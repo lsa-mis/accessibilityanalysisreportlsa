@@ -1,0 +1,2080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LSA Web Accessibility Report · Spring 2026</title>
+<meta name="description" content="Interactive data report on LSA Technology Services' web accessibility program, Spring 2026.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..500&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<style>
+:root {
+  --um-blue: #00274C;
+  --um-blue-800: #0a3866;
+  --um-blue-400: #6b8cb0;
+  --um-blue-50: #eff3f7;
+  --um-maize: #FFCB05;
+  --um-maize-100: #fff5cc;
+  --paper: #F7F2E7;
+  --paper-warm: #F0E8D5;
+  --paper-light: #FAF7F0;
+  --ink: #0F1A26;
+  --ink-80: #2a3441;
+  --ink-60: #4f5763;
+  --ink-40: #8b919a;
+  --ink-20: #c4c7cc;
+  --rule: #d8cfba;
+  --rule-light: #e9e1cc;
+  --warning: #a55a00;
+  --warning-soft: #f5e1c0;
+  --danger: #7d1d1d;
+  --danger-soft: #ecd0cf;
+  --success: #2d6a4f;
+  --dv-1: #00274C;
+  --dv-2: #4a7ca8;
+  --dv-3: #b8855a;
+  --dv-4: #4a7a5f;
+  --dv-5: #8b3a3a;
+  --dv-6: #5a4a7a;
+  --dv-accent: #d4a017;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-weight: 400;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--paper);
+  font-feature-settings: "ss01", "cv01";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+canvas { display: block; max-width: 100%; }
+.num, .metric-value, .big-num, .ts-num, [data-count], .label-value,
+.data-table td, .ba-number, .tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" on, "lnum" on;
+}
+
+.display, h1, h2, h3, h4 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.018em;
+  line-height: 1.06;
+  color: var(--um-blue);
+  font-optical-sizing: auto;
+}
+h1 { font-size: clamp(2.75rem, 7vw, 6rem); font-weight: 600; letter-spacing: -0.04em; line-height: 0.98; }
+h2 { font-size: clamp(2rem, 4.2vw, 3.75rem); font-weight: 500; letter-spacing: -0.028em; }
+h3 { font-size: clamp(1.4rem, 2.1vw, 1.75rem); font-weight: 500; }
+h4 { font-size: 1.15rem; font-weight: 600; }
+
+.eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--warning);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+.eyebrow::before { content: ''; width: 28px; height: 1px; background: var(--warning); }
+.section-number {
+  font-family: 'Fraunces', serif;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--ink-60);
+  margin-bottom: 0.5rem;
+}
+.lede {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(1.25rem, 2vw, 1.7rem);
+  font-weight: 300;
+  font-style: italic;
+  line-height: 1.35;
+  color: var(--ink-80);
+  margin: 1.8rem 0 2.5rem;
+  max-width: 40ch;
+  letter-spacing: -0.01em;
+}
+p { margin-bottom: 1.1em; max-width: 65ch; color: var(--ink-80); }
+p.wide { max-width: 85ch; }
+a {
+  color: var(--um-blue);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--ink-20);
+  transition: all 0.2s;
+}
+a:hover { color: var(--warning); text-decoration-color: var(--warning); }
+a:focus-visible { outline: 3px solid var(--um-maize); outline-offset: 3px; border-radius: 2px; text-decoration: none; }
+strong { font-weight: 600; color: var(--ink); }
+.highlight { background: linear-gradient(180deg, transparent 55%, var(--um-maize-100) 55%); padding: 0 0.12em; }
+.drop-cap::first-letter {
+  font-family: 'Fraunces', serif;
+  font-size: 4.2em;
+  float: left;
+  line-height: 0.85;
+  margin: 0.15em 0.12em -0.05em 0;
+  font-weight: 600;
+  color: var(--um-blue);
+}
+
+.scroll-progress {
+  position: fixed; top: 0; left: 0; height: 3px;
+  background: var(--um-maize); z-index: 200; width: 0%;
+}
+.skip-link {
+  position: absolute; left: -9999px;
+  background: var(--um-blue); color: var(--um-maize);
+  padding: 1rem 1.5rem; font-weight: 600; z-index: 1000;
+}
+.skip-link:focus { left: 1rem; top: 1rem; }
+
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(247, 242, 231, 0.9);
+  backdrop-filter: blur(16px) saturate(1.1);
+  -webkit-backdrop-filter: blur(16px) saturate(1.1);
+  border-bottom: 1px solid var(--rule-light);
+}
+.nav-inner {
+  max-width: 1440px; margin: 0 auto;
+  padding: 1.1rem 2rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 2rem;
+}
+.nav-logo { display: flex; align-items: center; gap: 0.85rem; text-decoration: none; color: var(--ink); }
+.nav-logo-mark {
+  width: 34px; height: 34px;
+  background: var(--um-blue); color: var(--um-maize);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Fraunces', serif; font-weight: 700; font-size: 0.82rem; border-radius: 3px;
+}
+.nav-logo-text { font-family: 'Fraunces', serif; font-weight: 500; font-size: 0.98rem; }
+.nav-logo-text span { color: var(--ink-60); font-weight: 400; }
+.nav-links { display: flex; gap: 2.2rem; list-style: none; }
+.nav-links a {
+  text-decoration: none; color: var(--ink-80); font-size: 0.88rem; font-weight: 500;
+  position: relative; padding: 0.4rem 0;
+}
+.nav-links a::after {
+  content: ''; position: absolute; left: 0; right: 100%; bottom: -2px; height: 2px;
+  background: var(--um-maize); transition: right 0.25s ease;
+}
+.nav-links a:hover { color: var(--um-blue); }
+.nav-links a:hover::after { right: 0; }
+@media (max-width: 860px) { .nav-links { display: none; } }
+
+section { padding: 7rem 2.5rem; position: relative; }
+@media (max-width: 700px) { section { padding: 4.5rem 1.5rem; } }
+.container { max-width: 1440px; margin: 0 auto; }
+.container-narrow { max-width: 840px; margin: 0 auto; }
+.section-header { max-width: 800px; margin-bottom: 5rem; }
+
+.hero {
+  padding: 8rem 2.5rem 6rem;
+  background: var(--paper);
+  min-height: 90vh;
+  display: flex; align-items: center;
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 800px 500px at 90% 10%, rgba(255, 203, 5, 0.12), transparent 55%),
+    radial-gradient(ellipse 600px 400px at 10% 90%, rgba(0, 39, 76, 0.05), transparent 55%);
+  pointer-events: none;
+}
+.hero::after {
+  content: ''; position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,39,76,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,39,76,0.035) 1px, transparent 1px);
+  background-size: 72px 72px;
+  pointer-events: none;
+  mask-image: linear-gradient(180deg, black 40%, transparent 95%);
+  -webkit-mask-image: linear-gradient(180deg, black 40%, transparent 95%);
+}
+.hero-inner { max-width: 1440px; margin: 0 auto; position: relative; width: 100%; }
+.hero-meta {
+  display: flex; align-items: center; gap: 1.5rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-60); margin-bottom: 2.5rem; flex-wrap: wrap;
+}
+.hero-meta-divider { width: 40px; height: 1px; background: var(--ink-40); }
+.hero h1 { max-width: 22ch; margin-bottom: 1.5rem; }
+.hero h1 em { font-style: italic; color: var(--warning); font-weight: 400; }
+.hero-lede {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(1.15rem, 1.8vw, 1.5rem);
+  font-weight: 300; font-style: italic;
+  line-height: 1.4; color: var(--ink-80);
+  max-width: 55ch; margin: 2rem 0 3.5rem;
+  letter-spacing: -0.005em;
+}
+.hero-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+  margin-top: 3rem;
+}
+@media (max-width: 900px) { .hero-metrics { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 500px) { .hero-metrics { grid-template-columns: 1fr; } }
+.hero-metric {
+  padding: 2rem 1.75rem 2rem 0;
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.hero-metric.first-col { padding-left: 0; }
+/* Featured cell: spans bigger */
+.hero-metric.featured {
+  grid-row: span 2;
+  padding-right: 2.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.hero-metric.featured .hero-metric-value {
+  font-size: clamp(3.5rem, 7.5vw, 6rem);
+  font-weight: 600;
+}
+/* last items in each visible row shouldn't have right border */
+.hero-metric:nth-child(3n+1):not(.featured) { border-left: none; }
+.hero-metric:last-child { border-right: none; padding-right: 0; }
+/* bottom row: no bottom border */
+.hero-metric.bottom-row { border-bottom: none; }
+
+@media (max-width: 900px) {
+  .hero-metric.featured { grid-row: auto; grid-column: span 2; padding-right: 1.75rem; }
+  .hero-metric { border-right: 1px solid var(--rule); padding-right: 1.75rem; }
+  .hero-metric:nth-child(2n) { border-right: none; padding-right: 0; }
+  .hero-metric.bottom-row { border-bottom: 1px solid var(--rule); }
+  .hero-metric:last-child { border-bottom: none; }
+}
+@media (max-width: 500px) {
+  .hero-metric, .hero-metric.featured {
+    grid-row: auto; grid-column: auto;
+    border-right: none; padding-right: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .hero-metric:last-child { border-bottom: none; }
+  .hero-metric.featured .hero-metric-value { font-size: clamp(3rem, 10vw, 4rem); }
+}
+.hero-metric-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--ink-60); margin-bottom: 1.25rem;
+  display: flex; align-items: center; gap: 0.55rem;
+}
+.hero-metric-label .tag {
+  display: inline-block; padding: 0.12rem 0.45rem;
+  background: var(--um-maize-100); color: var(--warning);
+  border-radius: 2px;
+  font-size: 0.6rem; letter-spacing: 0.1em; font-weight: 600;
+}
+.hero-metric.bottom-row .hero-metric-label .tag {
+  background: rgba(0, 39, 76, 0.08); color: var(--um-blue);
+}
+.hero-metric-value {
+  font-family: 'Fraunces', serif; font-weight: 500;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 0.9; color: var(--um-blue);
+  letter-spacing: -0.035em; margin-bottom: 0.75rem;
+}
+.hero-metric-value .unit {
+  font-size: 0.4em; color: var(--ink-60); font-weight: 400; margin-left: 0.15em;
+}
+.hero-metric-sub { font-size: 0.85rem; color: var(--ink-60); line-height: 1.4; max-width: 32ch; }
+
+.section-paper-warm { background: var(--paper-warm); }
+.section-blue { background: var(--um-blue); color: white; }
+.section-blue h2, .section-blue h3, .section-blue h4 { color: white; }
+.section-blue .eyebrow { color: var(--um-maize); }
+.section-blue .eyebrow::before { background: var(--um-maize); }
+.section-blue .lede { color: rgba(255,255,255,0.82); }
+.section-blue p { color: rgba(255,255,255,0.78); }
+.section-blue strong { color: white; }
+.section-blue .section-number { color: rgba(255,255,255,0.5); }
+
+.timeline {
+  display: grid; grid-template-columns: 200px 1fr; gap: 3rem;
+  padding: 3rem 0; border-top: 1px solid rgba(255,255,255,0.15);
+  align-items: start;
+}
+.timeline:last-child { border-bottom: 1px solid rgba(255,255,255,0.15); }
+.timeline-date {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--um-maize); padding-top: 0.3rem;
+}
+.timeline-badge {
+  display: inline-block; background: var(--um-maize); color: var(--um-blue);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem; letter-spacing: 0.12em; font-weight: 600;
+  padding: 0.25rem 0.65rem; margin-left: 0.6rem; border-radius: 2px;
+  animation: pulse-badge 2.5s ease-in-out infinite;
+}
+@keyframes pulse-badge {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 203, 5, 0.6); }
+  50% { box-shadow: 0 0 0 8px rgba(255, 203, 5, 0); }
+}
+.timeline-content h3 { font-size: 1.5rem; margin-bottom: 1rem; color: white; }
+.timeline-content p { color: rgba(255,255,255,0.8); max-width: 60ch; }
+.timeline-content ul { margin-top: 1rem; padding-left: 0; list-style: none; }
+.timeline-content li {
+  padding-left: 1.75rem; position: relative; margin-bottom: 0.5rem;
+  font-size: 0.95rem; color: rgba(255,255,255,0.75);
+}
+.timeline-content li::before {
+  content: ''; position: absolute; left: 0; top: 0.7em; width: 12px; height: 1px; background: var(--um-maize);
+}
+@media (max-width: 700px) { .timeline { grid-template-columns: 1fr; gap: 1rem; } }
+
+.chart-block {
+  background: var(--paper-light);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 2.25rem 2.25rem 2rem;
+  margin: 1.5rem 0;
+  position: relative;
+}
+.section-blue .chart-block { background: var(--um-blue-800); border-color: rgba(255,255,255,0.1); }
+.chart-block-header {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 2rem; margin-bottom: 1.75rem; padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--rule-light);
+  flex-wrap: wrap;
+}
+.section-blue .chart-block-header { border-bottom-color: rgba(255,255,255,0.12); }
+.chart-block-header h3 {
+  font-family: 'Fraunces', serif; font-size: 1.35rem; font-weight: 500;
+  color: var(--um-blue); margin: 0; letter-spacing: -0.015em;
+}
+.section-blue .chart-block-header h3 { color: white; }
+.chart-kicker {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.66rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-40);
+}
+.chart-description {
+  font-size: 0.92rem; color: var(--ink-60); line-height: 1.55;
+  margin-bottom: 1.5rem; max-width: 70ch;
+}
+.chart-wrapper { position: relative; height: 360px; margin: 0; }
+.chart-wrapper.tall { height: 460px; }
+.chart-wrapper.short { height: 250px; }
+.chart-footnote {
+  margin-top: 1.5rem; padding-top: 1.25rem;
+  border-top: 1px solid var(--rule-light);
+  font-size: 0.82rem; color: var(--ink-60); font-style: italic; line-height: 1.5;
+}
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.grid-2-asym { display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; }
+@media (max-width: 900px) { .grid-2, .grid-2-asym { grid-template-columns: 1fr; } }
+
+.progress-row { margin-bottom: 1.75rem; }
+.progress-row:last-child { margin-bottom: 0; }
+.progress-label {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 0.55rem;
+}
+.progress-label .label-text { font-size: 0.92rem; color: var(--ink-80); font-weight: 500; }
+.progress-label .label-value {
+  font-family: 'Fraunces', serif; font-weight: 500; font-size: 1.25rem;
+  color: var(--um-blue); letter-spacing: -0.01em;
+}
+.progress-label .label-pct {
+  font-size: 0.78em; color: var(--ink-60); font-weight: 400; margin-left: 0.3rem;
+}
+.progress-track {
+  height: 6px; background: rgba(0, 39, 76, 0.08);
+  border-radius: 3px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; background: var(--um-blue);
+  transform-origin: left; transform: scaleX(0);
+  transition: transform 1.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.progress-fill.maize { background: var(--dv-accent); }
+.progress-fill.visible { transform: scaleX(1); }
+
+.filter-group {
+  display: inline-flex; border: 1px solid var(--rule);
+  border-radius: 3px; overflow: hidden; background: white;
+}
+.filter-btn {
+  background: transparent; border: none; padding: 0.55rem 1.1rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-60); cursor: pointer; font-weight: 500;
+  border-right: 1px solid var(--rule); transition: all 0.15s;
+}
+.filter-btn:last-child { border-right: none; }
+.filter-btn:hover { color: var(--um-blue); background: var(--um-blue-50); }
+.filter-btn.active { background: var(--um-blue); color: var(--um-maize); }
+.filter-btn:focus-visible {
+  outline: 3px solid var(--um-maize); outline-offset: 2px; z-index: 1; position: relative;
+}
+
+.callout {
+  background: var(--paper-light);
+  border-left: 3px solid var(--um-maize);
+  padding: 2.25rem 2.25rem 2rem 2rem;
+  margin: 3rem 0;
+  border-radius: 0 4px 4px 0;
+}
+.callout-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.16em;
+  color: var(--warning); margin-bottom: 0.85rem; font-weight: 500;
+}
+.callout h3 { margin-bottom: 1rem; }
+.callout.bold {
+  background: var(--um-blue); color: white;
+  border-left-color: var(--um-maize); border-left-width: 4px;
+}
+.callout.bold h3 { color: white; }
+.callout.bold p { color: rgba(255,255,255,0.85); }
+.callout.bold .callout-label { color: var(--um-maize); }
+.callout.warning {
+  background: #fef6e7; border-left-color: var(--warning);
+}
+.callout.warning .callout-label { color: var(--warning); }
+
+.ba-compare {
+  display: grid; grid-template-columns: 1fr 1fr;
+  margin: 3rem 0; position: relative;
+  border: 1px solid var(--rule);
+  border-radius: 4px; overflow: hidden;
+  background: var(--paper-light);
+}
+.ba-compare::after {
+  content: ''; position: absolute; top: 0; bottom: 0; left: 50%;
+  width: 1px; background: var(--rule); pointer-events: none;
+}
+.ba-side { padding: 3rem 2.25rem; position: relative; }
+.ba-side.after { background: var(--um-maize-100); }
+.ba-side-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-60); margin-bottom: 1.25rem;
+  display: flex; align-items: center; gap: 0.6rem;
+}
+.ba-side-label::after {
+  content: ''; flex: 1; height: 1px; background: var(--rule);
+}
+.ba-side.after .ba-side-label { color: var(--warning); }
+.ba-number {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(2.75rem, 5.5vw, 4.75rem);
+  font-weight: 600; color: var(--um-blue);
+  line-height: 0.9; letter-spacing: -0.04em;
+  margin-bottom: 0.75rem;
+  display: flex; align-items: baseline; gap: 0.25em;
+}
+.ba-number-unit { font-size: 0.4em; color: var(--ink-60); font-weight: 400; }
+.ba-caption { font-size: 0.95rem; color: var(--ink-80); line-height: 1.5; max-width: 42ch; }
+@media (max-width: 700px) {
+  .ba-compare { grid-template-columns: 1fr; }
+  .ba-compare::after { left: 0; right: 0; top: 50%; bottom: auto; width: auto; height: 1px; }
+}
+
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.data-table thead { border-bottom: 2px solid var(--um-blue); }
+.data-table thead th {
+  padding: 0.85rem 1rem 0.85rem 0;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase;
+  font-weight: 500; color: var(--ink-60); text-align: left;
+}
+.data-table thead th.num { text-align: right; padding-right: 0; }
+.data-table tbody td {
+  padding: 0.85rem 1rem 0.85rem 0;
+  border-bottom: 1px solid var(--rule-light); color: var(--ink-80);
+}
+.data-table tbody td.num { text-align: right; padding-right: 0; }
+.data-table tbody tr:hover { background: rgba(0, 39, 76, 0.02); }
+.data-table .mono { font-family: 'IBM Plex Mono', monospace; font-size: 0.86rem; color: var(--ink-60); }
+
+.tiers {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem;
+  margin: 3rem 0;
+}
+@media (max-width: 1100px) { .tiers { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 550px) { .tiers { grid-template-columns: 1fr; } }
+.tier {
+  background: var(--paper-light); border: 1px solid var(--rule);
+  padding: 1.75rem 1.5rem; border-radius: 4px;
+  position: relative; display: flex; flex-direction: column; min-height: 280px;
+}
+.tier.featured {
+  background: var(--um-blue); color: white; border-color: var(--um-blue);
+  box-shadow: 0 20px 40px -20px rgba(0, 39, 76, 0.4);
+  transform: scale(1.02);
+}
+.tier.featured::before {
+  content: 'Primary focus';
+  position: absolute; top: -0.7rem; left: 1.5rem;
+  background: var(--um-maize); color: var(--um-blue);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem; letter-spacing: 0.12em; font-weight: 600;
+  padding: 0.25rem 0.65rem; text-transform: uppercase; border-radius: 2px;
+}
+.tier-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--warning); margin-bottom: 0.75rem;
+}
+.tier.featured .tier-num { color: var(--um-maize); }
+.tier h4 {
+  font-family: 'Fraunces', serif; font-size: 1.2rem; font-weight: 500;
+  color: var(--um-blue); margin-bottom: 1.25rem; line-height: 1.2;
+}
+.tier.featured h4 { color: white; }
+.tier-stats {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;
+  padding: 1rem 0; margin: auto 0;
+  border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+}
+.tier.featured .tier-stats {
+  border-top-color: rgba(255,255,255,0.18);
+  border-bottom-color: rgba(255,255,255,0.18);
+}
+.ts-num {
+  font-family: 'Fraunces', serif; font-size: 1.55rem; font-weight: 500;
+  color: var(--um-blue); line-height: 1; letter-spacing: -0.015em;
+}
+.tier.featured .ts-num { color: white; }
+.ts-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-40); margin-top: 0.3rem;
+}
+.tier.featured .ts-label { color: rgba(255,255,255,0.65); }
+.tier p { font-size: 0.85rem; color: var(--ink-60); margin: 1rem 0 0; line-height: 1.5; }
+.tier.featured p { color: rgba(255,255,255,0.82); }
+
+.pull-quote {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(1.5rem, 2.8vw, 2.25rem);
+  font-weight: 300; font-style: italic;
+  line-height: 1.25; color: var(--um-blue);
+  padding: 4rem 0; margin: 4rem auto; max-width: 800px;
+  position: relative;
+  border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+  letter-spacing: -0.01em;
+}
+.pull-quote::before {
+  content: ''; display: block; width: 50px; height: 3px;
+  background: var(--um-maize); margin-bottom: 2rem;
+}
+.pull-quote cite {
+  display: block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem; font-style: normal; font-weight: 500;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-60); margin-top: 2rem;
+}
+
+.step-list { margin-top: 4rem; }
+.step {
+  display: grid; grid-template-columns: 130px 1fr; gap: 2.5rem;
+  padding: 2.25rem 0; border-top: 1px solid rgba(255,255,255,0.15);
+  align-items: start;
+}
+.step:last-child { border-bottom: 1px solid rgba(255,255,255,0.15); }
+.step-num {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(3rem, 5vw, 4.5rem);
+  font-weight: 400; font-style: italic;
+  color: var(--um-maize); line-height: 0.9; letter-spacing: -0.03em;
+}
+.step h3 { font-size: 1.45rem; margin-bottom: 0.75rem; color: white; font-weight: 500; }
+.step p { color: rgba(255,255,255,0.78); max-width: 58ch; }
+@media (max-width: 700px) { .step { grid-template-columns: 1fr; gap: 0.75rem; } }
+
+.footer {
+  background: var(--ink); color: rgba(255,255,255,0.7);
+  padding: 4rem 2.5rem 3rem;
+  border-top: 3px solid var(--um-maize);
+}
+.footer-inner { max-width: 1440px; margin: 0 auto; }
+.footer-top {
+  display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 3rem;
+  margin-bottom: 3rem; padding-bottom: 3rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+@media (max-width: 700px) { .footer-top { grid-template-columns: 1fr; gap: 2rem; } }
+.footer h3, .footer h4 { color: white; margin-bottom: 1rem; }
+.footer h4 {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
+  font-weight: 500; color: rgba(255,255,255,0.6);
+}
+.footer a { color: var(--um-maize); text-decoration: underline; text-decoration-color: rgba(255,203,5,0.3); }
+.footer a:hover { text-decoration-color: var(--um-maize); color: white; }
+.footer-links { list-style: none; }
+.footer-links li { margin-bottom: 0.5rem; font-size: 0.9rem; }
+.footer-note { font-size: 0.82rem; color: rgba(255,255,255,0.5); line-height: 1.6; }
+.footer-signoff {
+  font-family: 'Fraunces', serif; font-style: italic; font-size: 0.95rem;
+  color: var(--um-maize); margin-top: 1.5rem;
+}
+
+.reveal {
+  opacity: 0; transform: translateY(24px);
+  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+.badge {
+  display: inline-block; padding: 0.18rem 0.55rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase;
+  border-radius: 2px; font-weight: 600;
+}
+.badge.level-a { background: var(--warning-soft); color: var(--warning); }
+.badge.level-aa { background: var(--danger-soft); color: var(--danger); }
+hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  html { scroll-behavior: auto; }
+  .reveal { opacity: 1; transform: none; }
+  .progress-fill { transform: scaleX(1); }
+}
+
+/* ==========================================================================
+   Maturity model
+   ========================================================================== */
+.maturity {
+  margin: 2.5rem 0 1.5rem;
+  position: relative;
+}
+.maturity-track {
+  position: relative;
+  height: 3px;
+  background: var(--rule);
+  margin: 5rem 0 4rem;
+  border-radius: 2px;
+}
+.maturity-progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(90deg, var(--dv-accent), var(--um-maize));
+  border-radius: 2px;
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 1.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.maturity-progress.visible { transform: scaleX(1); }
+.maturity-steps {
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  transform: translateY(-50%);
+}
+.maturity-step {
+  text-align: center;
+  position: relative;
+}
+.maturity-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--paper-light);
+  border: 2px solid var(--rule);
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+  transition: all 0.3s;
+}
+.maturity-step.done .maturity-dot {
+  background: var(--um-blue);
+  border-color: var(--um-blue);
+}
+.maturity-step.current .maturity-dot {
+  background: var(--um-maize);
+  border-color: var(--um-blue);
+  width: 20px;
+  height: 20px;
+  box-shadow: 0 0 0 6px rgba(255, 203, 5, 0.25);
+}
+.maturity-step.target .maturity-dot {
+  background: var(--paper-light);
+  border-color: var(--um-blue);
+  border-width: 3px;
+  border-style: dashed;
+}
+.maturity-label {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: -4.5rem;
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  color: var(--um-blue);
+  font-size: 1.05rem;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+.maturity-label .ml-num {
+  display: block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-40);
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+}
+.maturity-desc {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -3.5rem;
+  font-size: 0.78rem;
+  color: var(--ink-60);
+  max-width: 140px;
+  line-height: 1.35;
+  text-align: center;
+}
+.maturity-badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  margin-top: 0.25rem;
+}
+.maturity-step.current .maturity-badge {
+  background: var(--um-maize);
+  color: var(--um-blue);
+}
+.maturity-step.target .maturity-badge {
+  background: var(--um-blue-50);
+  color: var(--um-blue);
+  border: 1px dashed var(--um-blue);
+}
+@media (max-width: 700px) {
+  .maturity-label { font-size: 0.85rem; }
+  .maturity-desc { display: none; }
+}
+
+/* ==========================================================================
+   Pillars grid
+   ========================================================================== */
+.pillars-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin: 3rem 0;
+}
+.pillar {
+  background: var(--paper-light);
+  border: 1px solid var(--rule);
+  padding: 2rem 1.75rem;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.pillar:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 40px -20px rgba(0, 39, 76, 0.25);
+}
+.pillar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--um-maize);
+}
+.pillar-header {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+.pillar-num {
+  font-family: 'Fraunces', serif;
+  font-size: 2.75rem;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--um-maize);
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+}
+.pillar h4 {
+  font-family: 'Fraunces', serif;
+  font-size: 1.4rem;
+  font-weight: 500;
+  color: var(--um-blue);
+  letter-spacing: -0.015em;
+}
+.pillar-tagline {
+  font-size: 0.92rem;
+  color: var(--ink-60);
+  font-style: italic;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+.pillar-section {
+  border-top: 1px solid var(--rule-light);
+  padding: 1rem 0 0.5rem;
+}
+.pillar-section-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 0.65rem;
+}
+.pillar-section-label.current { color: var(--um-blue); }
+.pillar-section-label.building { color: var(--warning); }
+.pillar ul {
+  list-style: none;
+  padding: 0;
+}
+.pillar li {
+  font-size: 0.87rem;
+  padding-left: 1.25rem;
+  position: relative;
+  margin-bottom: 0.45rem;
+  line-height: 1.5;
+  color: var(--ink-80);
+}
+.pillar-section.current li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 10px;
+  height: 1px;
+  background: var(--um-blue);
+}
+.pillar-section.building li::before {
+  content: '+';
+  position: absolute;
+  left: 0;
+  top: -0.05em;
+  color: var(--warning);
+  font-weight: 600;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* ==========================================================================
+   Course outline table
+   ========================================================================== */
+.course-modules {
+  margin-top: 2rem;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+}
+.course-module {
+  display: grid;
+  grid-template-columns: 80px 1fr 180px 100px;
+  gap: 1rem;
+  padding: 1.4rem 1.5rem;
+  border-bottom: 1px solid var(--rule-light);
+  background: var(--paper-light);
+  align-items: start;
+}
+.course-module:last-child { border-bottom: none; }
+.course-module:hover { background: var(--bg-cream, #FAF7F0); }
+.cm-num {
+  font-family: 'Fraunces', serif;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--um-maize);
+  font-style: italic;
+}
+.cm-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--um-blue);
+  line-height: 1.25;
+  margin-bottom: 0.35rem;
+}
+.cm-desc {
+  font-size: 0.88rem;
+  color: var(--ink-60);
+  line-height: 1.5;
+}
+.cm-skills {
+  font-size: 0.82rem;
+  color: var(--ink-60);
+  line-height: 1.5;
+}
+.cm-skills strong {
+  display: block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-40);
+  margin-bottom: 0.3rem;
+  font-weight: 500;
+}
+.cm-time {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.82rem;
+  color: var(--warning);
+  text-align: right;
+  font-weight: 500;
+}
+@media (max-width: 800px) {
+  .course-module { grid-template-columns: 50px 1fr; }
+  .course-module .cm-skills,
+  .course-module .cm-time { grid-column: 2; }
+}
+</style>
+</head>
+<body>
+
+<div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
+<a href="#main" class="skip-link">Skip to main content</a>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a href="#hero" class="nav-logo" aria-label="LSA Web Accessibility Report">
+      <span class="nav-logo-mark" aria-hidden="true">LSA</span>
+      <span class="nav-logo-text">Web Accessibility <span>· Spring 2026</span></span>
+    </a>
+    <nav aria-label="Main sections">
+      <ul class="nav-links">
+        <li><a href="#journey">Journey</a></li>
+        <li><a href="#started">Origin</a></li>
+        <li><a href="#now">Current</a></li>
+        <li><a href="#aria">The push</a></li>
+        <li><a href="#manual">Manual</a></li>
+        <li><a href="#plan">Plan</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="hero" id="hero">
+  <div class="hero-inner">
+    <div class="hero-meta">
+      <span>A program report</span>
+      <span class="hero-meta-divider" aria-hidden="true"></span>
+      <span>LSA Technology Services</span>
+      <span class="hero-meta-divider" aria-hidden="true"></span>
+      <span>April 20, 2026</span>
+    </div>
+    <h1>Progress, not <em>perfection</em>, across a portfolio of 1,618 sites.</h1>
+    <p class="hero-lede">An interactive look at where LSA's web accessibility program started, where it stands four days before the Title II deadline, and the work still ahead.</p>
+
+    <div class="hero-metrics">
+      <!-- FEATURED: portfolio target score, spans full height -->
+      <div class="hero-metric featured first-col">
+        <div class="hero-metric-label">
+          <span class="tag">Current</span>
+          Portfolio target score
+        </div>
+        <div class="hero-metric-value"><span data-count="95.96" data-decimals="2">0.00</span></div>
+        <div class="hero-metric-sub">Active-site average on the compliance-oriented scoring metric. AEM at 91.17, WordPress at 96.60, Omeka at 91.41.</div>
+      </div>
+
+      <!-- Top row -->
+      <div class="hero-metric">
+        <div class="hero-metric-label">
+          <span class="tag">Current</span>
+          Sites at target
+        </div>
+        <div class="hero-metric-value"><span data-count="12">0</span><span class="unit"> of 1,373</span></div>
+        <div class="hero-metric-sub">Active sites with "Target met" status in Siteimprove. Close to target: 280 more within 1.5 points.</div>
+      </div>
+
+      <div class="hero-metric">
+        <div class="hero-metric-label">
+          <span class="tag">Current</span>
+          Pages monitored
+        </div>
+        <div class="hero-metric-value"><span data-count="463926">0</span></div>
+        <div class="hero-metric-sub">Pages covered by automated scanning across 1,373 active sites.</div>
+      </div>
+
+      <!-- Bottom row -->
+      <div class="hero-metric bottom-row">
+        <div class="hero-metric-label">
+          <span class="tag">Ahead</span>
+          Automated issues
+        </div>
+        <div class="hero-metric-value"><span data-count="34.8" data-decimals="1">0</span><span class="unit">M</span></div>
+        <div class="hero-metric-sub">Occurrences flagged. AEM template fix resolves roughly half.</div>
+      </div>
+
+      <div class="hero-metric bottom-row">
+        <div class="hero-metric-label">
+          <span class="tag">Ahead</span>
+          Est. manual findings
+        </div>
+        <div class="hero-metric-value">~<span data-count="25">0</span><span class="unit">K</span></div>
+        <div class="hero-metric-sub">Distinct remediation tasks projected across the portfolio. Range 18K to 35K based on audit literature.</div>
+      </div>
+    </div>
+
+    <!-- Secondary row: the testing budget headline -->
+    <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 2rem; align-items: center; margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--rule);">
+      <div></div>
+      <div style="text-align: center;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-60); margin-bottom: 0.75rem; display: inline-flex; align-items: center; gap: 0.55rem; justify-content: center;">
+          <span class="tag" style="background: rgba(0,39,76,0.08); color: var(--um-blue); padding: 0.12rem 0.45rem; border-radius: 2px; font-size: 0.6rem; letter-spacing: 0.1em; font-weight: 600;">Ahead</span>
+          First-pass manual testing budget
+        </div>
+        <div style="font-family: 'Fraunces', serif; font-weight: 500; font-size: clamp(2.25rem, 4vw, 3.25rem); line-height: 0.95; color: var(--um-blue); letter-spacing: -0.035em;">
+          <span data-count="2090">0</span><span style="font-size: 0.45em; color: var(--ink-60); font-weight: 400; margin-left: 0.15em;"> hours</span>
+        </div>
+        <div style="font-size: 0.9rem; color: var(--ink-60); margin-top: 0.75rem; font-style: italic;">
+          Tiered plan phased across 18 to 24 months · <span style="font-family: 'IBM Plex Mono', monospace; font-style: normal; letter-spacing: 0.04em;">~100 hrs/month at steady state</span>
+        </div>
+      </div>
+      <div></div>
+    </div>
+  </div>
+</section>
+
+<!-- JOURNEY -->
+<section class="section-blue" id="journey">
+  <div class="container-narrow">
+    <div class="section-number">01 · The program</div>
+    <span class="eyebrow">The arc of the work</span>
+    <h2>Five phases, one continuous practice.</h2>
+    <p class="lede">Web accessibility at LSA is not a project with a finish line. It is an operational discipline. This is how the current phase took shape.</p>
+
+    <div style="margin-top: 4rem;">
+      <div class="timeline">
+        <div class="timeline-date">Q4 · 2025</div>
+        <div class="timeline-content">
+          <h3>Foundation</h3>
+          <p>Siteimprove configured across AEM and WordPress. Baseline established. First cross-site reports generated. Governance conversations begin with Maria and Mikhail.</p>
+        </div>
+      </div>
+      <div class="timeline">
+        <div class="timeline-date">Jan — Mar · 2026</div>
+        <div class="timeline-content">
+          <h3>Setup and onboarding</h3>
+          <p>Canvas courses for AEM and WordPress editors launched. Open Lab sessions opened. Custom Siteimprove dashboards shared with Communications Administrators. Per-site remediation plans drafted.</p>
+          <ul>
+            <li>Platform-specific training published</li>
+            <li>Stakeholder engagement templates in place</li>
+            <li>TDX response workflows established with Caihui</li>
+          </ul>
+        </div>
+      </div>
+      <div class="timeline">
+        <div class="timeline-date">April · 2026 <span class="timeline-badge">We are here</span></div>
+        <div class="timeline-content">
+          <h3>The pivot to sustained practice</h3>
+          <p>Title II compliance deadline four days away. AEM template-level ARIA fix staged for production. Only 12 of 1,373 active sites meet their accessibility target, though 280 more sit within 1.5 points. Portfolio target score averages 95.96. AEM sites trail at 91.17. Active engagement with stakeholders replaces setup work.</p>
+        </div>
+      </div>
+      <div class="timeline">
+        <div class="timeline-date">May — Jun · 2026</div>
+        <div class="timeline-content">
+          <h3>AEM template push, intern onboarded</h3>
+          <p>AEM-only ARIA landmark fix ships. Roughly 51% of automated occurrences resolve. AEM average target score projected to rise toward 95. Stacy Shang joins for the summer. WordPress and Omeka template work enters the next-wave backlog.</p>
+        </div>
+      </div>
+      <div class="timeline">
+        <div class="timeline-date">Jul · 2026+</div>
+        <div class="timeline-content">
+          <h3>Sustained tiered practice and culture-building</h3>
+          <p>First-pass manual audits begin on Tier 1 sites. Manual testing courses launch for editors. Accessibility Champions network forms. Governance documentation formalized. Approximately 2,090 hours of first-pass effort phased across 18 to 24 months.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ORIGIN -->
+<section id="started">
+  <div class="container-narrow">
+    <div class="section-number">02 · Origin</div>
+    <span class="eyebrow">The inheritance</span>
+    <h2>A portfolio, a deadline, a philosophy.</h2>
+    <p class="lede">The program began with a question: how does a college with 1,600+ registered sites, four content platforms, and a federal compliance deadline actually move forward?</p>
+
+    <p class="drop-cap wide" style="margin-top: 3rem;">The answer was <span class="highlight">Progress Over Perfection</span>. Rather than attempt a perfect audit of every page (an impossible task with available resources), the team committed to a continuous practice. Find the highest-leverage issues first. Fix them at the template level where they cascade. Train the editors who create new content every day. Build the systems that sustain the work after the deadline.</p>
+
+    <div class="grid-2" style="margin-top: 4rem;">
+      <div class="callout">
+        <div class="callout-label">The scope inherited</div>
+        <h3>1,618 registered sites</h3>
+        <p>Across Adobe Experience Manager, WordPress, Omeka, and legacy platforms. 185 had no scanned pages. 60 had only a placeholder page. Another 36 are unreachable. The real active surface: 1,373 sites, 463,926 pages.</p>
+      </div>
+      <div class="callout">
+        <div class="callout-label">The deadline</div>
+        <h3>April 24, 2026</h3>
+        <p>ADA Title II compliance with WCAG 2.1 Level AA, established through U-M SPG 601.20. The college serves as a support partner in this effort, not a compliance enforcer, which shaped every choice about how we engage with site owners.</p>
+      </div>
+    </div>
+
+    <blockquote class="pull-quote">
+      Automated scans can flag what is broken. They cannot tell you what your users are actually experiencing. That part is ours.
+      <cite>— Program framing, LSA-TS Accessibility</cite>
+    </blockquote>
+  </div>
+</section>
+
+<!-- CURRENT STATE -->
+<section class="section-paper-warm" id="now">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-number">03 · Current state</div>
+      <span class="eyebrow">Where we are now</span>
+      <h2>The portfolio in April 2026.</h2>
+      <p class="lede">Four lenses on the data: how sites are distributed, where they sit on the compliance scale, how platforms differ, and where the highest-leverage work is concentrated.</p>
+    </div>
+
+    <!-- A transparency note at the top of this section -->
+    <div class="callout warning" style="margin-bottom: 3rem;">
+      <div class="callout-label">A note on "active sites"</div>
+      <p style="margin: 0;"><strong>An "active site" in this report is a Siteimprove record with at least 2 scanned pages.</strong> Single-page records are treated as placeholders or landing-only sites. Zero-page records include empty, authenticated, or unreachable sites. This definition gives us 1,373 active sites carrying 463,926 pages. Of those, 12 currently hold "Target met" status; the remaining 1,361 are working toward it, with 280 sitting within 1.5 points of target.</p>
+    </div>
+
+    <!-- Portfolio composition -->
+    <div class="chart-block">
+      <div class="chart-block-header">
+        <h3>Portfolio composition</h3>
+        <span class="chart-kicker">Figure 3.1</span>
+      </div>
+      <p class="chart-description">Of the 1,618 registered sites, 1,373 carry real content (2+ scanned pages). 245 are empty, placeholder, or unreachable records. Of the active sites, only 12 have reached "target met" status in Siteimprove; the remaining 1,361 are working toward it.</p>
+      <div class="grid-2" style="gap: 3rem; align-items: center;">
+        <div class="chart-wrapper short">
+          <canvas id="portfolioChart" aria-label="Doughnut chart: 1,373 active sites, 245 empty or placeholder, of 1,618 total"></canvas>
+        </div>
+        <div>
+          <div class="progress-row">
+            <div class="progress-label">
+              <span class="label-text">Active sites (2+ pages)</span>
+              <span class="label-value">1,373<span class="label-pct">84.9%</span></span>
+            </div>
+            <div class="progress-track"><div class="progress-fill" data-fill="84.9"></div></div>
+          </div>
+          <div class="progress-row">
+            <div class="progress-label">
+              <span class="label-text">Empty, placeholder, unreachable</span>
+              <span class="label-value">245<span class="label-pct">15.1%</span></span>
+            </div>
+            <div class="progress-track"><div class="progress-fill maize" data-fill="15.1"></div></div>
+          </div>
+          <hr class="divider" style="margin: 1.75rem 0;">
+          <div class="progress-row">
+            <div class="progress-label">
+              <span class="label-text">Sites with "Target met" status</span>
+              <span class="label-value">12<span class="label-pct">0.9%</span></span>
+            </div>
+            <div class="progress-track"><div class="progress-fill" data-fill="0.9"></div></div>
+          </div>
+          <div class="progress-row">
+            <div class="progress-label">
+              <span class="label-text">Sites within 1.5 points of target</span>
+              <span class="label-value">280<span class="label-pct">20.4%</span></span>
+            </div>
+            <div class="progress-track"><div class="progress-fill" data-fill="20.4"></div></div>
+          </div>
+          <div class="progress-row">
+            <div class="progress-label">
+              <span class="label-text">Sites needing 5+ points</span>
+              <span class="label-value">255<span class="label-pct">18.6%</span></span>
+            </div>
+            <div class="progress-track"><div class="progress-fill maize" data-fill="18.6"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Points-to-target distribution -->
+    <div class="chart-block">
+      <div class="chart-block-header">
+        <h3>How close are sites to their target?</h3>
+        <span class="chart-kicker">Figure 3.2</span>
+      </div>
+      <p class="chart-description">Most active sites need only a handful of points to reach target. The distribution shows that 128 sites are within 1.5 points of target, which is a reasonable scope for editor-level remediation. Another 313 sites need 1.5 to 5 points, where template-level fixes come into play.</p>
+      <div class="chart-wrapper">
+        <canvas id="pointsToTargetChart" aria-label="Bar chart: distribution of sites by points needed to reach target"></canvas>
+      </div>
+    </div>
+
+    <!-- Score distribution with toggle -->
+    <div class="chart-block">
+      <div class="chart-block-header">
+        <h3>Score distribution across 559 active sites</h3>
+        <span class="chart-kicker">Figure 3.3</span>
+      </div>
+      <p class="chart-description">The target score and accessibility score tell different stories about the same portfolio. Target score reflects compliance conformance; accessibility score is more sensitive to best-practice deductions. Toggle to compare.</p>
+      <div style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: center; margin-bottom: 1.5rem;">
+        <div class="filter-group" role="radiogroup" aria-label="Score metric">
+          <button class="filter-btn active" data-score="target" role="radio" aria-checked="true">Target score</button>
+          <button class="filter-btn" data-score="accessibility" role="radio" aria-checked="false">Accessibility score</button>
+        </div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; color: var(--ink-60); letter-spacing: 0.06em; text-transform: uppercase;">
+          <span id="scoreMetricNote">Mean 96.04 · median 96.71 · min 78.69</span>
+        </div>
+      </div>
+      <div class="chart-wrapper">
+        <canvas id="scoreDistChart" aria-label="Bar chart: site distribution across score bands"></canvas>
+      </div>
+    </div>
+
+    <!-- Platform + Pareto -->
+    <div class="grid-2-asym" style="margin-top: 1.5rem;">
+      <div class="chart-block">
+        <div class="chart-block-header">
+          <h3>Platforms at a glance</h3>
+          <span class="chart-kicker">Figure 3.4</span>
+        </div>
+        <p class="chart-description">AEM carries four times the pages of WordPress but has a much larger accessibility-to-target gap. AEM sites need an average of 6.87 points to reach target; WordPress sites average 2.49. The gap is where the template-level work lives.</p>
+        <div class="chart-wrapper">
+          <canvas id="platformChart" aria-label="Grouped bar chart: target score versus accessibility score by platform"></canvas>
+        </div>
+      </div>
+      <div class="chart-block">
+        <div class="chart-block-header">
+          <h3>Pareto of pages</h3>
+          <span class="chart-kicker">Figure 3.5</span>
+        </div>
+        <p class="chart-description">The top 50 sites contain 85% of all pages. Tiered audit planning follows this curve.</p>
+        <div class="chart-wrapper">
+          <canvas id="paretoChart" aria-label="Cumulative area chart: page coverage by top N sites"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Remediation debt -->
+    <div class="chart-block" style="margin-top: 1.5rem;">
+      <div class="chart-block-header">
+        <h3>Top 10 sites by remediation debt</h3>
+        <span class="chart-kicker">Figure 3.6</span>
+      </div>
+      <p class="chart-description">Debt equals pages multiplied by the gap from a perfect target score. The top 10 account for roughly 61% of portfolio-wide debt. Three of the largest contributors deserve a closer look: <em>sites.lsa.umich.edu</em> is the WordPress parent aggregator, <em>AEM Staging</em> is a non-production environment, and the International Institute sub-sites appear to duplicate each other's page counts and should be reviewed for scan configuration.</p>
+      <div class="chart-wrapper tall">
+        <canvas id="debtChart" aria-label="Horizontal bar chart: top 10 sites by remediation debt"></canvas>
+      </div>
+      <p class="chart-footnote">Sites flagged in amber (AEM Staging, sites.lsa.umich.edu parent) likely do not represent real user-facing content and should be excluded from compliance reporting after confirmation.</p>
+    </div>
+
+    <div class="callout bold" style="margin-top: 3rem;">
+      <div class="callout-label">Four signals worth reading</div>
+      <h3>What the data is telling us</h3>
+      <p style="margin-top: 1rem;"><strong>One.</strong> The compliance picture has real room to grow. Only 12 of 1,373 active sites fully meet target. But 280 sites sit within 1.5 points of target, which is realistic editor-level remediation scope.</p>
+      <p><strong>Two.</strong> The operational picture is concentrated on AEM and a handful of large sites. AEM (91.17) and Omeka (91.41) trail WordPress (96.60) substantially. The 29 largest sites (each 2000+ pages) hold 75% of all pages.</p>
+      <p><strong>Three.</strong> The inventory needs cleanup before compliance reporting. AEM Staging should be excluded from user-facing metrics. The International Institute sub-sites show duplicate page counts suggesting scan configuration needs review. <em>sites.lsa.umich.edu</em> is a parent aggregator that may double-count.</p>
+      <p style="margin-bottom: 0;"><strong>Four.</strong> The sustainability picture depends on systems, not heroics. A single AEM template change cascades across 184,077 pages. Editor culture, developer tooling, and governance are the long-term levers.</p>
+    </div>
+  </div>
+</section>
+
+<!-- THE PUSH (CORRECTED: AEM-ONLY) -->
+<section id="aria">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-number">04 · The push</div>
+      <span class="eyebrow">The AEM template fix</span>
+      <h2>Half the automated volume, one platform at a time.</h2>
+      <p class="lede">The most consequential remediation staged for deployment is an ARIA landmark template fix. It applies only to AEM sites. Here is what shifts when it lands, and what stays the same.</p>
+    </div>
+
+    <div class="callout warning">
+      <div class="callout-label">Scope clarification</div>
+      <p style="margin: 0;"><strong>This fix is AEM-only.</strong> WordPress and Omeka sites also carry ARIA landmark issues in their themes, but those require separate template-level work that has not yet been scoped. The projections below assume the AEM fix ships as planned and non-AEM platforms remain unchanged.</p>
+    </div>
+
+    <div class="ba-compare">
+      <div class="ba-side">
+        <div class="ba-side-label">Before (current)</div>
+        <div class="ba-number"><span>34.8</span><span class="ba-number-unit">M</span></div>
+        <p class="ba-caption">Total automated occurrences across the active portfolio. 30.5M of these are ARIA-related, of which an estimated 58% sit on AEM pages (40% of portfolio page share, higher per-page issue density).</p>
+      </div>
+      <div class="ba-side after">
+        <div class="ba-side-label">After AEM push</div>
+        <div class="ba-number"><span>~17.1</span><span class="ba-number-unit">M</span></div>
+        <p class="ba-caption">Roughly 51% reduction, driven by eliminating ARIA landmark occurrences on AEM's 184,077 pages. WordPress (144K pages) and Omeka (49K pages) persist until their templates receive similar treatment.</p>
+      </div>
+    </div>
+
+    <!-- Platform-level score projection -->
+    <div class="chart-block">
+      <div class="chart-block-header">
+        <h3>Projected target score uplift by platform</h3>
+        <span class="chart-kicker">Figure 4.1</span>
+      </div>
+      <p class="chart-description">AEM sees the gain. Other platforms are unchanged until their own template work is done. Portfolio average rises modestly because AEM represents 92 of 559 active sites.</p>
+      <div class="chart-wrapper">
+        <canvas id="upliftChart" aria-label="Grouped bar chart: current versus projected target scores by platform"></canvas>
+      </div>
+      <p class="chart-footnote">Projections are estimates based on AEM's current accessibility-to-target gap and typical Siteimprove weighting. They should be validated against the first post-deployment scan.</p>
+    </div>
+
+    <div class="grid-2" style="margin-top: 1.5rem;">
+      <div class="chart-block">
+        <div class="chart-block-header">
+          <h3>Ownership of remaining work</h3>
+          <span class="chart-kicker">Figure 4.2</span>
+        </div>
+        <p class="chart-description">Development remains the dominant owner of what's left, because non-AEM ARIA issues still exist. Visual design's share rises but does not dominate the way it would have with a portfolio-wide fix.</p>
+        <div class="chart-wrapper">
+          <canvas id="ownershipChart" aria-label="Grouped bar chart: team responsibility shares before and after AEM push"></canvas>
+        </div>
+      </div>
+      <div class="chart-block">
+        <div class="chart-block-header">
+          <h3>Next-wave AEM priorities</h3>
+          <span class="chart-kicker">Figure 4.3</span>
+        </div>
+        <p class="chart-description">Once the ARIA fix ships, the biggest remaining AEM issues are target size and color contrast. Both have template components and would benefit from the same centralized fix approach.</p>
+        <div class="chart-wrapper">
+          <canvas id="remainingChart" aria-label="Horizontal bar chart: top remaining issue types"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <div class="callout-label">The reframe</div>
+      <h3>Manual testing becomes the larger share of what's left</h3>
+      <p>Before the push, the ratio of manual-only findings to automated findings is roughly 2 to 1. After the AEM push, that ratio rises to roughly 4 to 1. The total universe of accessibility issues on the sites does not change; the share of work that can only be done by human testers grows. Capacity planning should reflect this shift, even though the AEM-only scope means the reframe is less dramatic than a portfolio-wide fix would have been.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MANUAL TESTING -->
+<section class="section-paper-warm" id="manual">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-number">05 · The manual work</div>
+      <span class="eyebrow">What automation cannot see</span>
+      <h2>The 60 to 70 percent that needs a person.</h2>
+      <p class="lede">Automated tools catch roughly a third of WCAG failures. The rest requires human judgment, assistive technology, and context. This is how that work breaks down.</p>
+    </div>
+
+    <div class="grid-2">
+      <div class="chart-block">
+        <div class="chart-block-header">
+          <h3>Tester time by WCAG area</h3>
+          <span class="chart-kicker">Figure 5.1</span>
+        </div>
+        <p class="chart-description">Rough allocation of manual audit time across major WCAG categories. Keyboard, focus, and screen reader review together account for more than half of any session.</p>
+        <div class="chart-wrapper">
+          <canvas id="timeAllocChart" aria-label="Doughnut chart: tester time across WCAG testing categories"></canvas>
+        </div>
+      </div>
+      <div class="chart-block">
+        <div class="chart-block-header">
+          <h3>Expected findings per site</h3>
+          <span class="chart-kicker">Figure 5.2</span>
+        </div>
+        <p class="chart-description">Empirical ranges drawn from published audit literature. These estimate distinct remediation tasks, not raw occurrences. Most findings are systemic and repeat across templates.</p>
+        <div class="chart-wrapper">
+          <canvas id="findingsChart" aria-label="Range bars: low and high finding estimates by site complexity"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-block" style="margin-top: 1.5rem;">
+      <div class="chart-block-header">
+        <h3>The manual-only WCAG criteria</h3>
+        <span class="chart-kicker">Figure 5.3</span>
+      </div>
+      <p class="chart-description">Twenty success criteria that Siteimprove cannot reliably evaluate. Each requires human testers, assistive technology, or contextual judgment. This is a representative set, not a complete list.</p>
+      <div style="overflow-x: auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th scope="col" style="width: 18%;">Area</th>
+              <th scope="col" style="width: 12%;">WCAG</th>
+              <th scope="col">Criterion</th>
+              <th scope="col" class="num" style="width: 12%;">Level</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Keyboard</td><td class="mono">2.1.1</td><td>All functionality operable without a mouse</td><td class="num"><span class="badge level-a">A</span></td></tr>
+            <tr><td>Keyboard</td><td class="mono">2.1.2</td><td>No keyboard traps in widgets or modals</td><td class="num"><span class="badge level-a">A</span></td></tr>
+            <tr><td>Focus</td><td class="mono">2.4.3</td><td>Logical tab order</td><td class="num"><span class="badge level-a">A</span></td></tr>
+            <tr><td>Focus</td><td class="mono">2.4.7</td><td>Focus indicator visible</td><td class="num"><span class="badge level-aa">AA</span></td></tr>
+            <tr><td>Focus</td><td class="mono">2.4.11</td><td>Focus not obscured by sticky elements</td><td class="num"><span class="badge level-aa">AA</span></td></tr>
+            <tr><td>Screen reader</td><td class="mono">1.1.1</td><td>Alt text describes the image meaningfully</td><td class="num"><span class="badge level-a">A</span></td></tr>
+            <tr><td>Screen reader</td><td class="mono">1.3.1</td><td>Semantic structure conveys intended relationships</td><td class="num"><span class="badge level-a">A</span></td></tr>
+            <tr><td>Screen reader</td><td class="mono">2.4.6</td><td>Headings and labels are descriptive</td><td class="num"><span class="badge level-aa">AA</span></td></tr>
+            <tr><td>Screen reader</td><td class="mono">4.1.2</td><td>Custom components expose name, role, value</td><td class="num"><span class="badge level-a">A</span></td></tr>
+            <tr><td>Visual</td><td class="mono">1.3.3</td><td>Instructions not reliant on color or position</td><td class="num"><span class="badge level-a">A</span></td></tr>
+            <tr><td>Visual</td><td class="mono">1.4.1</td><td>Color is not the sole indicator of meaning</td><td class="num"><span class="badge level-a">A</span></td></tr>
+            <tr><td>Visual</td><td class="mono">1.4.10</td><td>Content reflows at 320px and 200% zoom</td><td class="num"><span class="badge level-aa">AA</span></td></tr>
+            <tr><td>Visual</td><td class="mono">1.4.13</td><td>Hover and focus content is dismissible</td><td class="num"><span class="badge level-aa">AA</span></td></tr>
+            <tr><td>Forms</td><td class="mono">3.3.1</td><td>Error identification explains what failed</td><td class="num"><span class="badge level-a">A</span></td></tr>
+            <tr><td>Forms</td><td class="mono">3.3.3</td><td>Error suggestions help users fix problems</td><td class="num"><span class="badge level-aa">AA</span></td></tr>
+            <tr><td>Forms</td><td class="mono">3.3.8</td><td>Authentication accessible (no memory puzzles)</td><td class="num"><span class="badge level-aa">AA</span></td></tr>
+            <tr><td>Media</td><td class="mono">1.2.2</td><td>Captions accurate and synchronized</td><td class="num"><span class="badge level-a">A</span></td></tr>
+            <tr><td>Media</td><td class="mono">1.2.5</td><td>Audio description provided where needed</td><td class="num"><span class="badge level-aa">AA</span></td></tr>
+            <tr><td>Cognitive</td><td class="mono">3.2.3</td><td>Navigation consistent across pages</td><td class="num"><span class="badge level-aa">AA</span></td></tr>
+            <tr><td>Cognitive</td><td class="mono">3.2.4</td><td>Same function has consistent identification</td><td class="num"><span class="badge level-aa">AA</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout bold" style="margin-top: 3rem;">
+      <div class="callout-label">Why this matters</div>
+      <h3>No dashboard can tell you what a screen reader user heard</h3>
+      <p>Siteimprove is essential, but it is an early-warning system, not a conformance test. A heading labeled "More" passes every automated check. A form field with a label of "Field 1" passes too. A button with an accessible name of "submit-btn-1" is technically present. Manual testing is where compliance becomes lived experience.</p>
+    </div>
+  </div>
+</section>
+
+<!-- THE PLAN -->
+<section id="plan">
+  <div class="container-narrow">
+    <div class="section-number">06 · The plan</div>
+    <span class="eyebrow">Where we're going</span>
+    <h2>A tiered plan sized for the real portfolio.</h2>
+    <p class="lede">Approximately 1,950 hours of first-pass manual testing over 12 to 18 months, concentrated where user exposure actually lives.</p>
+  </div>
+
+  <div class="container">
+    <div class="tiers">
+      <div class="tier">
+        <div class="tier-num">Tier 0</div>
+        <h4>Inventory cleanup</h4>
+        <div class="tier-stats">
+          <div><div class="ts-num">245</div><div class="ts-label">sites</div></div>
+          <div><div class="ts-num">20</div><div class="ts-label">hours</div></div>
+        </div>
+        <p>Empty, placeholder, or unreachable records. Decommission or rescan before compliance reporting. Includes 36 unreachable sites.</p>
+      </div>
+      <div class="tier featured">
+        <div class="tier-num">Tier 1</div>
+        <h4>Full WCAG 2.1 AA audit</h4>
+        <div class="tier-stats">
+          <div><div class="ts-num">50</div><div class="ts-label">sites</div></div>
+          <div><div class="ts-num">1,000</div><div class="ts-label">hours</div></div>
+        </div>
+        <p>Top sites by pages. 81% of user exposure concentrated here. ~20 hours per site, representative page sample.</p>
+      </div>
+      <div class="tier">
+        <div class="tier-num">Tier 2</div>
+        <h4>Abbreviated audit</h4>
+        <div class="tier-stats">
+          <div><div class="ts-num">150</div><div class="ts-label">sites</div></div>
+          <div><div class="ts-num">600</div><div class="ts-label">hours</div></div>
+        </div>
+        <p>Next band by size (7% additional page coverage). 4 hours per site focused on keyboard, screen reader, and any forms present.</p>
+      </div>
+      <div class="tier">
+        <div class="tier-num">Tier 3</div>
+        <h4>Automated + spot check</h4>
+        <div class="tier-stats">
+          <div><div class="ts-num">1,172</div><div class="ts-label">sites</div></div>
+          <div><div class="ts-num">390</div><div class="ts-label">hours</div></div>
+        </div>
+        <p>Long tail, mostly small WordPress sites. Siteimprove monitoring plus a 20-minute automated-review check per site.</p>
+      </div>
+      <div class="tier">
+        <div class="tier-num">Special</div>
+        <h4>Top-5 debt sites</h4>
+        <div class="tier-stats">
+          <div><div class="ts-num">5</div><div class="ts-label">sites</div></div>
+          <div><div class="ts-num">80+</div><div class="ts-label">hours</div></div>
+        </div>
+        <p>Residential College, Home, LSA Strategic Vision, chahrour, UMS 1580. Large-page sites that warrant dedicated remediation projects with site-owner collaboration.</p>
+      </div>
+    </div>
+
+    <div class="chart-block">
+      <div class="chart-block-header">
+        <h3>Coverage achieved per tier</h3>
+        <span class="chart-kicker">Figure 6.1</span>
+      </div>
+      <p class="chart-description">The tiered approach earns its keep from Pareto distribution: Tier 1 alone covers 81% of pages. Adding Tier 2 covers 89%. The remaining 11% lives in the long tail of 1,172 smaller sites, which is where automation plus editor training carries the work.</p>
+      <div class="chart-wrapper">
+        <canvas id="coverageChart" aria-label="Bar chart: page coverage percentage by tier"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-block" style="margin-top: 1.5rem;">
+      <div class="chart-block-header">
+        <h3>Roadmap for the next 18 months</h3>
+        <span class="chart-kicker">Figure 6.2</span>
+      </div>
+      <p class="chart-description">Phased execution matched to capacity. AEM push completes in May. Tier 1 audits begin in June. Intern accelerates Tier 3 through August.</p>
+      <div class="chart-wrapper tall">
+        <canvas id="roadmapChart" aria-label="Stacked bar chart: work distribution over 18 months"></canvas>
+      </div>
+    </div>
+
+    <blockquote class="pull-quote">
+      Accessibility is a practice, not a project. A compliance deadline is a beginning, not a finish line.
+      <cite>— Closing note</cite>
+    </blockquote>
+  </div>
+</section>
+
+<!-- NEXT STEPS -->
+<section class="section-blue">
+  <div class="container-narrow">
+    <div class="section-number">07 · Next steps</div>
+    <span class="eyebrow">The next quarter</span>
+    <h2>Five priorities before the intern arrives.</h2>
+
+    <div class="step-list">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div>
+          <h3>Resolve the inventory question</h3>
+          <p>1,059 zero-page records distort any compliance math. Coordinate with Maria to decide: decommissioned, authenticated, or needing rescan.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div>
+          <h3>Ship the AEM ARIA template fix</h3>
+          <p>Confirm production timeline with Ananta. Validate score uplift against first post-deployment scan. Identify the second wave of AEM template work (target size, contrast).</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div>
+          <h3>Scope the WordPress and Omeka template work</h3>
+          <p>The AEM fix only addresses one platform. WordPress (434 active sites) and Omeka (8 sites with 33,873 pages) still carry ARIA landmark issues in their themes. A separate scoping conversation with Jessica and the WP team should follow the AEM push.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div>
+          <h3>Launch Tier 1 audits with Stacy</h3>
+          <p>Build page-sampling frames for the top 50 sites. Document one complete audit as reference methodology. Begin weekly cadence in June.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">05</div>
+        <div>
+          <h3>Open the Residential College conversation</h3>
+          <p>Scoped conversation with the site owner about phased remediation or migration. This single site's debt exceeds the next nine combined.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <h3>LSA Technology Services</h3>
+        <p style="color: rgba(255,255,255,0.75);">Web Accessibility Program · University of Michigan</p>
+        <p class="footer-signoff">Progress over perfection.</p>
+      </div>
+      <div>
+        <h4>Resources</h4>
+        <ul class="footer-links">
+          <li><a href="https://accessibility.lsa.umich.edu/">accessibility.lsa.umich.edu</a></li>
+          <li><a href="https://teamdynamix.umich.edu/TDClient/47/LSAPortal/Requests/ServiceOfferingDet?ID=503">Request accessibility help</a></li>
+          <li><a href="https://accessibility.umich.edu/">U-M accessibility portal</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>This report</h4>
+        <ul class="footer-links">
+          <li>Prepared April 20, 2026</li>
+          <li>Next update after May AEM push</li>
+          <li>Data: Siteimprove export, spring 2026</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-note">
+      <p>Data sources: Siteimprove Home Sites export (1,618 sites), Cross-site Accessibility Issues export (48 issue types). Target-met classification based on "Target met" status in Points-to-target column. AEM share of ARIA occurrences estimated at ~58% based on page proportion and accessibility-to-target gap analysis. Scope framed within U-M SPG 601.20 and WCAG 2.1 Level AA.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ============================================================
+// Chart.js defaults tuned for the editorial aesthetic
+// ============================================================
+Chart.defaults.font.family = "'IBM Plex Sans', sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.color = '#4f5763';
+Chart.defaults.plugins.legend.position = 'bottom';
+Chart.defaults.plugins.legend.align = 'start';
+Chart.defaults.plugins.legend.labels.boxWidth = 12;
+Chart.defaults.plugins.legend.labels.boxHeight = 12;
+Chart.defaults.plugins.legend.labels.padding = 16;
+Chart.defaults.plugins.legend.labels.font = { family: "'IBM Plex Sans'", size: 12, weight: '500' };
+Chart.defaults.plugins.tooltip.backgroundColor = '#00274C';
+Chart.defaults.plugins.tooltip.titleFont = { family: "'IBM Plex Sans'", weight: '600', size: 13 };
+Chart.defaults.plugins.tooltip.bodyFont = { family: "'IBM Plex Sans'", size: 12 };
+Chart.defaults.plugins.tooltip.padding = 12;
+Chart.defaults.plugins.tooltip.cornerRadius = 3;
+Chart.defaults.plugins.tooltip.boxPadding = 5;
+Chart.defaults.elements.bar.borderRadius = 2;
+
+const C = {
+  blue: '#00274C', blueLight: '#4a7ca8', blueFade: '#bccedd',
+  maize: '#FFCB05', maizeSoft: '#ffd94a',
+  amber: '#a55a00', tan: '#b8855a',
+  green: '#2d6a4f', red: '#7d1d1d', purple: '#5a4a7a',
+  gray: '#8b919a', grayLight: '#c4c7cc'
+};
+const GRID = '#e9e1cc';
+
+// ============================================================
+// Scroll progress bar
+// ============================================================
+window.addEventListener('scroll', () => {
+  const h = document.documentElement;
+  const scrolled = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
+  document.getElementById('scrollProgress').style.width = scrolled + '%';
+}, { passive: true });
+
+// ============================================================
+// Number count-up animation
+// ============================================================
+function animateCount(el) {
+  if (el.dataset.animated) return;
+  el.dataset.animated = 'true';
+  const target = parseFloat(el.dataset.count);
+  const decimals = parseInt(el.dataset.decimals || 0);
+  const duration = 1400;
+  const start = performance.now();
+  function frame(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const v = target * eased;
+    el.textContent = decimals ? v.toFixed(decimals) : Math.round(v).toLocaleString();
+    if (progress < 1) requestAnimationFrame(frame);
+    else el.textContent = decimals ? target.toFixed(decimals) : target.toLocaleString();
+  }
+  requestAnimationFrame(frame);
+}
+
+// ============================================================
+// Intersection observer for reveals
+// ============================================================
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      e.target.querySelectorAll('[data-count]').forEach(animateCount);
+      e.target.querySelectorAll('.progress-fill[data-fill]').forEach(fill => {
+        fill.style.transform = `scaleX(${parseFloat(fill.dataset.fill)/100})`;
+      });
+    }
+  });
+}, { threshold: 0.15, rootMargin: '-50px 0px' });
+document.querySelectorAll('section, .chart-block, .callout, .ba-compare, .tiers').forEach(el => observer.observe(el));
+// Trigger hero immediately
+document.querySelectorAll('.hero [data-count]').forEach(animateCount);
+
+// ============================================================
+// Chart: Portfolio composition (doughnut)
+// ============================================================
+new Chart(document.getElementById('portfolioChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Active sites (2+ pages)', 'Empty, placeholder, or unreachable'],
+    datasets: [{
+      data: [1373, 245],
+      backgroundColor: [C.blue, C.grayLight],
+      borderWidth: 0, hoverOffset: 8
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '68%',
+    plugins: {
+      legend: { position: 'bottom' },
+      tooltip: { callbacks: {
+        label: (ctx) => `${ctx.label}: ${ctx.parsed.toLocaleString()} (${(ctx.parsed / 1618 * 100).toFixed(1)}%)`
+      }}
+    }
+  }
+});
+
+// ============================================================
+// Chart: Points to target distribution (updated counts)
+// ============================================================
+new Chart(document.getElementById('pointsToTargetChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Target met', '< 0.5', '0.5 to 1.5', '1.5 to 3', '3 to 5', '5 or more'],
+    datasets: [{
+      label: 'Sites',
+      data: [12, 80, 188, 436, 401, 255],
+      backgroundColor: [C.green, C.blueFade, C.blueLight, C.blue, C.amber, C.red]
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: {
+        label: (ctx) => {
+          const lbl = ctx.label === 'Target met' ? 'at target' : 'need this many more points';
+          return `${ctx.parsed.y} sites ${lbl}`;
+        }
+      }}
+    },
+    scales: {
+      y: { beginAtZero: true, grid: { color: GRID }, title: { display: true, text: 'Number of sites', color: C.gray, font: { size: 11 } } },
+      x: { grid: { display: false }, title: { display: true, text: 'Points needed to reach target', color: C.gray, font: { size: 11 } } }
+    }
+  }
+});
+
+// ============================================================
+// Chart: Score distribution (toggleable, new bands)
+// ============================================================
+const scoreData = {
+  target: {
+    labels: ['95 to 100', '85 to 95', '75 to 85', '65 to 75', 'Below 65'],
+    data: [1016, 337, 19, 0, 0],
+    color: C.blue,
+    note: 'Mean 95.96 · median 96.55 · min 75.73'
+  },
+  accessibility: {
+    labels: ['95 to 100', '85 to 95', '75 to 85', '65 to 75', 'Below 65'],
+    data: [53, 876, 378, 59, 7],
+    color: C.amber,
+    note: 'Mean 89.40 · median 91.00 · min 60.04'
+  }
+};
+const scoreChart = new Chart(document.getElementById('scoreDistChart'), {
+  type: 'bar',
+  data: {
+    labels: scoreData.target.labels,
+    datasets: [{
+      label: 'Sites', data: scoreData.target.data,
+      backgroundColor: scoreData.target.color
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.parsed.y} sites` } } },
+    scales: {
+      y: { beginAtZero: true, grid: { color: GRID } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+document.querySelectorAll('[data-score]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-score]').forEach(b => {
+      b.classList.remove('active');
+      b.setAttribute('aria-checked', 'false');
+    });
+    btn.classList.add('active');
+    btn.setAttribute('aria-checked', 'true');
+    const m = btn.dataset.score;
+    scoreChart.data.datasets[0].data = scoreData[m].data;
+    scoreChart.data.datasets[0].backgroundColor = scoreData[m].color;
+    scoreChart.update();
+    document.getElementById('scoreMetricNote').textContent = scoreData[m].note;
+  });
+});
+
+// ============================================================
+// Chart: Platform comparison (new numbers)
+// ============================================================
+new Chart(document.getElementById('platformChart'), {
+  type: 'bar',
+  data: {
+    labels: ['WordPress', 'AEM', 'Omeka', 'Other'],
+    datasets: [
+      { label: 'Target score', data: [96.60, 91.17, 91.41, 95.59], backgroundColor: C.blue },
+      { label: 'Accessibility score', data: [91.57, 79.65, 85.87, 89.07], backgroundColor: C.blueLight }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}` } } },
+    scales: {
+      y: { beginAtZero: false, min: 70, max: 100, grid: { color: GRID } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ============================================================
+// Chart: Pareto (updated coverage)
+// ============================================================
+new Chart(document.getElementById('paretoChart'), {
+  type: 'line',
+  data: {
+    labels: ['Top 10', 'Top 25', 'Top 50', 'Top 100', 'Top 200', 'All 1,373'],
+    datasets: [{
+      label: '% of pages covered',
+      data: [48.7, 73.4, 81.2, 88.5, 94.5, 100],
+      borderColor: C.blue,
+      backgroundColor: 'rgba(0, 39, 76, 0.1)',
+      borderWidth: 3, fill: true, tension: 0.35,
+      pointBackgroundColor: C.maize, pointBorderColor: C.blue,
+      pointBorderWidth: 2, pointRadius: 5, pointHoverRadius: 7
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: {
+        title: (items) => items[0].label,
+        label: (ctx) => `${ctx.parsed.y}% of portfolio pages`
+      }}
+    },
+    scales: {
+      y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' }, grid: { color: GRID } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ============================================================
+// Chart: Remediation debt (new top 10)
+// Amber = data quality flag sites (Staging, WP parent aggregator)
+// ============================================================
+new Chart(document.getElementById('debtChart'), {
+  type: 'bar',
+  data: {
+    labels: [
+      'sites.lsa.umich.edu (WP parent)',
+      'Residential College',
+      'Home (AEM, lsa.umich.edu)',
+      'LSA Strategic Vision',
+      'AEM Staging',
+      'chahrour',
+      'UMS 1580 (Omeka)',
+      'II: Southeast Asia Studies',
+      'II: Japanese Studies',
+      'II: Human Rights'
+    ],
+    datasets: [{
+      label: 'Remediation debt',
+      data: [924108, 572279, 561569, 561563, 542128, 430284, 329651, 160246, 157283, 154310],
+      backgroundColor: [C.amber, C.red, C.blue, C.blue, C.amber, C.blue, C.blue, C.blue, C.blue, C.blue]
+    }]
+  },
+  options: {
+    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: {
+        label: (ctx) => `Debt: ${ctx.parsed.x.toLocaleString()}`,
+        afterLabel: (ctx) => {
+          const flag = [0, 4];
+          return flag.includes(ctx.dataIndex) ? 'Data quality flag: likely aggregate or non-prod' : '';
+        }
+      }}
+    },
+    scales: {
+      x: { beginAtZero: true, grid: { color: GRID }, ticks: { callback: v => (v/1000).toFixed(0) + 'K' } },
+      y: { grid: { display: false } }
+    }
+  }
+});
+
+// ============================================================
+// Chart: Coverage by tier (updated percentages)
+// ============================================================
+new Chart(document.getElementById('coverageChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Tier 1 (50 sites)', 'Tier 1 + 2 (200 sites)', 'All active (1,373 sites)'],
+    datasets: [{
+      label: 'Pages covered',
+      data: [81.2, 88.5, 100],
+      backgroundColor: [C.maize, C.blue, C.green]
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: (ctx) => `${ctx.parsed.y}% of pages` } }
+    },
+    scales: {
+      y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' }, grid: { color: GRID } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ============================================================
+// Chart: Score uplift (platform-differentiated)
+// ============================================================
+new Chart(document.getElementById('upliftChart'), {
+  type: 'bar',
+  data: {
+    labels: ['AEM', 'WordPress', 'Omeka', 'Other', 'Portfolio avg'],
+    datasets: [
+      { label: 'Current target score', data: [91.17, 96.60, 91.41, 95.59, 95.96], backgroundColor: C.blueLight },
+      { label: 'Post-push (AEM-only)', data: [95.0, 96.60, 91.41, 95.59, 96.4], backgroundColor: C.maize }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom' },
+      tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}` } }
+    },
+    scales: {
+      y: { beginAtZero: false, min: 85, max: 100, grid: { color: GRID } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ============================================================
+// Chart: Ownership shift (AEM-only)
+// ============================================================
+new Chart(document.getElementById('ownershipChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Development', 'Visual design', 'Content writing', 'UX design'],
+    datasets: [
+      { label: 'Before (% of 34.8M)', data: [88.2, 9.7, 2.1, 0.1], backgroundColor: C.blueLight },
+      { label: 'After AEM push (% of 17.1M)', data: [76.0, 19.7, 4.2, 0.1], backgroundColor: C.maize }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom' },
+      tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%` } }
+    },
+    scales: {
+      y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' }, grid: { color: GRID } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ============================================================
+// Chart: Remaining issues post-push (AEM-focused)
+// ============================================================
+new Chart(document.getElementById('remainingChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Target size (AA)', 'Color contrast (AA)', 'Link missing alt (A)', 'Links unclear (A)', 'Headings unstructured', 'Image missing alt (A)', 'Form field no label (A)'],
+    datasets: [{
+      label: 'Occurrences',
+      data: [1704072, 1165607, 344681, 212126, 201318, 154781, 114243],
+      backgroundColor: [C.amber, C.amber, C.blue, C.blue, C.gray, C.blue, C.blue]
+    }]
+  },
+  options: {
+    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: (ctx) => `${ctx.parsed.x.toLocaleString()} occurrences` } }
+    },
+    scales: {
+      x: { beginAtZero: true, grid: { color: GRID }, ticks: { callback: v => (v/1000000).toFixed(1) + 'M' } },
+      y: { grid: { display: false } }
+    }
+  }
+});
+
+// ============================================================
+// Chart: Time allocation
+// ============================================================
+new Chart(document.getElementById('timeAllocChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Keyboard & focus (30%)', 'Screen reader (25%)', 'Visual & sensory (15%)', 'Forms (15%)', 'Media & motion (10%)', 'Pointer & cognitive (5%)'],
+    datasets: [{
+      data: [30, 25, 15, 15, 10, 5],
+      backgroundColor: [C.blue, C.maize, C.amber, C.green, C.blueLight, C.purple],
+      borderWidth: 2, borderColor: '#FAF7F0'
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '55%',
+    plugins: { legend: { position: 'right', labels: { padding: 10, font: { size: 11 } } } }
+  }
+});
+
+// ============================================================
+// Chart: Findings per site
+// ============================================================
+new Chart(document.getElementById('findingsChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Simple (20 to 100 pages)', 'Medium (100 to 500 pages)', 'Complex (500+ pages)'],
+    datasets: [
+      { label: 'Low estimate', data: [10, 20, 40], backgroundColor: C.blueLight },
+      { label: 'High estimate', data: [25, 50, 100], backgroundColor: C.blue }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom' },
+      tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ~${ctx.parsed.y} distinct findings` } }
+    },
+    scales: {
+      y: { beginAtZero: true, grid: { color: GRID }, title: { display: true, text: 'Distinct manual findings', color: C.gray, font: { size: 11 } } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ============================================================
+// Chart: Roadmap (stacked by month)
+// ============================================================
+new Chart(document.getElementById('roadmapChart'), {
+  type: 'bar',
+  data: {
+    labels: ['May\n2026', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan\n27', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
+    datasets: [
+      { label: 'AEM push + verify', data: [40, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], backgroundColor: C.red },
+      { label: 'WP/Omeka template scoping', data: [0, 10, 30, 40, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], backgroundColor: C.amber },
+      { label: 'Tier 1 audits', data: [0, 60, 100, 80, 80, 80, 80, 80, 80, 80, 80, 80, 60, 40, 0, 0, 0, 0], backgroundColor: C.blue },
+      { label: 'Tier 2 audits', data: [0, 0, 40, 60, 60, 60, 60, 60, 60, 60, 60, 60, 40, 40, 20, 0, 0, 0], backgroundColor: C.blueLight },
+      { label: 'Tier 3 + spot checks', data: [0, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 40, 40, 20, 20], backgroundColor: C.maize },
+      { label: 'Intern project', data: [80, 80, 80, 40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], backgroundColor: C.green }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom' },
+      tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y} hours` } }
+    },
+    scales: {
+      y: { beginAtZero: true, stacked: true, grid: { color: GRID }, title: { display: true, text: 'Hours per month', color: C.gray, font: { size: 11 } } },
+      x: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 } } }
+    }
+  }
+});
+</script>
+</body>
+</html>
