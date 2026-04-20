@@ -23,16 +23,16 @@
   --paper-light: #FAF7F0;
   --ink: #0F1A26;
   --ink-80: #2a3441;
-  --ink-60: #4f5763;
-  --ink-40: #8b919a;
+  --ink-60: #3d434a;
+  --ink-40: #44494f;
   --ink-20: #c4c7cc;
   --rule: #d8cfba;
   --rule-light: #e9e1cc;
-  --warning: #a55a00;
+  --warning: #6b3a00;
   --warning-soft: #f5e1c0;
-  --danger: #7d1d1d;
+  --danger: #5e1616;
   --danger-soft: #ecd0cf;
-  --success: #2d6a4f;
+  --success: #174531;
   --dv-1: #00274C;
   --dv-2: #4a7ca8;
   --dv-3: #b8855a;
@@ -106,7 +106,7 @@ h4 { font-size: 1.15rem; font-weight: 600; }
   letter-spacing: -0.01em;
 }
 p { margin-bottom: 1.1em; max-width: 65ch; color: var(--ink-80); }
-p.wide { max-width: 85ch; }
+p.wide { max-width: 78ch; }
 a {
   color: var(--um-blue);
   text-decoration: underline;
@@ -164,7 +164,7 @@ strong { font-weight: 600; color: var(--ink); }
 .nav-links { display: flex; gap: 2.2rem; list-style: none; }
 .nav-links a {
   text-decoration: none; color: var(--ink-80); font-size: 0.88rem; font-weight: 500;
-  position: relative; padding: 0.4rem 0;
+  position: relative; padding: 0.85rem 0.25rem; display: inline-flex; align-items: center; min-height: 44px;
 }
 .nav-links a::after {
   content: ''; position: absolute; left: 0; right: 100%; bottom: -2px; height: 2px;
@@ -172,6 +172,10 @@ strong { font-weight: 600; color: var(--ink); }
 }
 .nav-links a:hover { color: var(--um-blue); }
 .nav-links a:hover::after { right: 0; }
+.nav-links a:focus-visible {
+  outline: 3px solid var(--um-maize); outline-offset: 4px; border-radius: 2px; color: var(--um-blue);
+}
+.nav-links a:focus-visible::after { right: 0; }
 @media (max-width: 860px) { .nav-links { display: none; } }
 
 section { padding: 7rem 2.5rem; position: relative; }
@@ -304,7 +308,7 @@ section { padding: 7rem 2.5rem; position: relative; }
 .section-blue .lede { color: rgba(255,255,255,0.82); }
 .section-blue p { color: rgba(255,255,255,0.78); }
 .section-blue strong { color: white; }
-.section-blue .section-number { color: rgba(255,255,255,0.5); }
+.section-blue .section-number { color: rgba(255,255,255,0.75); }
 
 .timeline {
   display: grid; grid-template-columns: 200px 1fr; gap: 3rem;
@@ -333,7 +337,7 @@ section { padding: 7rem 2.5rem; position: relative; }
 .timeline-content ul { margin-top: 1rem; padding-left: 0; list-style: none; }
 .timeline-content li {
   padding-left: 1.75rem; position: relative; margin-bottom: 0.5rem;
-  font-size: 0.95rem; color: rgba(255,255,255,0.75);
+  font-size: 0.95rem; color: rgba(255,255,255,0.82);
 }
 .timeline-content li::before {
   content: ''; position: absolute; left: 0; top: 0.7em; width: 12px; height: 1px; background: var(--um-maize);
@@ -414,7 +418,7 @@ section { padding: 7rem 2.5rem; position: relative; }
   border-radius: 3px; overflow: hidden; background: white;
 }
 .filter-btn {
-  background: transparent; border: none; padding: 0.55rem 1.1rem;
+  background: transparent; border: none; padding: 0.85rem 1.25rem; min-height: 44px;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--ink-60); cursor: pointer; font-weight: 500;
@@ -537,11 +541,11 @@ section { padding: 7rem 2.5rem; position: relative; }
   color: var(--warning); margin-bottom: 0.75rem;
 }
 .tier.featured .tier-num { color: var(--um-maize); }
-.tier h4 {
+.tier h3 {
   font-family: 'Fraunces', serif; font-size: 1.2rem; font-weight: 500;
   color: var(--um-blue); margin-bottom: 1.25rem; line-height: 1.2;
 }
-.tier.featured h4 { color: white; }
+.tier.featured h3 { color: white; }
 .tier-stats {
   display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;
   padding: 1rem 0; margin: auto 0;
@@ -561,7 +565,7 @@ section { padding: 7rem 2.5rem; position: relative; }
   font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--ink-40); margin-top: 0.3rem;
 }
-.tier.featured .ts-label { color: rgba(255,255,255,0.65); }
+.tier.featured .ts-label { color: rgba(255,255,255,0.82); }
 .tier p { font-size: 0.85rem; color: var(--ink-60); margin: 1rem 0 0; line-height: 1.5; }
 .tier.featured p { color: rgba(255,255,255,0.82); }
 
@@ -620,13 +624,13 @@ section { padding: 7rem 2.5rem; position: relative; }
 .footer h4 {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
-  font-weight: 500; color: rgba(255,255,255,0.6);
+  font-weight: 500; color: rgba(255,255,255,0.82);
 }
 .footer a { color: var(--um-maize); text-decoration: underline; text-decoration-color: rgba(255,203,5,0.3); }
 .footer a:hover { text-decoration-color: var(--um-maize); color: white; }
 .footer-links { list-style: none; }
 .footer-links li { margin-bottom: 0.5rem; font-size: 0.9rem; }
-.footer-note { font-size: 0.82rem; color: rgba(255,255,255,0.5); line-height: 1.6; }
+.footer-note { font-size: 0.82rem; color: rgba(255,255,255,0.78); line-height: 1.6; }
 .footer-signoff {
   font-family: 'Fraunces', serif; font-style: italic; font-size: 0.95rem;
   color: var(--um-maize); margin-top: 1.5rem;
@@ -1013,7 +1017,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
           Sites at target
         </div>
         <div class="hero-metric-value"><span data-count="12">0</span><span class="unit"> of 1,373</span></div>
-        <div class="hero-metric-sub">Active sites with "Target met" status in Siteimprove. Close to target: 280 more within 1.5 points.</div>
+        <div class="hero-metric-sub">Active sites with "Target met" status in Siteimprove. Close to target: 268 more within 1.5 points.</div>
       </div>
 
       <div class="hero-metric">
@@ -1097,7 +1101,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
         <div class="timeline-date">April · 2026 <span class="timeline-badge">We are here</span></div>
         <div class="timeline-content">
           <h3>The pivot to sustained practice</h3>
-          <p>Title II compliance deadline four days away. AEM template-level ARIA fix staged for production. Only 12 of 1,373 active sites meet their accessibility target, though 280 more sit within 1.5 points. Portfolio target score averages 95.96. AEM sites trail at 91.17. Active engagement with stakeholders replaces setup work.</p>
+          <p>Title II compliance deadline four days away. AEM template-level ARIA fix staged for production. Only 12 of 1,373 active sites meet their accessibility target, though 268 more sit within 1.5 points. Portfolio target score averages 95.96. AEM sites trail at 91.17. Active engagement with stakeholders replaces setup work.</p>
         </div>
       </div>
       <div class="timeline">
@@ -1161,7 +1165,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
     <!-- A transparency note at the top of this section -->
     <div class="callout warning" style="margin-bottom: 3rem;">
       <div class="callout-label">A note on "active sites"</div>
-      <p style="margin: 0;"><strong>An "active site" in this report is a Siteimprove record with at least 2 scanned pages.</strong> Single-page records are treated as placeholders or landing-only sites. Zero-page records include empty, authenticated, or unreachable sites. This definition gives us 1,373 active sites carrying 463,926 pages. Of those, 12 currently hold "Target met" status; the remaining 1,361 are working toward it, with 280 sitting within 1.5 points of target.</p>
+      <p style="margin: 0;"><strong>An "active site" in this report is a Siteimprove record with at least 2 scanned pages.</strong> Single-page records are treated as placeholders or landing-only sites. Zero-page records include empty, authenticated, or unreachable sites. This definition gives us 1,373 active sites carrying 463,926 pages. Of those, 12 currently hold "Target met" status; the remaining 1,361 are working toward it, with 268 more within 1.5 points of target.</p>
     </div>
 
     <!-- Portfolio composition -->
@@ -1201,9 +1205,9 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
           <div class="progress-row">
             <div class="progress-label">
               <span class="label-text">Sites within 1.5 points of target</span>
-              <span class="label-value">280<span class="label-pct">20.4%</span></span>
+              <span class="label-value">268<span class="label-pct">19.5%</span></span>
             </div>
-            <div class="progress-track"><div class="progress-fill" data-fill="20.4"></div></div>
+            <div class="progress-track"><div class="progress-fill" data-fill="19.5"></div></div>
           </div>
           <div class="progress-row">
             <div class="progress-label">
@@ -1222,7 +1226,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
         <h3>How close are sites to their target?</h3>
         <span class="chart-kicker">Figure 3.2</span>
       </div>
-      <p class="chart-description">Most active sites need only a handful of points to reach target. The distribution shows that 128 sites are within 1.5 points of target, which is a reasonable scope for editor-level remediation. Another 313 sites need 1.5 to 5 points, where template-level fixes come into play.</p>
+      <p class="chart-description">Most active sites need only a handful of points to reach target. The distribution shows that 268 sites are within 1.5 points of target, which is a reasonable scope for editor-level remediation. Another 837 sites need 1.5 to 5 points, where template-level fixes come into play.</p>
       <div class="chart-wrapper">
         <canvas id="pointsToTargetChart" aria-label="Bar chart: distribution of sites by points needed to reach target"></canvas>
       </div>
@@ -1231,7 +1235,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
     <!-- Score distribution with toggle -->
     <div class="chart-block">
       <div class="chart-block-header">
-        <h3>Score distribution across 559 active sites</h3>
+        <h3>Score distribution across 1,372 active sites</h3>
         <span class="chart-kicker">Figure 3.3</span>
       </div>
       <p class="chart-description">The target score and accessibility score tell different stories about the same portfolio. Target score reflects compliance conformance; accessibility score is more sensitive to best-practice deductions. Toggle to compare.</p>
@@ -1241,7 +1245,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
           <button class="filter-btn" data-score="accessibility" role="radio" aria-checked="false">Accessibility score</button>
         </div>
         <div style="font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; color: var(--ink-60); letter-spacing: 0.06em; text-transform: uppercase;">
-          <span id="scoreMetricNote">Mean 96.04 · median 96.71 · min 78.69</span>
+          <span id="scoreMetricNote">Mean 95.96 · median 96.55 · min 75.73</span>
         </div>
       </div>
       <div class="chart-wrapper">
@@ -1256,7 +1260,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
           <h3>Platforms at a glance</h3>
           <span class="chart-kicker">Figure 3.4</span>
         </div>
-        <p class="chart-description">AEM carries four times the pages of WordPress but has a much larger accessibility-to-target gap. AEM sites need an average of 6.87 points to reach target; WordPress sites average 2.49. The gap is where the template-level work lives.</p>
+        <p class="chart-description">AEM carries roughly 1.3 times the pages of WordPress on 1/8 the number of sites, and has a much larger accessibility-to-target gap. AEM sites need an average of 7.27 points to reach target; WordPress sites average 2.85. The gap is where the template-level work lives.</p>
         <div class="chart-wrapper">
           <canvas id="platformChart" aria-label="Grouped bar chart: target score versus accessibility score by platform"></canvas>
         </div>
@@ -1266,7 +1270,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
           <h3>Pareto of pages</h3>
           <span class="chart-kicker">Figure 3.5</span>
         </div>
-        <p class="chart-description">The top 50 sites contain 85% of all pages. Tiered audit planning follows this curve.</p>
+        <p class="chart-description">The top 50 sites contain 81% of all pages. Tiered audit planning follows this curve.</p>
         <div class="chart-wrapper">
           <canvas id="paretoChart" aria-label="Cumulative area chart: page coverage by top N sites"></canvas>
         </div>
@@ -1279,7 +1283,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
         <h3>Top 10 sites by remediation debt</h3>
         <span class="chart-kicker">Figure 3.6</span>
       </div>
-      <p class="chart-description">Debt equals pages multiplied by the gap from a perfect target score. The top 10 account for roughly 61% of portfolio-wide debt. Three of the largest contributors deserve a closer look: <em>sites.lsa.umich.edu</em> is the WordPress parent aggregator, <em>AEM Staging</em> is a non-production environment, and the International Institute sub-sites appear to duplicate each other's page counts and should be reviewed for scan configuration.</p>
+      <p class="chart-description">Debt equals pages multiplied by the gap from a perfect target score. The top 10 account for roughly 65% of portfolio-wide debt. Three of the largest contributors deserve a closer look: <em>sites.lsa.umich.edu</em> is the WordPress parent aggregator, <em>AEM Staging</em> is a non-production environment, and the International Institute sub-sites appear to duplicate each other's page counts and should be reviewed for scan configuration.</p>
       <div class="chart-wrapper tall">
         <canvas id="debtChart" aria-label="Horizontal bar chart: top 10 sites by remediation debt"></canvas>
       </div>
@@ -1289,7 +1293,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
     <div class="callout bold" style="margin-top: 3rem;">
       <div class="callout-label">Four signals worth reading</div>
       <h3>What the data is telling us</h3>
-      <p style="margin-top: 1rem;"><strong>One.</strong> The compliance picture has real room to grow. Only 12 of 1,373 active sites fully meet target. But 280 sites sit within 1.5 points of target, which is realistic editor-level remediation scope.</p>
+      <p style="margin-top: 1rem;"><strong>One.</strong> The compliance picture has real room to grow. Only 12 of 1,373 active sites fully meet target. But 268 more sit within 1.5 points of target, which is realistic editor-level remediation scope.</p>
       <p><strong>Two.</strong> The operational picture is concentrated on AEM and a handful of large sites. AEM (91.17) and Omeka (91.41) trail WordPress (96.60) substantially. The 29 largest sites (each 2000+ pages) hold 75% of all pages.</p>
       <p><strong>Three.</strong> The inventory needs cleanup before compliance reporting. AEM Staging should be excluded from user-facing metrics. The International Institute sub-sites show duplicate page counts suggesting scan configuration needs review. <em>sites.lsa.umich.edu</em> is a parent aggregator that may double-count.</p>
       <p style="margin-bottom: 0;"><strong>Four.</strong> The sustainability picture depends on systems, not heroics. A single AEM template change cascades across 184,077 pages. Editor culture, developer tooling, and governance are the long-term levers.</p>
@@ -1331,7 +1335,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
         <h3>Projected target score uplift by platform</h3>
         <span class="chart-kicker">Figure 4.1</span>
       </div>
-      <p class="chart-description">AEM sees the gain. Other platforms are unchanged until their own template work is done. Portfolio average rises modestly because AEM represents 92 of 559 active sites.</p>
+      <p class="chart-description">AEM sees the gain. Other platforms are unchanged until their own template work is done. Portfolio average rises modestly because AEM represents 136 of 1,373 active sites.</p>
       <div class="chart-wrapper">
         <canvas id="upliftChart" aria-label="Grouped bar chart: current versus projected target scores by platform"></canvas>
       </div>
@@ -1458,14 +1462,14 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
     <div class="section-number">06 · The plan</div>
     <span class="eyebrow">Where we're going</span>
     <h2>A tiered plan sized for the real portfolio.</h2>
-    <p class="lede">Approximately 1,950 hours of first-pass manual testing over 12 to 18 months, concentrated where user exposure actually lives.</p>
+    <p class="lede">Approximately 2,090 hours of first-pass manual testing over 18 to 24 months, concentrated where user exposure actually lives.</p>
   </div>
 
   <div class="container">
     <div class="tiers">
       <div class="tier">
         <div class="tier-num">Tier 0</div>
-        <h4>Inventory cleanup</h4>
+        <h3>Inventory cleanup</h3>
         <div class="tier-stats">
           <div><div class="ts-num">245</div><div class="ts-label">sites</div></div>
           <div><div class="ts-num">20</div><div class="ts-label">hours</div></div>
@@ -1474,7 +1478,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
       </div>
       <div class="tier featured">
         <div class="tier-num">Tier 1</div>
-        <h4>Full WCAG 2.1 AA audit</h4>
+        <h3>Full WCAG 2.1 AA audit</h3>
         <div class="tier-stats">
           <div><div class="ts-num">50</div><div class="ts-label">sites</div></div>
           <div><div class="ts-num">1,000</div><div class="ts-label">hours</div></div>
@@ -1483,7 +1487,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
       </div>
       <div class="tier">
         <div class="tier-num">Tier 2</div>
-        <h4>Abbreviated audit</h4>
+        <h3>Abbreviated audit</h3>
         <div class="tier-stats">
           <div><div class="ts-num">150</div><div class="ts-label">sites</div></div>
           <div><div class="ts-num">600</div><div class="ts-label">hours</div></div>
@@ -1492,7 +1496,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
       </div>
       <div class="tier">
         <div class="tier-num">Tier 3</div>
-        <h4>Automated + spot check</h4>
+        <h3>Automated + spot check</h3>
         <div class="tier-stats">
           <div><div class="ts-num">1,172</div><div class="ts-label">sites</div></div>
           <div><div class="ts-num">390</div><div class="ts-label">hours</div></div>
@@ -1501,7 +1505,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
       </div>
       <div class="tier">
         <div class="tier-num">Special</div>
-        <h4>Top-5 debt sites</h4>
+        <h3>Top-5 debt sites</h3>
         <div class="tier-stats">
           <div><div class="ts-num">5</div><div class="ts-label">sites</div></div>
           <div><div class="ts-num">80+</div><div class="ts-label">hours</div></div>
