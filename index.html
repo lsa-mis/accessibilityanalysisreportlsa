@@ -975,6 +975,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
         <li><a href="#aria">The push</a></li>
         <li><a href="#manual">Manual</a></li>
         <li><a href="#plan">Plan</a></li>
+        <li><a href="#sustain">Sustain</a></li>
       </ul>
     </nav>
   </div>
@@ -1538,47 +1539,332 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
   </div>
 </section>
 
-<!-- NEXT STEPS -->
+<!-- ============================================================= -->
+<!-- SUSTAINABILITY                                                -->
+<!-- ============================================================= -->
+<section class="section-paper-warm" id="sustain">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-number">07 · The long arc</div>
+      <span class="eyebrow">Building the sustainable system</span>
+      <h2>Toward a culture where accessibility is the default.</h2>
+      <p class="lede">Compliance deadlines are a beginning. What sustains the work is culture: shared language, shared tools, shared ownership.</p>
+    </div>
+
+    <div class="container-narrow" style="margin: 0; padding: 0;">
+      <p class="drop-cap wide">LSA's accessibility program over the next three years is not measured by dashboards alone. It is measured by the number of editors who know how to test with a screen reader. The number of designers who think in reflow before they think in pixels. The number of site owners who ask "who will be excluded?" before launch. The number of conversations where accessibility is a design input, not a post-hoc audit. <span class="highlight">The compliance scan is the thermometer; the culture is the body temperature.</span></p>
+    </div>
+
+    <!-- Maturity Model -->
+    <div class="chart-block" style="margin-top: 4rem;">
+      <div class="chart-block-header">
+        <h3>Where we are on the maturity curve</h3>
+        <span class="chart-kicker">Figure 7.1</span>
+      </div>
+      <p class="chart-description">A five-level capability maturity framework. LSA's accessibility program sits between "Documented" and "Practiced" today. The 18-month target is "Measured" — data-driven, integrated into everyday workflows. "Embedded" is the longer arc.</p>
+
+      <div class="maturity">
+        <div class="maturity-track">
+          <div class="maturity-progress" data-progress="50"></div>
+        </div>
+        <div class="maturity-steps">
+          <div class="maturity-step done">
+            <div class="maturity-label"><span class="ml-num">Level 1</span>Ad hoc</div>
+            <div class="maturity-dot" aria-label="Level 1: Ad hoc, completed"></div>
+            <div class="maturity-desc">React to issues as they surface</div>
+          </div>
+          <div class="maturity-step current">
+            <div class="maturity-label"><span class="ml-num">Level 2</span>Documented<span class="maturity-badge">Current</span></div>
+            <div class="maturity-dot" aria-label="Level 2: Documented, current position"></div>
+            <div class="maturity-desc">Standards written, training available, Siteimprove in place</div>
+          </div>
+          <div class="maturity-step">
+            <div class="maturity-label"><span class="ml-num">Level 3</span>Practiced</div>
+            <div class="maturity-dot" aria-label="Level 3: Practiced"></div>
+            <div class="maturity-desc">Systematic, integrated into editor and developer workflows</div>
+          </div>
+          <div class="maturity-step target">
+            <div class="maturity-label"><span class="ml-num">Level 4</span>Measured<span class="maturity-badge">18-mo target</span></div>
+            <div class="maturity-dot" aria-label="Level 4: Measured, 18-month target"></div>
+            <div class="maturity-desc">Data-driven decisions, continuous improvement, feedback loops</div>
+          </div>
+          <div class="maturity-step">
+            <div class="maturity-label"><span class="ml-num">Level 5</span>Embedded</div>
+            <div class="maturity-dot" aria-label="Level 5: Embedded"></div>
+            <div class="maturity-desc">Cultural default, self-sustaining across teams</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Five Pillars -->
+    <h3 style="margin-top: 5rem; margin-bottom: 1rem; font-size: clamp(1.5rem, 2.5vw, 2rem);">Five pillars of a sustainable accessibility system</h3>
+    <p style="max-width: 70ch; color: var(--ink-60); margin-bottom: 2rem;">Each pillar has a current state that we can build on, and a near-term set of investments that take the program from "program with processes" to "culture with practice."</p>
+
+    <div class="pillars-grid">
+      <!-- Pillar 1: Learn -->
+      <div class="pillar">
+        <div class="pillar-header">
+          <div class="pillar-num">01</div>
+          <h4>Learn</h4>
+        </div>
+        <p class="pillar-tagline">Capability building for every role.</p>
+        <div class="pillar-section current">
+          <div class="pillar-section-label current">In place</div>
+          <ul>
+            <li>Canvas courses for AEM editors</li>
+            <li>Canvas courses for WordPress editors</li>
+            <li>Open Lab drop-in sessions</li>
+            <li>Quick-reference guides on the accessibility site</li>
+          </ul>
+        </div>
+        <div class="pillar-section building">
+          <div class="pillar-section-label building">Next 12 months</div>
+          <ul>
+            <li>Manual testing course for editors</li>
+            <li>Screen reader basics workshop series</li>
+            <li>Developer accessibility certification path</li>
+            <li>Role-specific learning paths (editor, developer, designer, comms admin)</li>
+            <li>LSA Web Accessibility lunchtime seminars</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Pillar 2: Practice -->
+      <div class="pillar">
+        <div class="pillar-header">
+          <div class="pillar-num">02</div>
+          <h4>Practice</h4>
+        </div>
+        <p class="pillar-tagline">Daily habits and tools that make the right thing easy.</p>
+        <div class="pillar-section current">
+          <div class="pillar-section-label current">In place</div>
+          <ul>
+            <li>Siteimprove continuous monitoring</li>
+            <li>Custom dashboards shared with CAs</li>
+            <li>TDX intake and triage workflows</li>
+            <li>AEM component accessibility tracker</li>
+          </ul>
+        </div>
+        <div class="pillar-section building">
+          <div class="pillar-section-label building">Next 12 months</div>
+          <ul>
+            <li>Accessibility browser toolkit rollout (axe DevTools, WAVE)</li>
+            <li>Pre-publish accessibility checklists in CMS</li>
+            <li>Developer pre-commit accessibility linting</li>
+            <li>Template-first approach for new content types</li>
+            <li>Alt text gem and supporting tooling for editors</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Pillar 3: Connect -->
+      <div class="pillar">
+        <div class="pillar-header">
+          <div class="pillar-num">03</div>
+          <h4>Connect</h4>
+        </div>
+        <p class="pillar-tagline">Community, recognition, shared ownership.</p>
+        <div class="pillar-section current">
+          <div class="pillar-section-label current">In place</div>
+          <ul>
+            <li>Open Lab monthly sessions</li>
+            <li>Stakeholder engagement templates</li>
+            <li>Connection to U-M Digital Accessibility Strategic Initiative</li>
+          </ul>
+        </div>
+        <div class="pillar-section building">
+          <div class="pillar-section-label building">Next 12 months</div>
+          <ul>
+            <li>Accessibility Champions network across LSA units</li>
+            <li>Quarterly "Progress stories" showcase</li>
+            <li>Dedicated Slack channel for accessibility questions</li>
+            <li>Annual recognition for editors making measurable improvements</li>
+            <li>Cross-unit sharing of audit findings and fixes</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Pillar 4: Govern -->
+      <div class="pillar">
+        <div class="pillar-header">
+          <div class="pillar-num">04</div>
+          <h4>Govern</h4>
+        </div>
+        <p class="pillar-tagline">Policies, gates, and the shift-left principle.</p>
+        <div class="pillar-section current">
+          <div class="pillar-section-label current">In place</div>
+          <ul>
+            <li>U-M SPG 601.20 framework</li>
+            <li>LSA-level accessibility implementation guide (draft)</li>
+            <li>Technical Service Expectations document</li>
+          </ul>
+        </div>
+        <div class="pillar-section building">
+          <div class="pillar-section-label building">Next 12 months</div>
+          <ul>
+            <li>Accessibility review as a gate in design and dev workflows</li>
+            <li>Procurement accessibility requirements for third-party tools and vendors</li>
+            <li>Template approval process with accessibility sign-off</li>
+            <li>Annual accessibility review cycles per unit</li>
+            <li>Publication standards for editorial content (alt text, headings, links)</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Pillar 5: Measure -->
+      <div class="pillar">
+        <div class="pillar-header">
+          <div class="pillar-num">05</div>
+          <h4>Measure</h4>
+        </div>
+        <p class="pillar-tagline">Transparency and feedback loops.</p>
+        <div class="pillar-section current">
+          <div class="pillar-section-label current">In place</div>
+          <ul>
+            <li>Siteimprove scores and dashboards</li>
+            <li>This report (and future iterations)</li>
+            <li>TDX ticket metrics</li>
+          </ul>
+        </div>
+        <div class="pillar-section building">
+          <div class="pillar-section-label building">Next 12 months</div>
+          <ul>
+            <li>Editor-specific progress reports sent quarterly</li>
+            <li>Site-owner quarterly review meetings for top 50 sites</li>
+            <li>Culture pulse surveys (twice yearly)</li>
+            <li>Public accessibility status page</li>
+            <li>Manual audit finding tracker (JIRA) with pattern analysis</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empowerment callout -->
+    <div class="callout bold" style="margin-top: 4rem;">
+      <div class="callout-label">The shift we are working toward</div>
+      <h3>From "LSA-TS does it" to "the college owns it, we support."</h3>
+      <p style="margin-top: 1rem;">Every accessibility ticket that becomes a self-service correction. Every editor who catches a contrast issue during review. Every developer who ships a component keyboard-tested from the start. Every designer who reviews a mockup with reflow in mind. These are the markers of a sustainable system.</p>
+      <p>Our team does not shrink in this model. We become the infrastructure that lets the rest of the college own inclusion. Training, tooling, templates, office hours, escalation paths. Editors do the work of accessibility; we make sure they have everything they need to do it well.</p>
+    </div>
+
+    <!-- Manual testing course outline -->
+    <div class="chart-block" style="margin-top: 3rem;">
+      <div class="chart-block-header">
+        <h3>Manual testing course for editors · proposed outline</h3>
+        <span class="chart-kicker">Planned launch · Jul 2026</span>
+      </div>
+      <p class="chart-description">A self-paced Canvas course to build confidence in basic manual accessibility testing. Target audience: Communications Administrators and content editors on AEM and WordPress. Expected completion time: 3 to 4 hours across four modules, with hands-on exercises in each.</p>
+
+      <div class="course-modules">
+        <div class="course-module">
+          <div class="cm-num">01</div>
+          <div>
+            <div class="cm-title">Why manual testing matters</div>
+            <div class="cm-desc">What Siteimprove catches, what it misses, and why human judgment is essential. Real-world examples of issues that passed automation but broke user experience.</div>
+          </div>
+          <div class="cm-skills">
+            <strong>You'll learn</strong>
+            Recognizing the 60–70% of issues automation can't see
+          </div>
+          <div class="cm-time">45 min</div>
+        </div>
+        <div class="course-module">
+          <div class="cm-num">02</div>
+          <div>
+            <div class="cm-title">Keyboard-only testing</div>
+            <div class="cm-desc">How to unplug the mouse and evaluate your page. Tab order, focus indicators, skip links, keyboard traps. Practical exercises on an LSA site.</div>
+          </div>
+          <div class="cm-skills">
+            <strong>You'll learn</strong>
+            Tab, Shift+Tab, Enter, Space, arrow key navigation. Spotting focus trap patterns.
+          </div>
+          <div class="cm-time">60 min</div>
+        </div>
+        <div class="course-module">
+          <div class="cm-num">03</div>
+          <div>
+            <div class="cm-title">Screen reader basics</div>
+            <div class="cm-desc">Installing NVDA (Windows) or using VoiceOver (Mac). Navigating a page by headings, landmarks, and links. Listening for missing labels and bad alt text.</div>
+          </div>
+          <div class="cm-skills">
+            <strong>You'll learn</strong>
+            Screen reader navigation commands, common announcement patterns, how to evaluate alt text quality
+          </div>
+          <div class="cm-time">75 min</div>
+        </div>
+        <div class="course-module">
+          <div class="cm-num">04</div>
+          <div>
+            <div class="cm-title">Editor's quick audit checklist</div>
+            <div class="cm-desc">A 15-minute self-audit you can run before publishing any page. Headings, links, images, forms, color, reflow, and media. With a printable reference card.</div>
+          </div>
+          <div class="cm-skills">
+            <strong>You'll learn</strong>
+            A repeatable pre-publish routine, when to escalate to LSA-TS, how to log issues in TDX
+          </div>
+          <div class="cm-time">45 min</div>
+        </div>
+      </div>
+
+      <p class="chart-footnote">Course development scoped for Stacy Shang's summer project. First cohort opens to Communications Administrators; expanded access follows iteration on feedback.</p>
+    </div>
+  </div>
+</section>
 <section class="section-blue">
   <div class="container-narrow">
-    <div class="section-number">07 · Next steps</div>
-    <span class="eyebrow">The next quarter</span>
-    <h2>Five priorities before the intern arrives.</h2>
+    <div class="section-number">08 · Next steps</div>
+    <span class="eyebrow">The next six months</span>
+    <h2>Seven priorities shaping the work ahead.</h2>
 
     <div class="step-list">
       <div class="step">
         <div class="step-num">01</div>
         <div>
-          <h3>Resolve the inventory question</h3>
-          <p>1,059 zero-page records distort any compliance math. Coordinate with Maria to decide: decommissioned, authenticated, or needing rescan.</p>
+          <h3>Resolve the inventory and data quality questions</h3>
+          <p>Reconcile the 245 inactive records (185 zero-page, 60 single-page, 36 unreachable). Investigate AEM Staging showing up in production dashboards. Validate why ten International Institute sub-sites share identical 9,677 page counts. Clean data is a prerequisite to any compliance reporting.</p>
         </div>
       </div>
       <div class="step">
         <div class="step-num">02</div>
         <div>
           <h3>Ship the AEM ARIA template fix</h3>
-          <p>Confirm production timeline with Ananta. Validate score uplift against first post-deployment scan. Identify the second wave of AEM template work (target size, contrast).</p>
+          <p>Confirm production timeline with Ananta. Validate score uplift against the first post-deployment scan. Identify the second wave of AEM template work (target size, contrast) and scope tickets for it.</p>
         </div>
       </div>
       <div class="step">
         <div class="step-num">03</div>
         <div>
           <h3>Scope the WordPress and Omeka template work</h3>
-          <p>The AEM fix only addresses one platform. WordPress (434 active sites) and Omeka (8 sites with 33,873 pages) still carry ARIA landmark issues in their themes. A separate scoping conversation with Jessica and the WP team should follow the AEM push.</p>
+          <p>The AEM fix only addresses one platform. WordPress (1,148 active sites) and Omeka (12 sites with 48,579 pages) still carry ARIA landmark issues in their themes. Separate scoping conversation with Jessica and the WP team should follow the AEM push.</p>
         </div>
       </div>
       <div class="step">
         <div class="step-num">04</div>
         <div>
-          <h3>Launch Tier 1 audits with Stacy</h3>
-          <p>Build page-sampling frames for the top 50 sites. Document one complete audit as reference methodology. Begin weekly cadence in June.</p>
+          <h3>Launch the manual testing course with Stacy</h3>
+          <p>Four-module Canvas course for editors, scoped for Stacy Shang's summer project. Pilot with Communications Administrators in August. Expand access across the college after two rounds of feedback iteration.</p>
         </div>
       </div>
       <div class="step">
         <div class="step-num">05</div>
         <div>
-          <h3>Open the Residential College conversation</h3>
-          <p>Scoped conversation with the site owner about phased remediation or migration. This single site's debt exceeds the next nine combined.</p>
+          <h3>Start the Accessibility Champions network</h3>
+          <p>Identify one editor or developer per major LSA unit to serve as a point of contact and advocate for accessibility work in their department. Monthly gatherings, shared Slack channel, recognition for contributions. The network becomes the culture's connective tissue.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">06</div>
+        <div>
+          <h3>Launch Tier 1 manual audits</h3>
+          <p>Build page-sampling frames for the top 50 sites. Document one complete audit as reference methodology. Begin weekly cadence in June. Use early findings to refine the audit template and Canvas course content.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">07</div>
+        <div>
+          <h3>Open conversations on the top-5 debt sites</h3>
+          <p>Scoped conversations with owners of Residential College, Home (lsa.umich.edu), LSA Strategic Vision, chahrour, and UMS 1580. These five sites together represent more than 2 million units of remediation debt. Each deserves a dedicated plan rather than a generic tier assignment.</p>
         </div>
       </div>
     </div>
@@ -1688,6 +1974,9 @@ const observer = new IntersectionObserver((entries) => {
       e.target.querySelectorAll('[data-count]').forEach(animateCount);
       e.target.querySelectorAll('.progress-fill[data-fill]').forEach(fill => {
         fill.style.transform = `scaleX(${parseFloat(fill.dataset.fill)/100})`;
+      });
+      e.target.querySelectorAll('.maturity-progress[data-progress]').forEach(mp => {
+        mp.style.transform = `scaleX(${parseFloat(mp.dataset.progress)/100})`;
       });
     }
   });
