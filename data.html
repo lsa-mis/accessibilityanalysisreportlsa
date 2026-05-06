@@ -618,6 +618,11 @@
     <div class="summary-cards" id="summary-cards"></div>
 
     <div class="viz-grid">
+      <div class="viz-card full" style="border-left: 4px solid var(--um-maize);">
+        <h3>Top 15 sites by Title II occurrences</h3>
+        <div class="viz-sub">A + AA + ARIA combined — the fixed-lens compliance view, regardless of active level filters. AAA and Best Practices are excluded.</div>
+        <div id="chart-top-titleii"></div>
+      </div>
       <div class="viz-card">
         <h3>WCAG level breakdown</h3>
         <div class="viz-sub" id="viz-levels-sub">Total occurrences across filtered sites</div>
@@ -1072,6 +1077,21 @@
         .map(s => ({ label: s.site_name || "(unnamed)", value: s[key] || 0, color }));
     }
 
+    // Title II compliance lens: A + AA + ARIA only (no AAA, no BP).
+    // Fixed regardless of level-filter state — this chart always shows the
+    // same compliance-relevant aggregate so it can be a stable headline.
+    function titleIIOccurrences(s) {
+      return (s.lvl_a || 0) + (s.lvl_aa || 0) + (s.lvl_aria || 0);
+    }
+
+    function topByTitleII(sites, color, n = 15) {
+      return sites
+        .map(s => ({ label: s.site_name || "(unnamed)", value: titleIIOccurrences(s), color }))
+        .filter(x => x.value > 0)
+        .sort((a, b) => b.value - a.value)
+        .slice(0, n);
+    }
+
     function topBySelected(sites, color, n = 15) {
       return sites
         .map(s => ({ label: s.site_name || "(unnamed)", value: selectedOccurrences(s), color }))
@@ -1081,6 +1101,7 @@
     }
 
     function renderCharts(filteredSites) {
+      renderBars("chart-top-titleii", topByTitleII(filteredSites, "#00274C"), "Title II occurrences (A+AA+ARIA)");
       renderDonut("chart-levels", aggregateLevels(filteredSites));
       renderDonut("chart-status", aggregateStatus(filteredSites));
       renderBars("chart-top-aa",    topByKey(filteredSites, "lvl_aa",  COLORS.AA), "AA occurrences");
