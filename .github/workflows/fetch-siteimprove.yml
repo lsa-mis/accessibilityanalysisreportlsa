@@ -36,12 +36,25 @@ jobs:
 
       - name: Commit refreshed snapshot
         run: |
+          set -e
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- data/sites.json; then
+          if git diff --quiet -- data/sites.json data/rules.json; then
             echo "No changes to commit."
             exit 0
           fi
-          git add data/sites.json
+          git add data/sites.json data/rules.json
           git commit -m "Refresh Siteimprove site snapshot"
-          git push
+          # Push with retry — if main moved while we were fetching (concurrent
+          # human commits), rebase our single data commit and try again.
+          for attempt in 1 2 3 4 5; do
+            if git push; then
+              echo "Push succeeded on attempt $attempt."
+              exit 0
+            fi
+            echo "Push attempt $attempt rejected — pulling latest main and rebasing."
+            git fetch origin main
+            git rebase origin/main || { git rebase --abort; exit 1; }
+          done
+          echo "Push failed after 5 attempts."
+          exit 1

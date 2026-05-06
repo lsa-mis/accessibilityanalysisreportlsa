@@ -1236,6 +1236,35 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
       </div>
     </div>
 
+    <!-- Best Practices callout -->
+    <div class="chart-block" style="background: linear-gradient(135deg, rgba(74,122,95,0.06), rgba(0,39,76,0.04)); border-left: 4px solid #4a7a5f; padding: 1.5rem 1.75rem;">
+      <div class="chart-block-header">
+        <h3 style="margin: 0;">Beyond WCAG: Siteimprove's Best Practices</h3>
+        <span class="chart-kicker">A separate axis</span>
+      </div>
+      <p class="chart-description" style="margin-top: 0.75rem;">
+        Siteimprove flags a "Best Practices" category alongside the WCAG conformance levels — guidance like consistent heading hierarchy, predictable focus order, descriptive link text. These don't directly affect Title II compliance (we score conformance on A + AA + ARIA), but they shape how usable the experience is for assistive-tech users and how durable the remediation work will be.
+      </p>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-top: 1.25rem;">
+        <div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-60); margin-bottom: 0.4rem;">Best Practices occurrences</div>
+          <div style="font-family: 'Fraunces', serif; font-weight: 500; font-size: 2.25rem; color: #2f5a45; line-height: 1; letter-spacing: -0.02em;" data-stat="best_practice_occurrences">—</div>
+          <div style="font-size: 0.85rem; color: var(--ink-60); margin-top: 0.4rem;">Total flagged across active sites.</div>
+        </div>
+        <div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-60); margin-bottom: 0.4rem;">Sites affected</div>
+          <div style="font-family: 'Fraunces', serif; font-weight: 500; font-size: 2.25rem; color: #2f5a45; line-height: 1; letter-spacing: -0.02em;" data-stat="sites_with_best_practices">—</div>
+          <div style="font-size: 0.85rem; color: var(--ink-60); margin-top: 0.4rem;" data-stat="best_practices_share_label">—</div>
+        </div>
+        <div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-60); margin-bottom: 0.4rem;">How to dig in</div>
+          <div style="font-size: 0.95rem; color: var(--ink-80); line-height: 1.4; margin-top: 0.2rem;">
+            Filter the <a href="accessibiltiyreport/data.html" style="color: var(--um-blue); text-decoration: underline;">live dashboard</a> by <strong>Level: BP</strong> to see which sites carry the most Best Practices findings — the worst offenders here usually overlap with the AEM template work.
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Points-to-target distribution -->
     <div class="chart-block">
       <div class="chart-block-header">
@@ -1973,6 +2002,15 @@ function computeLSAStats(data) {
     return a + aa + aria;
   };
 
+  // Best Practices (Siteimprove guidance beyond WCAG) — separate axis so it
+  // doesn't inflate the Title II conformance number but is still trackable.
+  const bestPracticeOccurrences = (s) =>
+       (s.by_level && s.by_level.BP && s.by_level.BP.occurrences)
+    || (s.other_conformance && s.other_conformance.si && s.other_conformance.si.occurrences)
+    || 0;
+  const totalBestPractices = active.reduce((acc, s) => acc + bestPracticeOccurrences(s), 0);
+  const sitesWithBestPractices = active.filter(s => bestPracticeOccurrences(s) > 0).length;
+
   const sum = (arr, key) => arr.reduce((a, s) => a + (s[key] || 0), 0);
   const totalPages = sum(active, 'pages');
   const totalIssues = active.reduce((acc, s) => acc + targetOccurrences(s), 0);
@@ -2112,6 +2150,11 @@ function computeLSAStats(data) {
     pareto_labels: paretoLabels,
     pareto_coverage: paretoCoverage,
     aem_accessibility_score: aemAccessMean !== null ? +aemAccessMean.toFixed(2) : null,
+    best_practice_occurrences: totalBestPractices,
+    sites_with_best_practices: sitesWithBestPractices,
+    best_practices_share_label: active.length
+      ? `${(sitesWithBestPractices / active.length * 100).toFixed(1)}% of active sites`
+      : '—',
     score_metric_note: meanTargetPct !== null
       ? `Mean ${meanTargetPct.toFixed(2)} · median ${medianTargetPct.toFixed(2)} · min ${minTargetPct.toFixed(2)}`
       : null,

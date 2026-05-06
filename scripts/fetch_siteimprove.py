@@ -33,7 +33,7 @@ RETRY_BACKOFF_SECONDS = 5
 MAX_WORKERS = int(os.environ.get("SITEIMPROVE_MAX_WORKERS", "8"))
 FLUSH_EVERY_SECONDS = int(os.environ.get("SITEIMPROVE_FLUSH_SECONDS", "10"))
 
-LEVEL_KEYS = ("A", "AA", "AAA", "ARIA")
+LEVEL_KEYS = ("A", "AA", "AAA", "ARIA", "BP")
 
 # Lifecycle subdomain heuristics — first match wins.
 LIFECYCLE_PATTERNS = [
@@ -188,6 +188,57 @@ def fetch_site_pdfs(session: requests.Session, site_id: int) -> list[dict[str, A
         return []
 
 
+# Meta-tag generator strings → platform tag.
+META_GENERATOR_PATTERNS = [
+    ("wordpress",   re.compile(r"wordpress",      re.IGNORECASE)),
+    ("drupal",      re.compile(r"drupal",         re.IGNORECASE)),
+    ("aem",         re.compile(r"adobe[ -]?experience|aem", re.IGNORECASE)),
+    ("squarespace", re.compile(r"squarespace",    re.IGNORECASE)),
+    ("wix",         re.compile(r"\bwix\b",        re.IGNORECASE)),
+    ("hugo",        re.compile(r"\bhugo\b",       re.IGNORECASE)),
+    ("jekyll",      re.compile(r"\bjekyll\b",     re.IGNORECASE)),
+    ("ghost",       re.compile(r"\bghost\b",      re.IGNORECASE)),
+    ("joomla",      re.compile(r"\bjoomla\b",     re.IGNORECASE)),
+    ("omeka",       re.compile(r"\bomeka\b",      re.IGNORECASE)),
+]
+
+
+def fetch_site_platform_from_meta(session: requests.Session, site_id: int) -> str | None:
+    """Probe the meta-tags inventory for a 'generator' meta and parse the
+    platform out of its contents. Returns a lowercase platform key or None.
+
+    Requires the quality_assurance module on the site (which most LSA sites
+    have). Silently no-ops if the call fails or no generator is found."""
+    try:
+        # Cap at one page — generator is typically among the most common metas.
+        meta_index_url = f"{API_ROOT}/sites/{site_id}/quality_assurance/inventory/meta_tags?page_size=200"
+        index = get(session, meta_index_url)
+    except requests.HTTPError:
+        return None
+    items = index.get("items") or []
+    generator_id = None
+    for item in items:
+        name = (item.get("meta_name") or item.get("name") or "").lower()
+        if name == "generator":
+            generator_id = item.get("meta_name_id") or item.get("id")
+            break
+    if generator_id is None:
+        return None
+    try:
+        contents = get(
+            session,
+            f"{API_ROOT}/sites/{site_id}/quality_assurance/inventory/meta_tags/{generator_id}/contents?page_size=20",
+        )
+    except requests.HTTPError:
+        return None
+    for entry in (contents.get("items") or []):
+        text = entry.get("meta_content") or entry.get("content") or entry.get("value") or ""
+        for tag, pat in META_GENERATOR_PATTERNS:
+            if pat.search(text):
+                return tag
+    return None
+
+
 def summarize_pdfs(pdfs: list[dict[str, Any]]) -> dict[str, Any]:
     """Pull useful counts out of the PDF list — defensive about field names."""
     pdf_count = len(pdfs)
@@ -226,12 +277,18 @@ def coerce_float(value: Any) -> float | None:
 
 
 def normalize_level(value: Any) -> str | None:
-    """Return 'A', 'AA', 'AAA', or 'ARIA' — strict exact match so 'aria'
-    is preserved as its own bucket rather than mis-falling-into AA."""
+    """Return 'A', 'AA', 'AAA', 'ARIA', or 'BP' (Best Practices) for a
+    Siteimprove conformance value. Strict matching so 'aria' isn't
+    bucketed as AA, and 'si' (Siteimprove's own Best Practices guidance)
+    is preserved as its own bucket."""
     if not value:
         return None
     text = str(value).strip().upper()
-    return text if text in LEVEL_KEYS else None
+    if text in LEVEL_KEYS:
+        return text
+    if text in ("SI", "BEST", "BEST_PRACTICE", "BEST-PRACTICE", "BEST PRACTICE", "BEST_PRACTICES", "BP"):
+        return "BP"
+    return None
 
 
 def aggregate_site_issues(issues: list[dict[str, Any]]) -> dict[str, Any]:
@@ -393,7 +450,8 @@ def main() -> None:
     runnable_sites = [s for s in sites if s.get("id") is not None]
 
     def fetch_one(site: dict[str, Any]) -> tuple[
-        dict[str, Any], dict[str, Any], list[dict[str, Any]], list[str], dict[str, Any], dict[str, Any]
+        dict[str, Any], dict[str, Any], list[dict[str, Any]], list[str],
+        dict[str, Any], dict[str, Any], str | None
     ]:
         site_id = site["id"]
         target = fetch_site_target(session, site_id)
@@ -401,7 +459,8 @@ def main() -> None:
         groups = fetch_site_groups(session, site_id)
         detail = fetch_site_detail(session, site_id)
         pdfs = summarize_pdfs(fetch_site_pdfs(session, site_id))
-        return site, target, issues, groups, detail, pdfs
+        platform = fetch_site_platform_from_meta(session, site_id)
+        return site, target, issues, groups, detail, pdfs, platform
 
     site_rows: list[dict[str, Any]] = []
     per_site_issues: list[tuple[dict[str, Any], list[dict[str, Any]]]] = []
@@ -431,11 +490,18 @@ def main() -> None:
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = {executor.submit(fetch_one, s): s for s in runnable_sites}
         for index, future in enumerate(as_completed(futures), start=1):
-            site, target, issues, groups, detail, pdfs = future.result()
+            site, target, issues, groups, detail, pdfs, platform = future.result()
             per_site_issues.append((site, issues))
             rollup = aggregate_site_issues(issues)
             row = shape_site_row(site, target, rollup, groups)
             row.update(pdfs)
+            # Promote a meta-generator-derived platform tag (e.g. wordpress,
+            # drupal, omeka) when name/URL heuristics didn't already pick one.
+            if platform:
+                meta_tag = f"platform:{platform}"
+                if meta_tag not in (row.get("tags") or []):
+                    row.setdefault("tags", []).append(meta_tag)
+                row["platform_source"] = "meta_generator"
             # Surface any extra metadata from /sites/{id} (only fields not
             # already present on the listing row), so we can audit later.
             extras = {
