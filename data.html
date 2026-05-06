@@ -66,7 +66,26 @@
       border: 1px solid var(--rule);
       border-radius: 6px;
       padding: 1rem 1.25rem;
+      position: relative;
+      overflow: hidden;
     }
+    /* Category accent — solid color band on the card top edge so the eye
+       can group cards into Sites / Score / Pages / Occurrences / PDFs /
+       Misspellings / Time at a glance. */
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--cat-color, transparent);
+    }
+    .card.cat-sites { --cat-color: #00274C; }
+    .card.cat-score { --cat-color: #4a7ca8; }
+    .card.cat-pages { --cat-color: #b8855a; }
+    .card.cat-occ   { --cat-color: #7a4a8a; }
+    .card.cat-pdf   { --cat-color: #5e1616; }
+    .card.cat-spell { --cat-color: #6b3a00; }
+    .card.cat-time  { --cat-color: #3d434a; }
     .card .label {
       font-size: 0.75rem;
       text-transform: uppercase;
@@ -80,6 +99,10 @@
       font-variant-numeric: tabular-nums;
       color: var(--um-blue);
     }
+    .card.cat-occ   .value { color: #5e3a73; }
+    .card.cat-pdf   .value { color: #5e1616; }
+    .card.cat-spell .value { color: #6b3a00; }
+    .card.cat-pages .value { color: #7a4a2a; }
     .card.danger .value { color: var(--danger); }
     .filters {
       background: var(--paper-light);
@@ -342,6 +365,25 @@
     th:hover { background: #e2eaf2; }
     th[aria-sort="ascending"]::after { content: " \25B2"; font-size: 0.7em; }
     th[aria-sort="descending"]::after { content: " \25BC"; font-size: 0.7em; }
+    /* Column-group tints — same palette as the summary card accents so the
+       eye links a group of cards to its column block in the table. */
+    th.col-score, td.col-score { background-color: rgba(74, 124, 168, 0.06); }
+    th.col-pages, td.col-pages { background-color: rgba(184, 133, 90, 0.06); }
+    th.col-occ,   td.col-occ   { background-color: rgba(122, 74, 138, 0.07); }
+    th.col-pdf,   td.col-pdf   { background-color: rgba(94, 22, 22, 0.06); }
+    th.col-spell, td.col-spell { background-color: rgba(107, 58, 0, 0.06); }
+    /* Subtle vertical divider where one group ends and the next begins. */
+    th.col-divider, td.col-divider { box-shadow: inset 1px 0 0 var(--rule); }
+    th.col-score { background-color: #e2ecf5; }
+    th.col-pages { background-color: #efe3d3; }
+    th.col-occ   { background-color: #ebe1ee; }
+    th.col-pdf   { background-color: #efd6d6; }
+    th.col-spell { background-color: #ebd7c0; }
+    tbody tr:hover td.col-score { background-color: rgba(74, 124, 168, 0.12); }
+    tbody tr:hover td.col-pages { background-color: rgba(184, 133, 90, 0.12); }
+    tbody tr:hover td.col-occ   { background-color: rgba(122, 74, 138, 0.13); }
+    tbody tr:hover td.col-pdf   { background-color: rgba(94, 22, 22, 0.12); }
+    tbody tr:hover td.col-spell { background-color: rgba(107, 58, 0, 0.12); }
     td.num { text-align: right; font-variant-numeric: tabular-nums; }
     td.site-cell { min-width: 220px; }
     td.site-cell .url {
@@ -516,20 +558,20 @@
         <thead>
           <tr>
             <th data-key="site_name" data-type="string" aria-sort="ascending">Site</th>
-            <th data-key="score" data-type="number" title="Accessibility DCI score (0–100)">Score</th>
-            <th data-key="target_percentage" data-type="number" title="Site Target % — progress toward the configured target (TGS)">Target %</th>
-            <th data-key="pages" data-type="number" title="Site page count from Siteimprove">Pages</th>
-            <th data-key="pages_with_issues" data-type="number" title="Max pages affected by any single accessibility issue">Pages w/ issues</th>
-            <th data-key="issue_types" data-type="number" title="Distinct issue types found on the site">Types</th>
-            <th data-key="lvl_a" data-type="number" title="WCAG Level A — occurrences">A</th>
-            <th data-key="lvl_aa" data-type="number" title="WCAG Level AA — occurrences (Title II target)">AA</th>
-            <th data-key="lvl_aaa" data-type="number" title="WCAG Level AAA — occurrences">AAA</th>
-            <th data-key="lvl_aria" data-type="number" title="WAI-ARIA related occurrences">ARIA</th>
-            <th data-key="lvl_bp" data-type="number" title="Siteimprove Best Practices occurrences">BP</th>
-            <th data-key="issues" data-type="number" id="th-total">Total occurrences</th>
-            <th data-key="pdf_count" data-type="number" title="PDFs flagged by Siteimprove for accessibility validation">PDFs</th>
-            <th data-key="pdfs_with_issues" data-type="number" title="PDFs with at least one accessibility issue">PDFs w/ issues</th>
-            <th data-key="misspellings" data-type="number" title="Confirmed misspellings flagged by Siteimprove QA">Misspellings</th>
+            <th data-key="score" data-type="number" class="col-score" title="Accessibility DCI score (0–100)">Score</th>
+            <th data-key="target_percentage" data-type="number" class="col-score" title="Site Target % — progress toward the configured target (TGS)">Target %</th>
+            <th data-key="pages" data-type="number" class="col-pages" title="Site page count from Siteimprove">Pages</th>
+            <th data-key="pages_with_issues" data-type="number" class="col-pages" title="Max pages affected by any single accessibility issue">Pages w/ issues</th>
+            <th data-key="issue_types" data-type="number" class="col-occ" title="Distinct issue types found on the site">Types</th>
+            <th data-key="lvl_a" data-type="number" class="col-occ" title="WCAG Level A — occurrences">A</th>
+            <th data-key="lvl_aa" data-type="number" class="col-occ" title="WCAG Level AA — occurrences (Title II target)">AA</th>
+            <th data-key="lvl_aaa" data-type="number" class="col-occ" title="WCAG Level AAA — occurrences">AAA</th>
+            <th data-key="lvl_aria" data-type="number" class="col-occ" title="WAI-ARIA related occurrences">ARIA</th>
+            <th data-key="lvl_bp" data-type="number" class="col-occ" title="Siteimprove Best Practices occurrences">BP</th>
+            <th data-key="issues" data-type="number" id="th-total" class="col-occ">Total occurrences</th>
+            <th data-key="pdf_count" data-type="number" class="col-pdf" title="PDFs flagged by Siteimprove for accessibility validation">PDFs</th>
+            <th data-key="pdfs_with_issues" data-type="number" class="col-pdf" title="PDFs with at least one accessibility issue">PDFs w/ issues</th>
+            <th data-key="misspellings" data-type="number" class="col-spell" title="Confirmed misspellings flagged by Siteimprove QA">Misspellings</th>
             <th data-key="est_hours" data-type="number" title="Estimated manual-test hours = pages × minutes/page">Est. hrs</th>
             <th data-key="status" data-type="string">Status</th>
           </tr>
@@ -1005,23 +1047,23 @@
       const sitesWithMisspellings = filteredSites.filter(s => (s.misspellings || 0) > 0).length;
 
       const cards = [
-        { label: "Sites (filtered)",     value: total.toLocaleString() },
-        { label: "Sites with data",      value: ok.toLocaleString() },
-        { label: "Sites w/ errors",      value: errors.toLocaleString(), danger: errors > 0 },
-        { label: "Avg target %",         value: avgTarget !== null ? avgTarget.toFixed(1) + "%" : "—" },
-        { label: "Median target %",      value: medTarget !== null ? medTarget.toFixed(1) + "%" : "—" },
-        { label: "Total pages",          value: totalPages.toLocaleString() },
-        { label: "Total A occurrences",  value: totalA.toLocaleString() },
-        { label: "Total AA occurrences", value: totalAA.toLocaleString() },
-        { label: lensLabel,              value: lensTotal.toLocaleString() },
-        { label: "Total PDFs",           value: totalPdfs.toLocaleString() },
-        { label: "PDFs w/ issues",       value: totalPdfsWithIssues.toLocaleString(), danger: totalPdfsWithIssues > 0 },
-        { label: "Total misspellings",   value: totalMisspellings.toLocaleString() },
-        { label: "Sites w/ misspellings", value: sitesWithMisspellings.toLocaleString() },
-        { label: `Manual test (${manualMinutesPerPage}min/pg)`, value: fmtHours(totalTestHours) },
+        { cat: "sites", label: "Sites (filtered)",     value: total.toLocaleString() },
+        { cat: "sites", label: "Sites with data",      value: ok.toLocaleString() },
+        { cat: "sites", label: "Sites w/ errors",      value: errors.toLocaleString(), danger: errors > 0 },
+        { cat: "score", label: "Avg target %",         value: avgTarget !== null ? avgTarget.toFixed(1) + "%" : "—" },
+        { cat: "score", label: "Median target %",      value: medTarget !== null ? medTarget.toFixed(1) + "%" : "—" },
+        { cat: "pages", label: "Total pages",          value: totalPages.toLocaleString() },
+        { cat: "occ",   label: "Total A occurrences",  value: totalA.toLocaleString() },
+        { cat: "occ",   label: "Total AA occurrences", value: totalAA.toLocaleString() },
+        { cat: "occ",   label: lensLabel,              value: lensTotal.toLocaleString() },
+        { cat: "pdf",   label: "Total PDFs",           value: totalPdfs.toLocaleString() },
+        { cat: "pdf",   label: "PDFs w/ issues",       value: totalPdfsWithIssues.toLocaleString(), danger: totalPdfsWithIssues > 0 },
+        { cat: "spell", label: "Total misspellings",   value: totalMisspellings.toLocaleString() },
+        { cat: "spell", label: "Sites w/ misspellings", value: sitesWithMisspellings.toLocaleString() },
+        { cat: "time",  label: `Manual test (${manualMinutesPerPage}min/pg)`, value: fmtHours(totalTestHours) },
       ];
       document.getElementById("summary-cards").innerHTML = cards.map((c) => `
-        <div class="card${c.danger ? " danger" : ""}">
+        <div class="card cat-${escapeHtml(c.cat || "sites")}${c.danger ? " danger" : ""}">
           <div class="label">${escapeHtml(c.label)}</div>
           <div class="value">${escapeHtml(c.value)}</div>
         </div>`).join("");
@@ -1081,20 +1123,20 @@
               <span class="url">${urlCell}</span>
               ${tagsHtml ? `<div style="margin-top:3px;">${tagsHtml}</div>` : ""}
             </td>
-            <td class="num">${fmtScore(s.score)}</td>
-            <td class="num">${fmtScore(s.target_percentage)}</td>
-            <td class="num">${fmtNumber(s.pages)}</td>
-            <td class="num">${fmtNumber(s.pages_with_issues)}</td>
-            <td class="num">${fmtNumber(s.issue_types)}</td>
-            <td class="num">${fmtNumber(s.lvl_a)}</td>
-            <td class="num">${fmtNumber(s.lvl_aa)}</td>
-            <td class="num">${fmtNumber(s.lvl_aaa)}</td>
-            <td class="num">${fmtNumber(s.lvl_aria)}</td>
-            <td class="num">${fmtNumber(s.lvl_bp)}</td>
-            <td class="num">${fmtNumber(selectedOccurrences(s))}</td>
-            <td class="num">${fmtNumber(s.pdf_count)}</td>
-            <td class="num">${fmtNumber(s.pdfs_with_issues)}</td>
-            <td class="num">${fmtNumber(s.misspellings)}</td>
+            <td class="num col-score">${fmtScore(s.score)}</td>
+            <td class="num col-score">${fmtScore(s.target_percentage)}</td>
+            <td class="num col-pages">${fmtNumber(s.pages)}</td>
+            <td class="num col-pages">${fmtNumber(s.pages_with_issues)}</td>
+            <td class="num col-occ">${fmtNumber(s.issue_types)}</td>
+            <td class="num col-occ">${fmtNumber(s.lvl_a)}</td>
+            <td class="num col-occ">${fmtNumber(s.lvl_aa)}</td>
+            <td class="num col-occ">${fmtNumber(s.lvl_aaa)}</td>
+            <td class="num col-occ">${fmtNumber(s.lvl_aria)}</td>
+            <td class="num col-occ">${fmtNumber(s.lvl_bp)}</td>
+            <td class="num col-occ">${fmtNumber(selectedOccurrences(s))}</td>
+            <td class="num col-pdf">${fmtNumber(s.pdf_count)}</td>
+            <td class="num col-pdf">${fmtNumber(s.pdfs_with_issues)}</td>
+            <td class="num col-spell">${fmtNumber(s.misspellings)}</td>
             <td class="num">${fmtHours(estTestHours(s))}</td>
             <td>${statusBadge(s.status)}</td>
           </tr>`;
