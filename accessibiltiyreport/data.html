@@ -453,12 +453,13 @@
             <th data-key="issues" data-type="number" id="th-total">Total occurrences</th>
             <th data-key="pdf_count" data-type="number" title="PDFs flagged by Siteimprove for accessibility validation">PDFs</th>
             <th data-key="pdfs_with_issues" data-type="number" title="PDFs with at least one accessibility issue">PDFs w/ issues</th>
+            <th data-key="misspellings" data-type="number" title="Confirmed misspellings flagged by Siteimprove QA">Misspellings</th>
             <th data-key="est_hours" data-type="number" title="Estimated manual-test hours = pages × minutes/page">Est. hrs</th>
             <th data-key="status" data-type="string">Status</th>
           </tr>
         </thead>
         <tbody id="sites-body">
-          <tr><td colspan="16" class="empty">Loading…</td></tr>
+          <tr><td colspan="17" class="empty">Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -924,6 +925,8 @@
       const totalTestHours = filteredSites.reduce((acc, s) => acc + estTestHours(s), 0);
       const totalPdfs = filteredSites.reduce((acc, s) => acc + (s.pdf_count || 0), 0);
       const totalPdfsWithIssues = filteredSites.reduce((acc, s) => acc + (s.pdfs_with_issues || 0), 0);
+      const totalMisspellings = filteredSites.reduce((acc, s) => acc + (s.misspellings || 0), 0);
+      const sitesWithMisspellings = filteredSites.filter(s => (s.misspellings || 0) > 0).length;
 
       const cards = [
         { label: "Sites (filtered)",     value: total.toLocaleString() },
@@ -937,6 +940,8 @@
         { label: lensLabel,              value: lensTotal.toLocaleString() },
         { label: "Total PDFs",           value: totalPdfs.toLocaleString() },
         { label: "PDFs w/ issues",       value: totalPdfsWithIssues.toLocaleString(), danger: totalPdfsWithIssues > 0 },
+        { label: "Total misspellings",   value: totalMisspellings.toLocaleString() },
+        { label: "Sites w/ misspellings", value: sitesWithMisspellings.toLocaleString() },
         { label: `Manual test (${manualMinutesPerPage}min/pg)`, value: fmtHours(totalTestHours) },
       ];
       document.getElementById("summary-cards").innerHTML = cards.map((c) => `
@@ -980,7 +985,7 @@
         `${filteredSites.length.toLocaleString()} of ${state.sites.length.toLocaleString()} sites shown`;
 
       if (sorted.length === 0) {
-        body.innerHTML = '<tr><td colspan="16" class="empty">No sites match current filters.</td></tr>';
+        body.innerHTML = '<tr><td colspan="17" class="empty">No sites match current filters.</td></tr>';
         return;
       }
 
@@ -1013,6 +1018,7 @@
             <td class="num">${fmtNumber(selectedOccurrences(s))}</td>
             <td class="num">${fmtNumber(s.pdf_count)}</td>
             <td class="num">${fmtNumber(s.pdfs_with_issues)}</td>
+            <td class="num">${fmtNumber(s.misspellings)}</td>
             <td class="num">${fmtHours(estTestHours(s))}</td>
             <td>${statusBadge(s.status)}</td>
           </tr>`;
@@ -1052,7 +1058,7 @@
         renderAll();
       } catch (err) {
         document.getElementById("sites-body").innerHTML =
-          `<tr><td colspan="16" class="empty">Failed to load data: ${escapeHtml(err.message)}</td></tr>`;
+          `<tr><td colspan="17" class="empty">Failed to load data: ${escapeHtml(err.message)}</td></tr>`;
       }
     }
 

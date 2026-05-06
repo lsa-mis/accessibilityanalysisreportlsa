@@ -203,6 +203,30 @@ META_GENERATOR_PATTERNS = [
 ]
 
 
+def fetch_misspelling_counts(session: requests.Session, site_id: int) -> dict[str, int | None]:
+    """Pull misspelling totals from the QA spelling module. Returns total
+    confirmed misspellings, potential misspellings, and pages with
+    misspellings. Each value is None if that module isn't licensed for
+    the site or the call fails."""
+    counts: dict[str, int | None] = {
+        "misspellings": None,
+        "potential_misspellings": None,
+        "misspelling_pages": None,
+    }
+    endpoints = (
+        ("misspellings",            "/quality_assurance/spelling/misspellings"),
+        ("potential_misspellings",  "/quality_assurance/spelling/potential_misspellings"),
+        ("misspelling_pages",       "/quality_assurance/spelling/pages"),
+    )
+    for key, path in endpoints:
+        try:
+            payload = get(session, f"{API_ROOT}/sites/{site_id}{path}?page_size=1")
+            counts[key] = coerce_int(payload.get("total_items"))
+        except requests.HTTPError:
+            pass
+    return counts
+
+
 def fetch_site_platform_from_meta(session: requests.Session, site_id: int) -> str | None:
     """Probe the meta-tags inventory for a 'generator' meta and parse the
     platform out of its contents. Returns a lowercase platform key or None.
@@ -451,7 +475,7 @@ def main() -> None:
 
     def fetch_one(site: dict[str, Any]) -> tuple[
         dict[str, Any], dict[str, Any], list[dict[str, Any]], list[str],
-        dict[str, Any], dict[str, Any], str | None
+        dict[str, Any], dict[str, Any], str | None, dict[str, int | None]
     ]:
         site_id = site["id"]
         target = fetch_site_target(session, site_id)
@@ -460,7 +484,8 @@ def main() -> None:
         detail = fetch_site_detail(session, site_id)
         pdfs = summarize_pdfs(fetch_site_pdfs(session, site_id))
         platform = fetch_site_platform_from_meta(session, site_id)
-        return site, target, issues, groups, detail, pdfs, platform
+        spelling = fetch_misspelling_counts(session, site_id)
+        return site, target, issues, groups, detail, pdfs, platform, spelling
 
     site_rows: list[dict[str, Any]] = []
     per_site_issues: list[tuple[dict[str, Any], list[dict[str, Any]]]] = []
@@ -490,11 +515,12 @@ def main() -> None:
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = {executor.submit(fetch_one, s): s for s in runnable_sites}
         for index, future in enumerate(as_completed(futures), start=1):
-            site, target, issues, groups, detail, pdfs, platform = future.result()
+            site, target, issues, groups, detail, pdfs, platform, spelling = future.result()
             per_site_issues.append((site, issues))
             rollup = aggregate_site_issues(issues)
             row = shape_site_row(site, target, rollup, groups)
             row.update(pdfs)
+            row.update(spelling)
             # Promote a meta-generator-derived platform tag (e.g. wordpress,
             # drupal, omeka) when name/URL heuristics didn't already pick one.
             if platform:
