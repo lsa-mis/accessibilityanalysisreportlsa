@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Fetch site-level accessibility data from the Siteimprove API and write
-two JSON snapshots used by accessibiltiyreport/data.html:
+two JSON snapshots consumed by index.html and data.html:
 
   data/sites.json — per-site overview with scores, target %, A/AA/AAA breakdowns
   data/rules.json — cross-site rollup of failing accessibility rules

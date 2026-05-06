@@ -4,9 +4,9 @@ Static site published via GitHub Pages, with a live Siteimprove dashboard refres
 
 ## Layout
 
-- `index.html` — narrative accessibility report (manually authored)
-- `accessibiltiyreport/` — supplemental report pages, including `data.html` (the live dashboard)
-- `data/sites.json` — snapshot written by the fetch script; consumed by `data.html`
+- `index.html` — narrative accessibility report (manually authored, with live data wiring)
+- `data.html` — live dashboard (searchable, filterable per-site view)
+- `data/sites.json`, `data/rules.json` — snapshots written by the fetch script; consumed by both pages
 - `scripts/fetch_siteimprove.py` — pulls site list and per-site accessibility summary from the Siteimprove API
 - `.github/workflows/fetch-siteimprove.yml` — runs the fetch on a schedule and commits any changes
 - `.github/workflows/pages.yml` — deploys the site to GitHub Pages on every push to `main`
@@ -45,7 +45,7 @@ Use this to verify credentials and inspect the data shape before relying on the 
    python3 -m http.server 8000
    ```
 
-   Then open <http://localhost:8000/accessibiltiyreport/data.html>.
+   Then open <http://localhost:8000/data.html>.
 
 ## Configuring the scheduled run
 
