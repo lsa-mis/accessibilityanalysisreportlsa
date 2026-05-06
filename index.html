@@ -1103,7 +1103,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
         <div class="timeline-date">April · 2026 <span class="timeline-badge">We are here</span></div>
         <div class="timeline-content">
           <h3>The pivot to sustained practice</h3>
-          <p>Title II compliance deadline four days away. AEM template-level ARIA fix staged for production. Only 12 of 1,373 active sites meet their accessibility target, though 268 more sit within 1.5 points. Portfolio target score averages 95.96. AEM sites trail at 91.17. Active engagement with stakeholders replaces setup work.</p>
+          <p>Title II compliance deadline four days away. AEM template-level ARIA fix staged for production. Only <span data-stat="sites_at_target">12</span> of <span data-stat="active_sites">1,373</span> active sites meet their accessibility target, though <span data-stat="sites_near_target">268</span> more sit within 1.5 points. Portfolio target score averages <span data-stat="portfolio_target_score">95.96</span>. AEM sites trail at <span data-stat="aem_mean_target_score">91.17</span>. Active engagement with stakeholders replaces setup work.</p>
         </div>
       </div>
       <div class="timeline">
@@ -1167,7 +1167,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
     <!-- A transparency note at the top of this section -->
     <div class="callout warning" style="margin-bottom: 3rem;">
       <div class="callout-label">A note on "active sites"</div>
-      <p style="margin: 0;"><strong>An "active site" in this report is a Siteimprove record with at least 2 scanned pages.</strong> Single-page records are treated as placeholders or landing-only sites. Zero-page records include empty, authenticated, or unreachable sites. This definition gives us 1,373 active sites carrying 463,926 pages. Of those, 12 currently hold "Target met" status; the remaining 1,361 are working toward it, with 268 more within 1.5 points of target.</p>
+      <p style="margin: 0;"><strong>An "active site" in this report is a Siteimprove record with at least one crawled page.</strong> Zero-page records include empty, authenticated, or unreachable sites — they are excluded from every aggregate. This definition gives us <span data-stat="active_sites">1,373</span> active sites carrying <span data-stat="pages_monitored">463,926</span> pages. Of those, <span data-stat="sites_at_target">12</span> currently hold "Target met" status; the remaining <span data-stat="sites_below_target">1,361</span> are working toward it, with <span data-stat="sites_near_target">268</span> more within 1.5 points of target.</p>
     </div>
 
     <!-- Portfolio composition -->
@@ -1237,7 +1237,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
     <!-- Score distribution with toggle -->
     <div class="chart-block">
       <div class="chart-block-header">
-        <h3>Score distribution across 1,372 active sites</h3>
+        <h3>Score distribution across <span data-stat="active_sites">1,372</span> active sites</h3>
         <span class="chart-kicker">Figure 3.3</span>
       </div>
       <p class="chart-description">The target score and accessibility score tell different stories about the same portfolio. Target score reflects compliance conformance; accessibility score is more sensitive to best-practice deductions. Toggle to compare.</p>
@@ -1247,7 +1247,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
           <button class="filter-btn" data-score="accessibility" role="radio" aria-checked="false">Accessibility score</button>
         </div>
         <div style="font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; color: var(--ink-60); letter-spacing: 0.06em; text-transform: uppercase;">
-          <span id="scoreMetricNote">Mean 95.96 · median 96.55 · min 75.73</span>
+          <span id="scoreMetricNote" data-stat="score_metric_note">Mean 95.96 · median 96.55 · min 75.73</span>
         </div>
       </div>
       <div class="chart-wrapper">
@@ -1295,7 +1295,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
     <div class="callout bold" style="margin-top: 3rem;">
       <div class="callout-label">Four signals worth reading</div>
       <h3>What the data is telling us</h3>
-      <p style="margin-top: 1rem;"><strong>One.</strong> The compliance picture has real room to grow. Only 12 of 1,373 active sites fully meet target. But 268 more sit within 1.5 points of target, which is realistic editor-level remediation scope.</p>
+      <p style="margin-top: 1rem;"><strong>One.</strong> The compliance picture has real room to grow. Only <span data-stat="sites_at_target">12</span> of <span data-stat="active_sites">1,373</span> active sites fully meet target. But <span data-stat="sites_near_target">268</span> more sit within 1.5 points of target, which is realistic editor-level remediation scope.</p>
       <p><strong>Two.</strong> The operational picture is concentrated on AEM and a handful of large sites. AEM (91.17) and Omeka (91.41) trail WordPress (96.60) substantially. The 29 largest sites (each 2000+ pages) hold 75% of all pages.</p>
       <p><strong>Three.</strong> The inventory needs cleanup before compliance reporting. AEM Staging should be excluded from user-facing metrics. The International Institute sub-sites show duplicate page counts suggesting scan configuration needs review. <em>sites.lsa.umich.edu</em> is a parent aggregator that may double-count.</p>
       <p style="margin-bottom: 0;"><strong>Four.</strong> The sustainability picture depends on systems, not heroics. A single AEM template change cascades across 184,077 pages. Editor culture, developer tooling, and governance are the long-term levers.</p>
@@ -1337,7 +1337,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
         <h3>Projected target score uplift by platform</h3>
         <span class="chart-kicker">Figure 4.1</span>
       </div>
-      <p class="chart-description">AEM sees the gain. Other platforms are unchanged until their own template work is done. Portfolio average rises modestly because AEM represents 136 of 1,373 active sites.</p>
+      <p class="chart-description">AEM sees the gain. Other platforms are unchanged until their own template work is done. Portfolio average rises modestly because AEM represents <span data-stat="aem_sites">136</span> of <span data-stat="active_sites">1,373</span> active sites.</p>
       <div class="chart-wrapper">
         <canvas id="upliftChart" aria-label="Grouped bar chart: current versus projected target scores by platform"></canvas>
       </div>
@@ -1976,6 +1976,8 @@ function computeLSAStats(data) {
         : (sortedTargets[(sortedTargets.length >> 1) - 1] +
            sortedTargets[sortedTargets.length >> 1]) / 2)
     : null;
+  const minTargetPct = sortedTargets.length ? sortedTargets[0] : null;
+  const maxTargetPct = sortedTargets.length ? sortedTargets[sortedTargets.length - 1] : null;
 
   const sitesAtTarget = active.filter(s =>
     typeof s.target_percentage === 'number' && s.target_percentage >= 100
@@ -2034,6 +2036,11 @@ function computeLSAStats(data) {
     distinct_issue_types: totalIssueTypes,
     portfolio_target_score: meanTargetPct !== null ? +meanTargetPct.toFixed(2) : null,
     portfolio_target_score_median: medianTargetPct !== null ? +medianTargetPct.toFixed(2) : null,
+    portfolio_target_score_min: minTargetPct !== null ? +minTargetPct.toFixed(2) : null,
+    portfolio_target_score_max: maxTargetPct !== null ? +maxTargetPct.toFixed(2) : null,
+    score_metric_note: meanTargetPct !== null
+      ? `Mean ${meanTargetPct.toFixed(2)} · median ${medianTargetPct.toFixed(2)} · min ${minTargetPct.toFixed(2)}`
+      : null,
     aem_sites: aem.length,
     aem_mean_target_score: aemMeanTarget !== null ? +aemMeanTarget.toFixed(2) : null,
     manual_test_budget_hours: manualBudgetHours,
