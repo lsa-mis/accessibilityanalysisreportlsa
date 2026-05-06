@@ -995,6 +995,8 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
       <span>LSA Technology Services</span>
       <span class="hero-meta-divider" aria-hidden="true"></span>
       <span>April 20, 2026</span>
+      <span class="hero-meta-divider" aria-hidden="true"></span>
+      <span>Data refreshed: <strong data-stat="generated_at_label">—</strong></span>
     </div>
     <h1>Progress, not <em>perfection</em>, across a portfolio of 1,618 sites.</h1>
     <p class="hero-lede">An interactive look at where LSA's web accessibility program started, where it stands four days before the Title II deadline, and the work still ahead.</p>
@@ -1006,7 +1008,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
           <span class="tag">Current</span>
           Portfolio target score
         </div>
-        <div class="hero-metric-value"><span data-count="95.96" data-decimals="2">0.00</span></div>
+        <div class="hero-metric-value"><span data-stat="portfolio_target_score" data-count="95.96" data-decimals="2">0.00</span></div>
         <div class="hero-metric-sub">Active-site average on the compliance-oriented scoring metric. AEM at 91.17, WordPress at 96.60, Omeka at 91.41.</div>
       </div>
 
@@ -1016,7 +1018,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
           <span class="tag">Current</span>
           Sites at target
         </div>
-        <div class="hero-metric-value"><span data-count="12">0</span><span class="unit"> of 1,373</span></div>
+        <div class="hero-metric-value"><span data-stat="sites_at_target" data-count="12">0</span><span class="unit"> of <span data-stat="active_sites">1,373</span></span></div>
         <div class="hero-metric-sub">Active sites with "Target met" status in Siteimprove. Close to target: 268 more within 1.5 points.</div>
       </div>
 
@@ -1025,8 +1027,8 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
           <span class="tag">Current</span>
           Pages monitored
         </div>
-        <div class="hero-metric-value"><span data-count="463926">0</span></div>
-        <div class="hero-metric-sub">Pages covered by automated scanning across 1,373 active sites.</div>
+        <div class="hero-metric-value"><span data-stat="pages_monitored" data-count="463926">0</span></div>
+        <div class="hero-metric-sub">Pages covered by automated scanning across <span data-stat="active_sites">1,373</span> active sites.</div>
       </div>
 
       <!-- Bottom row -->
@@ -1035,7 +1037,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
           <span class="tag">Ahead</span>
           Automated issues
         </div>
-        <div class="hero-metric-value"><span data-count="34.8" data-decimals="1">0</span><span class="unit">M</span></div>
+        <div class="hero-metric-value"><span data-stat="automated_issues_millions" data-count="34.8" data-decimals="1">0</span><span class="unit">M</span></div>
         <div class="hero-metric-sub">Occurrences flagged. AEM template fix resolves roughly half.</div>
       </div>
 
@@ -1044,7 +1046,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
           <span class="tag">Ahead</span>
           Est. manual findings
         </div>
-        <div class="hero-metric-value">~<span data-count="25">0</span><span class="unit">K</span></div>
+        <div class="hero-metric-value">~<span data-stat="estimated_manual_findings_thousands" data-count="25">0</span><span class="unit">K</span></div>
         <div class="hero-metric-sub">Distinct remediation tasks projected across the portfolio. Range 18K to 35K based on audit literature.</div>
       </div>
     </div>
@@ -1058,7 +1060,7 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
           First-pass manual testing budget
         </div>
         <div style="font-family: 'Fraunces', serif; font-weight: 500; font-size: clamp(2.25rem, 4vw, 3.25rem); line-height: 0.95; color: var(--um-blue); letter-spacing: -0.035em;">
-          <span data-count="2090">0</span><span style="font-size: 0.45em; color: var(--ink-60); font-weight: 400; margin-left: 0.15em;"> hours</span>
+          <span data-stat="manual_test_budget_hours" data-count="2090">0</span><span style="font-size: 0.45em; color: var(--ink-60); font-weight: 400; margin-left: 0.15em;"> hours</span>
         </div>
         <div style="font-size: 0.9rem; color: var(--ink-60); margin-top: 0.75rem; font-style: italic;">
           Tiered plan phased across 18 to 24 months · <span style="font-family: 'IBM Plex Mono', monospace; font-style: normal; letter-spacing: 0.04em;">~100 hrs/month at steady state</span>
@@ -1910,6 +1912,127 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
 
 <script>
 // ============================================================
+// LSA stats loader — pulls data/sites.json and feeds the page.
+//
+// Convention: any element with data-stat="<key>" picks up its number
+// from the computed stats object below. Hero metrics also keep their
+// original data-count value as a static fallback if the JSON is empty
+// or fetch fails (e.g., before the first cron run).
+//
+// To wire a new number into the page:
+//   1. Wrap it in <span data-stat="my_key">staticValue</span>
+//   2. Add a computation for "my_key" in computeLSAStats() below
+//   3. Re-deploy — no other code changes required.
+// ============================================================
+window.lsaStatsPromise = (async function () {
+  let stats = null;
+  try {
+    const res = await fetch('data/sites.json', { cache: 'no-cache' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    stats = computeLSAStats(data);
+    window.lsaStats = stats;
+    applyLSAStats(stats);
+  } catch (err) {
+    console.warn('LSA stats: live data unavailable, using static fallbacks.', err);
+  }
+  document.dispatchEvent(new CustomEvent('lsa-stats-ready', { detail: stats }));
+  return stats;
+})();
+
+function computeLSAStats(data) {
+  const sites = Array.isArray(data && data.sites) ? data.sites : [];
+  const isActive = (s) => (s.pages || 0) > 0 || s.score !== null;
+  const active = sites.filter(isActive);
+
+  const sum = (arr, key) => arr.reduce((a, s) => a + (s[key] || 0), 0);
+  const totalPages = sum(active, 'pages');
+  const totalIssues = sum(active, 'issues');
+  const totalIssueTypes = sum(active, 'issue_types');
+
+  const targetPcts = active.map(s => s.target_percentage)
+                            .filter(v => typeof v === 'number');
+  const meanTargetPct = targetPcts.length
+    ? targetPcts.reduce((a, b) => a + b, 0) / targetPcts.length
+    : null;
+  const sortedTargets = [...targetPcts].sort((a, b) => a - b);
+  const medianTargetPct = sortedTargets.length
+    ? (sortedTargets.length % 2
+        ? sortedTargets[sortedTargets.length >> 1]
+        : (sortedTargets[(sortedTargets.length >> 1) - 1] +
+           sortedTargets[sortedTargets.length >> 1]) / 2)
+    : null;
+
+  const sitesAtTarget = active.filter(s =>
+    typeof s.target_percentage === 'number' && s.target_percentage >= 100
+  ).length;
+  const sitesNearTarget = active.filter(s =>
+    typeof s.target_percentage === 'number' &&
+    s.target_percentage < 100 &&
+    s.target_percentage >= 95   // ~within ~1.5 points equivalent on percentage scale
+  ).length;
+
+  // AEM platform breakdown (server tags + URL heuristics).
+  const isAEM = (s) => (s.tags || []).includes('platform:aem');
+  const aem = active.filter(isAEM);
+  const aemMeanTarget = (() => {
+    const vals = aem.map(s => s.target_percentage).filter(v => typeof v === 'number');
+    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+  })();
+
+  // Manual-test budget projection (data-driven proxy).
+  // Uses a conservative 0.27 minutes/page rate (~16s) chosen to match the
+  // existing 2,090-hour first-pass budget at ~463k pages.
+  const minutesPerPage = 0.27;
+  const manualBudgetHours = Math.round((totalPages * minutesPerPage) / 60);
+
+  return {
+    generated_at: data && data.generated_at,
+    generated_at_label: formatDateLabel(data && data.generated_at),
+    total_sites: sites.length,
+    active_sites: active.length,
+    inactive_sites: sites.length - active.length,
+    sites_at_target: sitesAtTarget,
+    sites_near_target: sitesNearTarget,
+    pages_monitored: totalPages,
+    automated_issues: totalIssues,
+    automated_issues_millions: +(totalIssues / 1_000_000).toFixed(1),
+    distinct_issue_types: totalIssueTypes,
+    portfolio_target_score: meanTargetPct !== null ? +meanTargetPct.toFixed(2) : null,
+    portfolio_target_score_median: medianTargetPct !== null ? +medianTargetPct.toFixed(2) : null,
+    aem_sites: aem.length,
+    aem_mean_target_score: aemMeanTarget !== null ? +aemMeanTarget.toFixed(2) : null,
+    manual_test_budget_hours: manualBudgetHours,
+    // Strategic projections — config-driven (not data-derived):
+    estimated_manual_findings_thousands: 25,
+  };
+}
+
+function formatDateLabel(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function applyLSAStats(stats) {
+  if (!stats) return;
+  document.querySelectorAll('[data-stat]').forEach((el) => {
+    const key = el.dataset.stat;
+    const val = stats[key];
+    if (val === undefined || val === null) return;
+    if (el.hasAttribute('data-count')) {
+      // Animated metric — overwrite data-count; the existing animation re-runs
+      // on the lsa-stats-ready event below.
+      el.dataset.count = String(val);
+    } else {
+      // Static span — set its text directly.
+      el.textContent = typeof val === 'number' ? val.toLocaleString() : String(val);
+    }
+  });
+}
+
+// ============================================================
 // Chart.js defaults tuned for the editorial aesthetic
 // ============================================================
 Chart.defaults.font.family = "'IBM Plex Sans', sans-serif";
@@ -1986,8 +2109,17 @@ const observer = new IntersectionObserver((entries) => {
   });
 }, { threshold: 0.15, rootMargin: '-50px 0px' });
 document.querySelectorAll('section, .chart-block, .callout, .ba-compare, .tiers').forEach(el => observer.observe(el));
-// Trigger hero immediately
-document.querySelectorAll('.hero [data-count]').forEach(animateCount);
+// Trigger hero immediately with whatever data-count holds right now
+// (static fallbacks); re-trigger when live stats arrive so the final
+// count-up reflects the freshly fetched data.
+function animateHero() {
+  document.querySelectorAll('.hero [data-count]').forEach((el) => {
+    delete el.dataset.animated;
+    animateCount(el);
+  });
+}
+animateHero();
+document.addEventListener('lsa-stats-ready', animateHero);
 
 // ============================================================
 // Chart: Portfolio composition (doughnut)
