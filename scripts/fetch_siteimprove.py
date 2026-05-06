@@ -172,6 +172,45 @@ def fetch_site_groups(session: requests.Session, site_id: int) -> list[str]:
         return []
 
 
+def fetch_site_detail(session: requests.Session, site_id: int) -> dict[str, Any]:
+    """Fetch /sites/{id} for any extra fields not present in /sites listing."""
+    try:
+        return get(session, f"{API_ROOT}/sites/{site_id}")
+    except requests.HTTPError:
+        return {}
+
+
+def fetch_site_pdfs(session: requests.Session, site_id: int) -> list[dict[str, Any]]:
+    """Fetch list of PDFs flagged by the accessibility module for this site."""
+    try:
+        return paginate(session, f"/sites/{site_id}/a11y/validation/pdfs")
+    except requests.HTTPError:
+        return []
+
+
+def summarize_pdfs(pdfs: list[dict[str, Any]]) -> dict[str, Any]:
+    """Pull useful counts out of the PDF list — defensive about field names."""
+    pdf_count = len(pdfs)
+    issue_keys = ("issues", "errors", "issue_count", "error_count", "occurrences")
+    total_issues = 0
+    pdfs_with_issues = 0
+    for pdf in pdfs:
+        n = 0
+        for k in issue_keys:
+            v = pdf.get(k)
+            if isinstance(v, (int, float)):
+                n = int(v)
+                break
+        if n > 0:
+            pdfs_with_issues += 1
+            total_issues += n
+    return {
+        "pdf_count": pdf_count,
+        "pdfs_with_issues": pdfs_with_issues,
+        "pdf_total_issues": total_issues,
+    }
+
+
 def coerce_int(value: Any) -> int | None:
     try:
         return int(value)
@@ -258,6 +297,19 @@ def shape_site_row(
                 tags.append(f"product:{product}")
     if groups:
         tags.extend(groups)
+    # Defensive: if either /sites or /sites/{id} ever returns a tags
+    # / category / department / domain field, surface it as a tag.
+    for source in (site, target):
+        if not isinstance(source, dict):
+            continue
+        for tagish_key in ("tags", "category", "categories", "department", "domain", "labels"):
+            value = source.get(tagish_key)
+            if isinstance(value, list):
+                for v in value:
+                    if v:
+                        tags.append(f"{tagish_key}:{v}")
+            elif isinstance(value, str) and value:
+                tags.append(f"{tagish_key}:{value}")
 
     return {
         "id": site.get("id"),
@@ -340,12 +392,16 @@ def main() -> None:
 
     runnable_sites = [s for s in sites if s.get("id") is not None]
 
-    def fetch_one(site: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], list[str]]:
+    def fetch_one(site: dict[str, Any]) -> tuple[
+        dict[str, Any], dict[str, Any], list[dict[str, Any]], list[str], dict[str, Any], dict[str, Any]
+    ]:
         site_id = site["id"]
         target = fetch_site_target(session, site_id)
         issues = fetch_site_issues(session, site_id)
         groups = fetch_site_groups(session, site_id)
-        return site, target, issues, groups
+        detail = fetch_site_detail(session, site_id)
+        pdfs = summarize_pdfs(fetch_site_pdfs(session, site_id))
+        return site, target, issues, groups, detail, pdfs
 
     site_rows: list[dict[str, Any]] = []
     per_site_issues: list[tuple[dict[str, Any], list[dict[str, Any]]]] = []
@@ -375,10 +431,20 @@ def main() -> None:
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = {executor.submit(fetch_one, s): s for s in runnable_sites}
         for index, future in enumerate(as_completed(futures), start=1):
-            site, target, issues, groups = future.result()
+            site, target, issues, groups, detail, pdfs = future.result()
             per_site_issues.append((site, issues))
             rollup = aggregate_site_issues(issues)
-            site_rows.append(shape_site_row(site, target, rollup, groups))
+            row = shape_site_row(site, target, rollup, groups)
+            row.update(pdfs)
+            # Surface any extra metadata from /sites/{id} (only fields not
+            # already present on the listing row), so we can audit later.
+            extras = {
+                k: v for k, v in (detail or {}).items()
+                if k not in row and k not in ("_links",) and not k.startswith("_")
+            }
+            if extras:
+                row["site_detail"] = extras
+            site_rows.append(row)
 
             now = time.monotonic()
             if now - last_flush >= FLUSH_EVERY_SECONDS:
