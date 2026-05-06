@@ -634,9 +634,9 @@
         <div id="chart-status"></div>
       </div>
       <div class="viz-card full">
-        <h3>Top 15 sites by AA occurrences</h3>
-        <div class="viz-sub">Most actionable for Title II AA conformance</div>
-        <div id="chart-top-aa"></div>
+        <h3>Top 15 sites by ARIA occurrences</h3>
+        <div class="viz-sub">WAI-ARIA findings only — separate from WCAG levels. Often concentrated in template-level fixes (landmarks, labelled regions, focus management).</div>
+        <div id="chart-top-aria"></div>
       </div>
       <div class="viz-card full">
         <h3 id="chart-top-total-title">Top 15 sites by total occurrences</h3>
@@ -1104,7 +1104,7 @@
       renderBars("chart-top-titleii", topByTitleII(filteredSites, "#00274C"), "Title II occurrences (A+AA+ARIA)");
       renderDonut("chart-levels", aggregateLevels(filteredSites));
       renderDonut("chart-status", aggregateStatus(filteredSites));
-      renderBars("chart-top-aa",    topByKey(filteredSites, "lvl_aa",  COLORS.AA), "AA occurrences");
+      renderBars("chart-top-aria",  topByKey(filteredSites, "lvl_aria", COLORS.ARIA), "ARIA occurrences");
       renderBars("chart-top-total", topBySelected(filteredSites, "#2a3441"),       "Selected-level occurrences");
 
       // Update chart titles to reflect the active level filter.
