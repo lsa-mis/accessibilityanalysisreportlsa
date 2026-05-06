@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#00274C" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <title>LSA Siteimprove dashboard</title>
   <style>
     :root {
@@ -166,6 +168,80 @@
     }
     @media (max-width: 720px) {
       .viz-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Mobile / phone responsiveness — covers single-column phones up to
+       narrow tablets. Tightens whitespace, downsizes typography, and
+       makes the multi-axis controls usable with thumbs. The 17-column
+       table inherits horizontal scroll from .table-wrap; the cells get
+       smaller padding here so more fits before the scrollbar kicks in. */
+    @media (max-width: 600px) {
+      header { padding: 1rem 1.25rem; }
+      header h1 { font-size: 1.15rem; }
+      header p  { font-size: 0.8rem; }
+      main { margin: 1rem auto; padding: 0 1rem; }
+
+      .meta { gap: 0.75rem; font-size: 0.82rem; margin-bottom: 1rem; }
+
+      .summary-cards {
+        gap: 0.55rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin-bottom: 1rem;
+      }
+      .card { padding: 0.6rem 0.7rem; }
+      .card .label { font-size: 0.65rem; margin-bottom: 0.15rem; }
+      .card .value { font-size: 1.2rem; }
+
+      .filters { padding: 0.55rem 0.65rem; margin-bottom: 0.85rem; }
+      .filter-row { gap: 0.3rem; margin-bottom: 0.35rem; }
+      .filter-label {
+        min-width: auto;
+        flex-basis: 100%;
+        margin-bottom: 0.15rem;
+      }
+      .pill { padding: 0.22rem 0.55rem; font-size: 0.75rem; }
+      .filter-hint { display: none; }
+
+      .controls {
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.7rem;
+      }
+      .controls input[type="search"] {
+        min-width: 0;
+        width: 100%;
+        flex: 1 1 100%;
+        font-size: 0.9rem;
+      }
+      .row-count {
+        margin-left: 0;
+        flex-basis: 100%;
+        font-size: 0.78rem;
+      }
+
+      .viz-card { padding: 0.85rem 0.95rem; }
+      .viz-card h3 { font-size: 0.88rem; }
+      .viz-card .viz-sub { font-size: 0.75rem; }
+
+      .donut-wrap { gap: 0.6rem; }
+      .legend { font-size: 0.78rem; }
+
+      .table-wrap { max-height: 60vh; }
+      table { font-size: 0.82rem; }
+      th, td { padding: 0.4rem 0.55rem; }
+      td.site-cell { min-width: 160px; }
+      td.site-cell .url { font-size: 0.72rem; }
+      .badge { font-size: 0.7rem; }
+      .tag { font-size: 0.65rem; padding: 0.05rem 0.3rem; }
+
+      .notice { padding: 0.55rem 0.75rem; font-size: 0.78rem; }
+
+      footer { font-size: 0.72rem; padding: 0.75rem 0; }
+    }
+
+    /* Very narrow phones (older iPhone SE etc.) — single-column cards. */
+    @media (max-width: 380px) {
+      .summary-cards { grid-template-columns: 1fr; }
     }
     .viz-card {
       background: var(--paper-light);

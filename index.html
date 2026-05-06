@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#00274C">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <title>LSA Web Accessibility Report · Spring 2026</title>
 <meta name="description" content="Interactive data report on LSA Technology Services' web accessibility program, Spring 2026.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -386,6 +388,45 @@ section { padding: 7rem 2.5rem; position: relative; }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
 .grid-2-asym { display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; }
 @media (max-width: 900px) { .grid-2, .grid-2-asym { grid-template-columns: 1fr; } }
+
+/* Mobile responsiveness — keep the editorial typography readable while
+   collapsing complex layouts to single column. The hero CTA stacks
+   vertically so the helper text doesn't crowd the button. Callouts
+   tighten internal padding and let stat blocks reflow. */
+@media (max-width: 600px) {
+  body { font-size: 16px; }
+  section { padding: 3rem 1.1rem; }
+
+  .hero-meta { flex-wrap: wrap; gap: 0.4rem 0.6rem; font-size: 0.78rem; }
+  .hero-meta-divider { display: none; }
+  .hero-lede { font-size: 1.05rem; line-height: 1.45; }
+
+  .hero-cta { display: flex; flex-direction: column; align-items: flex-start; gap: 0.65rem; }
+  .hero-cta a { width: 100%; justify-content: center; }
+  .hero-cta > span {
+    margin-left: 0 !important;
+    font-size: 0.78rem !important;
+    line-height: 1.4;
+  }
+
+  .hero-metric-value { font-size: clamp(2.25rem, 9vw, 3rem); }
+  .hero-metric-sub { font-size: 0.78rem; }
+
+  .chart-block { padding: 1.25rem 1.1rem !important; }
+  .chart-block-header h3 { font-size: 1.15rem; }
+  .chart-block-header { flex-wrap: wrap; gap: 0.4rem; }
+  .chart-description { font-size: 0.92rem; line-height: 1.5; }
+
+  .progress-row { margin-bottom: 1.25rem; }
+  .progress-label .label-text { font-size: 0.85rem; }
+  .progress-label .label-value { font-size: 0.85rem; }
+
+  /* The Best Practices + Spelling callout stat panels reflow to 1-col. */
+  .chart-block [style*="grid-template-columns: repeat(auto-fit"] {
+    grid-template-columns: 1fr !important;
+    gap: 0.85rem !important;
+  }
+}
 
 .progress-row { margin-bottom: 1.75rem; }
 .progress-row:last-child { margin-bottom: 0; }
