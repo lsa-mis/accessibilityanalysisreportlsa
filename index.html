@@ -1979,6 +1979,58 @@ function computeLSAStats(data) {
   const minTargetPct = sortedTargets.length ? sortedTargets[0] : null;
   const maxTargetPct = sortedTargets.length ? sortedTargets[sortedTargets.length - 1] : null;
 
+  // Accessibility score (DCI) stats — separate from target percentage.
+  const accessVals = active.map(s => s.score).filter(v => typeof v === 'number');
+  const accessSorted = [...accessVals].sort((a, b) => a - b);
+  const accessMean = accessVals.length
+    ? accessVals.reduce((a, b) => a + b, 0) / accessVals.length
+    : null;
+  const accessMedian = accessSorted.length
+    ? (accessSorted.length % 2
+        ? accessSorted[accessSorted.length >> 1]
+        : (accessSorted[(accessSorted.length >> 1) - 1] +
+           accessSorted[accessSorted.length >> 1]) / 2)
+    : null;
+  const accessMin = accessSorted.length ? accessSorted[0] : null;
+
+  // Bucket scores into 5 bands: [95+, 85–95, 75–85, 65–75, <65].
+  function bandCounts(values, edges) {
+    const counts = new Array(edges.length + 1).fill(0);
+    for (const v of values) {
+      let placed = false;
+      for (let i = 0; i < edges.length; i++) {
+        if (v >= edges[i]) { counts[i]++; placed = true; break; }
+      }
+      if (!placed) counts[edges.length]++;
+    }
+    return counts;
+  }
+  const targetBands = bandCounts(targetPcts, [95, 85, 75, 65]);
+  const accessBands = bandCounts(accessVals, [95, 85, 75, 65]);
+
+  // Pareto: cumulative share of total pages contributed by the top-N sites
+  // when active sites are ranked by page count (descending).
+  const sortedByPages = [...active].sort((a, b) => (b.pages || 0) - (a.pages || 0));
+  const paretoBuckets = [10, 25, 50, 100, 200];
+  const paretoCoverage = paretoBuckets.map(n => {
+    if (totalPages === 0) return 0;
+    const top = sortedByPages.slice(0, n);
+    const topPages = top.reduce((a, s) => a + (s.pages || 0), 0);
+    return +(topPages / totalPages * 100).toFixed(1);
+  });
+  paretoCoverage.push(100); // entire portfolio
+  const paretoLabels = paretoBuckets.map(n => `Top ${n}`).concat([`All ${active.length.toLocaleString()}`]);
+
+  // Per-platform mean target / accessibility score (AEM is the only platform
+  // we can detect reliably from the API; WordPress / Omeka would need a
+  // separate mapping and are left to a follow-up).
+  const aemActive = active.filter(s => (s.tags || []).includes('platform:aem'));
+  const meanOf = (arr, key) => {
+    const vals = arr.map(s => s[key]).filter(v => typeof v === 'number');
+    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+  };
+  const aemAccessMean = meanOf(aemActive, 'score');
+
   const sitesAtTarget = active.filter(s =>
     typeof s.target_percentage === 'number' && s.target_percentage >= 100
   ).length;
@@ -2038,8 +2090,22 @@ function computeLSAStats(data) {
     portfolio_target_score_median: medianTargetPct !== null ? +medianTargetPct.toFixed(2) : null,
     portfolio_target_score_min: minTargetPct !== null ? +minTargetPct.toFixed(2) : null,
     portfolio_target_score_max: maxTargetPct !== null ? +maxTargetPct.toFixed(2) : null,
+    accessibility_score_mean: accessMean !== null ? +accessMean.toFixed(2) : null,
+    accessibility_score_median: accessMedian !== null ? +accessMedian.toFixed(2) : null,
+    accessibility_score_min: accessMin !== null ? +accessMin.toFixed(2) : null,
+    score_bands_target: targetBands,
+    score_bands_accessibility: accessBands,
+    pareto_labels: paretoLabels,
+    pareto_coverage: paretoCoverage,
+    aem_accessibility_score: aemAccessMean !== null ? +aemAccessMean.toFixed(2) : null,
     score_metric_note: meanTargetPct !== null
       ? `Mean ${meanTargetPct.toFixed(2)} · median ${medianTargetPct.toFixed(2)} · min ${minTargetPct.toFixed(2)}`
+      : null,
+    score_metric_note_target: meanTargetPct !== null
+      ? `Mean ${meanTargetPct.toFixed(2)} · median ${medianTargetPct.toFixed(2)} · min ${minTargetPct.toFixed(2)}`
+      : null,
+    score_metric_note_accessibility: accessMean !== null
+      ? `Mean ${accessMean.toFixed(2)} · median ${accessMedian.toFixed(2)} · min ${accessMin.toFixed(2)}`
       : null,
     aem_sites: aem.length,
     aem_mean_target_score: aemMeanTarget !== null ? +aemMeanTarget.toFixed(2) : null,
@@ -2210,6 +2276,58 @@ document.addEventListener('lsa-stats-ready', (e) => {
 });
 
 // ============================================================
+// Live wiring for: score distribution, Pareto, platform AEM bar.
+// Runs after the stats fetcher dispatches lsa-stats-ready.
+// ============================================================
+document.addEventListener('lsa-stats-ready', (e) => {
+  const s = e.detail;
+  if (!s) return;
+
+  // Score distribution chart — refresh both modes' source data, then push
+  // the currently-displayed mode into the chart.
+  if (typeof scoreData !== 'undefined' && typeof scoreChart !== 'undefined') {
+    if (Array.isArray(s.score_bands_target)) {
+      scoreData.target.data = s.score_bands_target;
+      if (s.score_metric_note_target) scoreData.target.note = s.score_metric_note_target;
+    }
+    if (Array.isArray(s.score_bands_accessibility)) {
+      scoreData.accessibility.data = s.score_bands_accessibility;
+      if (s.score_metric_note_accessibility) scoreData.accessibility.note = s.score_metric_note_accessibility;
+    }
+    const activeBtn = document.querySelector('[data-score].active');
+    const mode = (activeBtn && activeBtn.dataset.score) || 'target';
+    scoreChart.data.datasets[0].data = scoreData[mode].data;
+    scoreChart.update();
+    const noteEl = document.getElementById('scoreMetricNote');
+    if (noteEl && scoreData[mode].note) noteEl.textContent = scoreData[mode].note;
+  }
+
+  // Pareto: cumulative pages-coverage by top-N sites.
+  if (typeof paretoChart !== 'undefined' && Array.isArray(s.pareto_coverage)) {
+    paretoChart.data.labels = s.pareto_labels;
+    paretoChart.data.datasets[0].data = s.pareto_coverage;
+    paretoChart.update();
+  }
+
+  // Platform chart: only AEM is data-driven for now (the only platform
+  // with a reliable detection signal). WordPress / Omeka / Other stay
+  // as the analyst's pre-run figures until we have a platform mapping.
+  if (typeof platformChart !== 'undefined') {
+    const labels = platformChart.data.labels || [];
+    const aemIdx = labels.indexOf('AEM');
+    if (aemIdx !== -1) {
+      if (typeof s.aem_mean_target_score === 'number') {
+        platformChart.data.datasets[0].data[aemIdx] = s.aem_mean_target_score;
+      }
+      if (typeof s.aem_accessibility_score === 'number') {
+        platformChart.data.datasets[1].data[aemIdx] = s.aem_accessibility_score;
+      }
+      platformChart.update();
+    }
+  }
+});
+
+// ============================================================
 // Chart: Points to target distribution (updated counts)
 // ============================================================
 new Chart(document.getElementById('pointsToTargetChart'), {
@@ -2294,7 +2412,7 @@ document.querySelectorAll('[data-score]').forEach(btn => {
 // ============================================================
 // Chart: Platform comparison (new numbers)
 // ============================================================
-new Chart(document.getElementById('platformChart'), {
+const platformChart = new Chart(document.getElementById('platformChart'), {
   type: 'bar',
   data: {
     labels: ['WordPress', 'AEM', 'Omeka', 'Other'],
@@ -2316,7 +2434,7 @@ new Chart(document.getElementById('platformChart'), {
 // ============================================================
 // Chart: Pareto (updated coverage)
 // ============================================================
-new Chart(document.getElementById('paretoChart'), {
+const paretoChart = new Chart(document.getElementById('paretoChart'), {
   type: 'line',
   data: {
     labels: ['Top 10', 'Top 25', 'Top 50', 'Top 100', 'Top 200', 'All 1,373'],
