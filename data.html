@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#00274C" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <title>LSA Siteimprove dashboard</title>
+  <title>LSA Web Accessibility Dashboard</title>
   <style>
     :root {
       --um-blue: #00274C;
@@ -40,27 +40,85 @@
     header {
       background: var(--um-blue);
       color: #fff;
-      padding: 1.5rem 2rem;
+      padding: 2rem 2rem 1.75rem;
       border-bottom: 4px solid var(--um-maize);
+      text-align: center;
     }
-    header h1 { margin: 0; font-size: 1.5rem; font-weight: 600; }
-    header p { margin: 0.25rem 0 0; opacity: 0.85; font-size: 0.9rem; }
+    header h1 { margin: 0; font-size: 1.85rem; font-weight: 600; letter-spacing: -0.01em; }
+    header p { margin: 0.4rem auto 0; opacity: 0.85; font-size: 0.95rem; max-width: 720px; }
     main { max-width: 1400px; margin: 2rem auto; padding: 0 1.5rem; }
     .meta {
       display: flex;
       flex-wrap: wrap;
-      gap: 1.5rem;
+      align-items: center;
+      gap: 1.25rem;
       margin-bottom: 1.5rem;
       font-size: 0.9rem;
       color: var(--ink-60);
     }
     .meta strong { color: var(--ink); }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.1rem;
+      border: 1px solid var(--um-blue);
+      background: var(--um-blue);
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      border-radius: 4px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .back-btn:hover { background: #0a3866; border-color: #0a3866; }
+    .back-btn .arrow { font-size: 1.05em; }
     .summary-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1rem;
+      display: block;
       margin-bottom: 1.5rem;
     }
+    /* Titled stat sections — group cards under a clear, scannable heading
+       so the eye lands on a category before reading numbers. */
+    .stats-block { margin-bottom: 1.5rem; }
+    .stats-section { margin-bottom: 1.25rem; }
+    .stats-section:last-child { margin-bottom: 0; }
+    .stats-section-title {
+      display: flex;
+      align-items: baseline;
+      gap: 0.6rem;
+      margin-bottom: 0.55rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--rule-light);
+    }
+    .stats-section-title .label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--um-blue);
+    }
+    .stats-section-title .accent {
+      width: 18px; height: 3px; border-radius: 2px;
+      background: var(--cat-color, var(--um-blue));
+      flex-shrink: 0;
+    }
+    .stats-section-title .blurb {
+      font-size: 0.78rem;
+      color: var(--ink-60);
+      font-style: italic;
+    }
+    .stats-section-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.75rem;
+    }
+    .stats-section.cat-sites { --cat-color: #00274C; }
+    .stats-section.cat-score { --cat-color: #4a7ca8; }
+    .stats-section.cat-pages { --cat-color: #b8855a; }
+    .stats-section.cat-occ   { --cat-color: #7a4a8a; }
+    .stats-section.cat-pdf   { --cat-color: #5e1616; }
+    .stats-section.cat-spell { --cat-color: #6b3a00; }
+    .stats-section.cat-time  { --cat-color: #3d434a; }
     .card {
       background: var(--paper-light);
       border: 1px solid var(--rule);
@@ -110,6 +168,51 @@
       border-radius: 6px;
       padding: 0.85rem 1rem;
       margin-bottom: 1.25rem;
+      position: relative;
+    }
+    .filters-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .filters-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--um-blue);
+      text-transform: uppercase;
+    }
+    .clear-filters-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.32rem 0.75rem;
+      border: 1px solid var(--rule);
+      background: #fff;
+      color: var(--um-blue);
+      font-size: 0.8rem;
+      font-weight: 500;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    .clear-filters-btn:hover {
+      background: var(--um-blue);
+      color: #fff;
+      border-color: var(--um-blue);
+    }
+    .clear-filters-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      background: #fff;
+      color: var(--ink-60);
+    }
+    .clear-filters-btn:disabled:hover {
+      background: #fff;
+      color: var(--ink-60);
+      border-color: var(--rule);
     }
     .filter-row {
       display: flex;
@@ -457,13 +560,13 @@
 </head>
 <body>
   <header>
-    <h1>LSA Siteimprove dashboard</h1>
-    <p>Live snapshot of accessibility scores, page counts, and issue occurrences across LSA sites.</p>
+    <h1>LSA Web Accessibility Dashboard</h1>
+    <p>Live snapshot of accessibility scores, page counts, and issue occurrences across LSA sites — refreshed weekly from Siteimprove.</p>
   </header>
   <main>
     <div class="meta">
+      <a href="index.html" class="back-btn"><span class="arrow" aria-hidden="true">←</span>Back to narrative report</a>
       <span>Last refreshed: <strong id="generated-at">—</strong></span>
-      <span><a href="index.html">← Back to report</a></span>
     </div>
 
     <div id="notice-stale" class="notice warning" hidden>
@@ -475,6 +578,12 @@
     </div>
 
     <div class="filters">
+      <div class="filters-header">
+        <span class="filters-title">Filters</span>
+        <button type="button" id="clear-filters" class="clear-filters-btn" disabled aria-label="Clear all active filters">
+          <span aria-hidden="true">✕</span> Clear all filters
+        </button>
+      </div>
       <div class="filter-row">
         <span class="filter-label">Level</span>
         <div id="filter-level" role="group" aria-label="WCAG level filter" style="display:flex;gap:0.4rem;flex-wrap:wrap;">
@@ -1012,26 +1121,82 @@
       const totalMisspellings = filteredSites.reduce((acc, s) => acc + (s.misspellings || 0), 0);
       const sitesWithMisspellings = filteredSites.filter(s => (s.misspellings || 0) > 0).length;
 
-      const cards = [
-        { cat: "sites", label: "Sites (filtered)",     value: total.toLocaleString() },
-        { cat: "sites", label: "Sites with data",      value: ok.toLocaleString() },
-        { cat: "sites", label: "Sites w/ errors",      value: errors.toLocaleString(), danger: errors > 0 },
-        { cat: "score", label: "Avg target %",         value: avgTarget !== null ? avgTarget.toFixed(1) + "%" : "—" },
-        { cat: "score", label: "Median target %",      value: medTarget !== null ? medTarget.toFixed(1) + "%" : "—" },
-        { cat: "pages", label: "Total pages",          value: totalPages.toLocaleString() },
-        { cat: "occ",   label: "Total A occurrences",  value: totalA.toLocaleString() },
-        { cat: "occ",   label: "Total AA occurrences", value: totalAA.toLocaleString() },
-        { cat: "occ",   label: lensLabel,              value: lensTotal.toLocaleString() },
-        { cat: "pdf",   label: "Total PDFs",           value: totalPdfs.toLocaleString() },
-        { cat: "pdf",   label: "PDFs w/ issues",       value: totalPdfsWithIssues.toLocaleString(), danger: totalPdfsWithIssues > 0 },
-        { cat: "spell", label: "Total misspellings",   value: totalMisspellings.toLocaleString() },
-        { cat: "spell", label: "Sites w/ misspellings", value: sitesWithMisspellings.toLocaleString() },
-        { cat: "time",  label: `Manual test (${manualMinutesPerPage}min/pg)`, value: fmtHours(totalTestHours) },
+      // Group cards under a titled section so the eye scans by category
+      // (Sites, Score, Pages, Occurrences, PDFs, Spelling, Manual testing)
+      // instead of decoding 14 cards in a flat grid.
+      const sections = [
+        {
+          cat: "sites", title: "Sites",
+          blurb: "Coverage and data quality across the filtered portfolio.",
+          cards: [
+            { label: "Sites (filtered)", value: total.toLocaleString() },
+            { label: "Sites with data",  value: ok.toLocaleString() },
+            { label: "Sites w/ errors",  value: errors.toLocaleString(), danger: errors > 0 },
+          ],
+        },
+        {
+          cat: "score", title: "Score & Compliance",
+          blurb: "Average and median target % — distance from the configured Siteimprove goal.",
+          cards: [
+            { label: "Avg target %",    value: avgTarget !== null ? avgTarget.toFixed(1) + "%" : "—" },
+            { label: "Median target %", value: medTarget !== null ? medTarget.toFixed(1) + "%" : "—" },
+          ],
+        },
+        {
+          cat: "pages", title: "Pages",
+          blurb: "Total pages crawled by Siteimprove across the filtered set.",
+          cards: [
+            { label: "Total pages", value: totalPages.toLocaleString() },
+          ],
+        },
+        {
+          cat: "occ", title: "Issue occurrences",
+          blurb: "Aggregated counts by WCAG level. AAA + ARIA + BP appear in the per-site table.",
+          cards: [
+            { label: "Total A occurrences",  value: totalA.toLocaleString() },
+            { label: "Total AA occurrences", value: totalAA.toLocaleString() },
+            { label: lensLabel,              value: lensTotal.toLocaleString() },
+          ],
+        },
+        {
+          cat: "pdf", title: "PDFs",
+          blurb: "PDF documents flagged by the accessibility module.",
+          cards: [
+            { label: "Total PDFs",     value: totalPdfs.toLocaleString() },
+            { label: "PDFs w/ issues", value: totalPdfsWithIssues.toLocaleString(), danger: totalPdfsWithIssues > 0 },
+          ],
+        },
+        {
+          cat: "spell", title: "Spelling quality",
+          blurb: "Confirmed misspellings from Siteimprove's QA module — editorial, not WCAG.",
+          cards: [
+            { label: "Total misspellings",    value: totalMisspellings.toLocaleString() },
+            { label: "Sites w/ misspellings", value: sitesWithMisspellings.toLocaleString() },
+          ],
+        },
+        {
+          cat: "time", title: "Manual testing",
+          blurb: `Estimated first-pass effort at ${manualMinutesPerPage} min / page across the filtered portfolio.`,
+          cards: [
+            { label: `Total hours (${manualMinutesPerPage}min/pg)`, value: fmtHours(totalTestHours) },
+          ],
+        },
       ];
-      document.getElementById("summary-cards").innerHTML = cards.map((c) => `
-        <div class="card cat-${escapeHtml(c.cat || "sites")}${c.danger ? " danger" : ""}">
-          <div class="label">${escapeHtml(c.label)}</div>
-          <div class="value">${escapeHtml(c.value)}</div>
+
+      document.getElementById("summary-cards").innerHTML = sections.map((sec) => `
+        <div class="stats-section cat-${escapeHtml(sec.cat)}">
+          <div class="stats-section-title">
+            <span class="accent" aria-hidden="true"></span>
+            <span class="label">${escapeHtml(sec.title)}</span>
+            <span class="blurb">${escapeHtml(sec.blurb)}</span>
+          </div>
+          <div class="stats-section-grid">
+            ${sec.cards.map(c => `
+              <div class="card cat-${escapeHtml(sec.cat)}${c.danger ? " danger" : ""}">
+                <div class="label">${escapeHtml(c.label)}</div>
+                <div class="value">${escapeHtml(c.value)}</div>
+              </div>`).join("")}
+          </div>
         </div>`).join("");
     }
 
@@ -1114,6 +1279,7 @@
       renderSummary(filtered);
       renderCharts(filtered);
       renderTable(filtered);
+      if (typeof syncClearButton === "function") syncClearButton();
     }
 
     async function load() {
@@ -1192,6 +1358,38 @@
     wireFilterGroup("filter-level",  "levelFilters",  "filter-level-hint",  "level");
     wireFilterGroup("filter-status", "statusFilters", "filter-status-hint", "status");
     wireFilterGroup("filter-tags",   "tagFilters",    "filter-tags-hint",   "tag");
+
+    function anyFilterActive() {
+      return state.search.trim() !== "" ||
+             state.levelFilters.size  > 0 ||
+             state.statusFilters.size > 0 ||
+             state.tagFilters.size    > 0;
+    }
+
+    function syncClearButton() {
+      const btn = document.getElementById("clear-filters");
+      if (btn) btn.disabled = !anyFilterActive();
+    }
+
+    document.getElementById("clear-filters").addEventListener("click", () => {
+      state.search = "";
+      state.levelFilters.clear();
+      state.statusFilters.clear();
+      state.tagFilters.clear();
+      const searchEl = document.getElementById("search");
+      if (searchEl) searchEl.value = "";
+      syncFilterGroup("filter-level",  state.levelFilters);
+      syncFilterGroup("filter-status", state.statusFilters);
+      syncFilterGroup("filter-tags",   state.tagFilters);
+      const clearHint = (id) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = "";
+      };
+      clearHint("filter-level-hint");
+      clearHint("filter-status-hint");
+      clearHint("filter-tags-hint");
+      renderAll();
+    });
 
     document.querySelectorAll("#sites-table th[data-key]").forEach((th) => {
       th.addEventListener("click", () => {
