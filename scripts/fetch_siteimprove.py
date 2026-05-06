@@ -11,6 +11,7 @@ Auth: HTTP Basic. Username = SITEIMPROVE_EMAIL, password = SITEIMPROVE_API_KEY.
 
 from __future__ import annotations
 
+import csv
 import json
 import os
 import re
@@ -53,6 +54,80 @@ PLATFORM_PATTERNS = [
     ("squarespace", re.compile(r"\bsquarespace\b", re.IGNORECASE)),
     ("wix",       re.compile(r"\bwix\b", re.IGNORECASE)),
 ]
+
+
+SITE_TAG_CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "site-tags.csv"
+TAG_SPLIT_RE = re.compile(r"[,|;]")
+
+
+def load_site_tag_csv(path: Path = SITE_TAG_CSV_PATH) -> tuple[
+    dict[int, list[str]], dict[str, list[str]], dict[str, list[str]]
+]:
+    """Load admin-configured site labels from a Siteimprove CSV export.
+
+    The site-tags endpoint at my2.us.siteimprove.com requires session
+    cookies, so a cron-driven workflow can't pull it directly. Instead we
+    accept a CSV exported from the Siteimprove UI and merge it onto each
+    row when the script runs.
+
+    Expected columns (case-insensitive; any subset works):
+      - site_id  (preferred match key)
+      - url      (fallback match key)
+      - site_name / name  (last-resort match key)
+      - tags     (comma-, pipe-, or semicolon-separated tag names)
+
+    Returns (by_id, by_url, by_name). Empty dicts if the file is missing.
+    """
+    if not path.exists():
+        return {}, {}, {}
+    by_id: dict[int, list[str]] = {}
+    by_url: dict[str, list[str]] = {}
+    by_name: dict[str, list[str]] = {}
+    with path.open(newline="", encoding="utf-8-sig") as handle:
+        reader = csv.DictReader(handle)
+        for raw in reader:
+            row = {(k or "").strip().lower(): (v or "") for k, v in raw.items()}
+            tags_field = row.get("tags") or row.get("labels") or ""
+            tags = [t.strip() for t in TAG_SPLIT_RE.split(tags_field) if t.strip()]
+            if not tags:
+                continue
+            site_id_raw = row.get("site_id") or row.get("id")
+            try:
+                if site_id_raw:
+                    by_id[int(str(site_id_raw).strip())] = tags
+            except ValueError:
+                pass
+            url = (row.get("url") or "").strip().rstrip("/")
+            if url:
+                by_url[url] = tags
+            name = (row.get("site_name") or row.get("name") or "").strip().lower()
+            if name:
+                by_name[name] = tags
+    print(
+        f"  loaded admin tags from CSV: "
+        f"{len(by_id)} by id, {len(by_url)} by url, {len(by_name)} by name",
+        file=sys.stderr,
+    )
+    return by_id, by_url, by_name
+
+
+def lookup_csv_tags(
+    site: dict[str, Any],
+    by_id: dict[int, list[str]],
+    by_url: dict[str, list[str]],
+    by_name: dict[str, list[str]],
+) -> list[str]:
+    """Return admin-configured tag names for one site, matched by id then url then name."""
+    site_id = site.get("id")
+    if site_id is not None and site_id in by_id:
+        return by_id[site_id]
+    url = (site.get("url") or "").strip().rstrip("/")
+    if url and url in by_url:
+        return by_url[url]
+    name = ((site.get("site_name") or site.get("name") or "")).strip().lower()
+    if name and name in by_name:
+        return by_name[name]
+    return []
 
 
 def derive_tags(site_name: str | None, url: str | None) -> list[str]:
@@ -471,6 +546,9 @@ def main() -> None:
     sites = paginate(session, "/sites")
     print(f"  found {len(sites)} sites", file=sys.stderr)
 
+    print("Loading admin tags from CSV (if present)...", file=sys.stderr)
+    csv_by_id, csv_by_url, csv_by_name = load_site_tag_csv()
+
     runnable_sites = [s for s in sites if s.get("id") is not None]
 
     def fetch_one(site: dict[str, Any]) -> tuple[
@@ -528,6 +606,12 @@ def main() -> None:
                 if meta_tag not in (row.get("tags") or []):
                     row.setdefault("tags", []).append(meta_tag)
                 row["platform_source"] = "meta_generator"
+            # Merge admin-configured site labels from the CSV export.
+            csv_tags = lookup_csv_tags(site, csv_by_id, csv_by_url, csv_by_name)
+            for label in csv_tags:
+                tag_value = f"tag:{label}"
+                if tag_value not in (row.get("tags") or []):
+                    row.setdefault("tags", []).append(tag_value)
             # Surface any extra metadata from /sites/{id} (only fields not
             # already present on the listing row), so we can audit later.
             extras = {

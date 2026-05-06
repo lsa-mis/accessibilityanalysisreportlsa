@@ -7,6 +7,23 @@ Static site published via GitHub Pages, with a live Siteimprove dashboard refres
 - `index.html` — narrative accessibility report (manually authored, with live data wiring)
 - `data.html` — live dashboard (searchable, filterable per-site view)
 - `data/sites.json`, `data/rules.json` — snapshots written by the fetch script; consumed by both pages
+- `data/site-tags.csv` — optional admin-configured site labels from the Siteimprove UI (see below)
+
+## Admin-configured site labels (optional)
+
+Siteimprove's site labels (e.g. `LSA`, `AEM`, `Humanities`, `WP-Sites`) live behind the management UI at `my2.us.siteimprove.com`, which requires session cookies — unreachable from a cron-driven workflow with the public API token.
+
+To make those labels flow through anyway, export them once from the Siteimprove UI and check the file in:
+
+1. In Siteimprove → **Settings → Sites** → look for an **Export** action (CSV / Excel)
+2. Save the export at `data/site-tags.csv` with at minimum these columns (case-insensitive, any subset works):
+   - `site_id` (preferred match key)
+   - `url` (fallback match key)
+   - `site_name` or `name` (last-resort match key)
+   - `tags` or `labels` (comma-, pipe-, or semicolon-separated label names)
+3. Commit the file. The next fetch run merges the labels onto each row as `tag:<label>` entries; the dashboard renders them as distinctive maize-on-blue chips.
+
+Re-export and overwrite the file whenever the tag assignments change in Siteimprove.
 - `scripts/fetch_siteimprove.py` — pulls site list and per-site accessibility summary from the Siteimprove API
 - `.github/workflows/fetch-siteimprove.yml` — runs the fetch on a schedule and commits any changes
 - `.github/workflows/pages.yml` — deploys the site to GitHub Pages on every push to `main`
