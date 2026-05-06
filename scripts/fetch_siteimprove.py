@@ -60,6 +60,27 @@ SITE_TAG_CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "site-tags
 TAG_SPLIT_RE = re.compile(r"[,|;]")
 
 
+def _detect_csv_encoding(path: Path) -> str:
+    """Sniff a BOM to pick UTF-16 vs UTF-8 (Siteimprove exports as UTF-16)."""
+    with path.open("rb") as handle:
+        head = handle.read(4)
+    if head[:2] in (b"\xff\xfe", b"\xfe\xff"):
+        return "utf-16"
+    return "utf-8-sig"
+
+
+def _detect_csv_delimiter(path: Path, encoding: str) -> str:
+    """Tab if the header line contains tabs, otherwise comma."""
+    with path.open(encoding=encoding, newline="") as handle:
+        first_line = handle.readline()
+    return "\t" if "\t" in first_line else ","
+
+
+def _norm_header(key: str | None) -> str:
+    """Normalize a header so 'Site ID' / 'site_id' / 'site id' all match."""
+    return (key or "").strip().lower().replace(" ", "_")
+
+
 def load_site_tag_csv(path: Path = SITE_TAG_CSV_PATH) -> tuple[
     dict[int, list[str]], dict[str, list[str]], dict[str, list[str]]
 ]:
@@ -67,44 +88,51 @@ def load_site_tag_csv(path: Path = SITE_TAG_CSV_PATH) -> tuple[
 
     The site-tags endpoint at my2.us.siteimprove.com requires session
     cookies, so a cron-driven workflow can't pull it directly. Instead we
-    accept a CSV exported from the Siteimprove UI and merge it onto each
-    row when the script runs.
+    accept the CSV/TSV exported from the Siteimprove UI ("Settings >
+    Sites > Export") and merge it onto each row when the script runs.
 
-    Expected columns (case-insensitive; any subset works):
-      - site_id  (preferred match key)
-      - url      (fallback match key)
-      - site_name / name  (last-resort match key)
-      - tags     (comma-, pipe-, or semicolon-separated tag names)
+    Auto-detects:
+      - encoding: UTF-16 (Siteimprove default) or UTF-8 with BOM
+      - delimiter: tab (Siteimprove default) or comma
+      - column names: case-insensitive, spaces or underscores fine
+        ("Site ID" / "site_id", "Site URL" / "url", "Site name" /
+         "site_name", "Tags" / "labels")
+
+    Tag values are split on comma / pipe / semicolon, so the
+    Siteimprove export's "LSA, AEM, Humanities" cells parse cleanly.
 
     Returns (by_id, by_url, by_name). Empty dicts if the file is missing.
     """
     if not path.exists():
         return {}, {}, {}
+    encoding = _detect_csv_encoding(path)
+    delimiter = _detect_csv_delimiter(path, encoding)
     by_id: dict[int, list[str]] = {}
     by_url: dict[str, list[str]] = {}
     by_name: dict[str, list[str]] = {}
-    with path.open(newline="", encoding="utf-8-sig") as handle:
-        reader = csv.DictReader(handle)
+    with path.open(newline="", encoding=encoding) as handle:
+        reader = csv.DictReader(handle, delimiter=delimiter)
         for raw in reader:
-            row = {(k or "").strip().lower(): (v or "") for k, v in raw.items()}
+            row = {_norm_header(k): (v or "") for k, v in raw.items()}
             tags_field = row.get("tags") or row.get("labels") or ""
             tags = [t.strip() for t in TAG_SPLIT_RE.split(tags_field) if t.strip()]
             if not tags:
                 continue
             site_id_raw = row.get("site_id") or row.get("id")
-            try:
-                if site_id_raw:
+            if site_id_raw:
+                try:
                     by_id[int(str(site_id_raw).strip())] = tags
-            except ValueError:
-                pass
-            url = (row.get("url") or "").strip().rstrip("/")
+                except ValueError:
+                    pass
+            url = (row.get("site_url") or row.get("url") or "").strip().rstrip("/")
             if url:
                 by_url[url] = tags
             name = (row.get("site_name") or row.get("name") or "").strip().lower()
             if name:
                 by_name[name] = tags
     print(
-        f"  loaded admin tags from CSV: "
+        f"  loaded admin tags from CSV ({encoding}, "
+        f"{'tab' if delimiter == chr(9) else 'comma'}-separated): "
         f"{len(by_id)} by id, {len(by_url)} by url, {len(by_name)} by name",
         file=sys.stderr,
     )
