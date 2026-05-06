@@ -1,0 +1,1101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LSA Siteimprove dashboard</title>
+  <style>
+    :root {
+      --um-blue: #00274C;
+      --um-blue-50: #eff3f7;
+      --um-blue-400: #6b8cb0;
+      --um-maize: #FFCB05;
+      --paper: #F7F2E7;
+      --paper-light: #FAF7F0;
+      --ink: #0F1A26;
+      --ink-60: #3d434a;
+      --ink-20: #c4c7cc;
+      --rule: #d8cfba;
+      --rule-light: #e9e1cc;
+      --danger: #5e1616;
+      --danger-soft: #ecd0cf;
+      --warning: #6b3a00;
+      --warning-soft: #f5e1c0;
+      --success: #174531;
+      --success-soft: #dceedc;
+      --c-a: #4a7ca8;
+      --c-aa: #00274C;
+      --c-aaa: #b8855a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+      line-height: 1.5;
+    }
+    header {
+      background: var(--um-blue);
+      color: #fff;
+      padding: 1.5rem 2rem;
+      border-bottom: 4px solid var(--um-maize);
+    }
+    header h1 { margin: 0; font-size: 1.5rem; font-weight: 600; }
+    header p { margin: 0.25rem 0 0; opacity: 0.85; font-size: 0.9rem; }
+    main { max-width: 1400px; margin: 2rem auto; padding: 0 1.5rem; }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+      color: var(--ink-60);
+    }
+    .meta strong { color: var(--ink); }
+    .summary-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .card {
+      background: var(--paper-light);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+    }
+    .card .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--ink-60);
+      margin-bottom: 0.25rem;
+    }
+    .card .value {
+      font-size: 1.5rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--um-blue);
+    }
+    .card.danger .value { color: var(--danger); }
+    .filters {
+      background: var(--paper-light);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      padding: 0.85rem 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.4rem;
+    }
+    .filter-row:last-child { margin-bottom: 0; }
+    .filter-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--ink-60);
+      text-transform: uppercase;
+      min-width: 60px;
+    }
+    .pill {
+      padding: 0.3rem 0.7rem;
+      border: 1px solid var(--rule);
+      border-radius: 999px;
+      background: #fff;
+      font-size: 0.83rem;
+      cursor: pointer;
+      color: var(--ink);
+    }
+    .pill:hover { background: var(--um-blue-50); }
+    .pill.active {
+      background: var(--um-blue);
+      color: #fff;
+      border-color: var(--um-blue);
+    }
+    .filter-hint {
+      font-size: 0.78rem;
+      color: var(--ink-60);
+      margin-left: 0.4rem;
+      font-style: italic;
+    }
+    .tag {
+      display: inline-block;
+      padding: 0.05rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.7rem;
+      background: #e9e1cc;
+      color: var(--ink-60);
+      margin-right: 0.25rem;
+      margin-top: 2px;
+      white-space: nowrap;
+    }
+    .tag-lifecycle { background: #d8e4f0; color: #1a3a5c; }
+    .tag-domain    { background: #e0d5b8; color: #5c4a1a; }
+    .tag-platform  { background: #d5e3d8; color: #1a4a2a; }
+    .tag-group     { background: #efd9d6; color: #6b2e2a; }
+    .controls {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .controls input[type="search"] {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      font-size: 0.95rem;
+      min-width: 320px;
+      background: var(--paper-light);
+    }
+    .controls input[type="search"]:focus {
+      outline: 2px solid var(--um-blue);
+      outline-offset: -1px;
+    }
+    .row-count { color: var(--ink-60); font-size: 0.85rem; margin-left: auto; }
+    .viz-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    @media (max-width: 720px) {
+      .viz-grid { grid-template-columns: 1fr; }
+    }
+    .viz-card {
+      background: var(--paper-light);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+    }
+    .viz-card.full {
+      grid-column: 1 / -1;
+    }
+    .viz-card h3 {
+      margin: 0 0 0.6rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--um-blue);
+    }
+    .viz-card .viz-sub {
+      color: var(--ink-60);
+      font-size: 0.8rem;
+      margin-bottom: 0.6rem;
+    }
+    .viz-empty {
+      padding: 2rem 0.5rem;
+      text-align: center;
+      color: var(--ink-60);
+      font-size: 0.85rem;
+    }
+    .donut-wrap {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .legend {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-size: 0.83rem;
+    }
+    .legend li {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.15rem 0;
+    }
+    .legend .swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .legend .lname { flex: 1; }
+    .legend .lvalue {
+      font-variant-numeric: tabular-nums;
+      color: var(--ink-60);
+      margin-left: auto;
+    }
+    svg.bars text.bar-label,
+    svg.bars text.bar-value {
+      font-family: inherit;
+      font-size: 14px;
+      fill: var(--ink);
+    }
+    svg.bars text.bar-value {
+      fill: var(--ink-60);
+      font-variant-numeric: tabular-nums;
+    }
+    .table-wrap {
+      background: var(--paper-light);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      overflow-x: auto;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    th, td {
+      padding: 0.55rem 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--rule-light);
+      vertical-align: top;
+    }
+    th {
+      background: var(--um-blue-50);
+      font-weight: 600;
+      color: var(--um-blue);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    th:hover { background: #e2eaf2; }
+    th[aria-sort="ascending"]::after { content: " \25B2"; font-size: 0.7em; }
+    th[aria-sort="descending"]::after { content: " \25BC"; font-size: 0.7em; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    td.site-cell { min-width: 220px; }
+    td.site-cell .url {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--ink-60);
+      margin-top: 2px;
+    }
+    td.site-cell .url a { color: var(--ink-60); text-decoration: none; }
+    td.site-cell .url a:hover { text-decoration: underline; color: var(--um-blue); }
+    tbody tr:hover { background: var(--um-blue-50); }
+    tbody tr.has-error { background: #fcf6e8; }
+    tbody tr.has-error:hover { background: #f7eed8; }
+    .badge {
+      display: inline-block;
+      padding: 0.1rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge.error { background: var(--danger-soft); color: var(--danger); }
+    .badge.warn  { background: var(--warning-soft); color: var(--warning); }
+    .badge.ok    { background: var(--success-soft); color: var(--success); }
+    .empty {
+      padding: 3rem 1rem;
+      text-align: center;
+      color: var(--ink-60);
+    }
+    .notice {
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 1.5rem;
+      font-size: 0.85rem;
+      border: 1px solid;
+    }
+    .notice.warning {
+      background: var(--warning-soft);
+      border-color: #d9b97a;
+      color: var(--warning);
+    }
+    .notice.live {
+      background: #e2efff;
+      border-color: var(--um-blue-400);
+      color: var(--um-blue);
+    }
+    .notice code { background: rgba(0,0,0,0.06); padding: 0.05rem 0.3rem; border-radius: 3px; }
+    .pulse {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--um-blue);
+      margin-right: 0.4rem;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.4; transform: scale(1.4); }
+    }
+    footer {
+      margin-top: 2rem;
+      padding: 1rem 0;
+      font-size: 0.8rem;
+      color: var(--ink-60);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>LSA Siteimprove dashboard</h1>
+    <p>Live snapshot of accessibility scores, page counts, and issue occurrences across LSA sites.</p>
+  </header>
+  <main>
+    <div class="meta">
+      <span>Last refreshed: <strong id="generated-at">—</strong></span>
+      <span><a href="index.html">← Back to report</a></span>
+    </div>
+
+    <div id="notice-stale" class="notice warning" hidden>
+      This snapshot was generated before the score/target field-mapping fix. Re-run <code>python scripts/fetch_siteimprove.py</code> to populate Score and Target % columns.
+    </div>
+
+    <div id="notice-live" class="notice live" hidden>
+      <span class="pulse"></span><strong>Fetch in progress.</strong> Showing partial data; auto-refreshing every 10s.
+    </div>
+
+    <div class="filters">
+      <div class="filter-row">
+        <span class="filter-label">Level</span>
+        <div id="filter-level" role="group" aria-label="WCAG level filter" style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+          <button class="pill active" data-filter="all" title="Clear level filters">All</button>
+          <button class="pill" data-filter="A">A</button>
+          <button class="pill" data-filter="AA">AA</button>
+          <button class="pill" data-filter="AAA">AAA</button>
+          <button class="pill" data-filter="ARIA" title="WAI-ARIA related issues (separate from WCAG levels)">ARIA</button>
+        </div>
+        <span class="filter-hint" id="filter-level-hint"></span>
+      </div>
+      <div class="filter-row">
+        <span class="filter-label">Status</span>
+        <div id="filter-status" role="group" aria-label="Status filter" style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+          <button class="pill active" data-filter="all" title="Clear status filters">All</button>
+          <button class="pill" data-filter="ok">Has data</button>
+          <button class="pill" data-filter="no-data">No data</button>
+          <button class="pill" data-filter="error">Errors</button>
+        </div>
+        <span class="filter-hint" id="filter-status-hint"></span>
+      </div>
+      <div class="filter-row">
+        <span class="filter-label">Tags</span>
+        <div id="filter-tags" role="group" aria-label="Tag filter" style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+          <button class="pill active" data-filter="all" title="Clear tag filters">All</button>
+        </div>
+        <span class="filter-hint" id="filter-tags-hint"></span>
+      </div>
+    </div>
+
+    <div class="summary-cards" id="summary-cards"></div>
+
+    <div class="viz-grid">
+      <div class="viz-card">
+        <h3>WCAG level breakdown</h3>
+        <div class="viz-sub" id="viz-levels-sub">Total occurrences across filtered sites</div>
+        <div id="chart-levels"></div>
+      </div>
+      <div class="viz-card">
+        <h3>Site status breakdown</h3>
+        <div class="viz-sub">Distribution of filtered sites by data status</div>
+        <div id="chart-status"></div>
+      </div>
+      <div class="viz-card full">
+        <h3>Top 15 sites by AA occurrences</h3>
+        <div class="viz-sub">Most actionable for Title II AA conformance</div>
+        <div id="chart-top-aa"></div>
+      </div>
+      <div class="viz-card full">
+        <h3 id="chart-top-total-title">Top 15 sites by total occurrences</h3>
+        <div class="viz-sub">Worst overall offenders across the active level lens</div>
+        <div id="chart-top-total"></div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <input
+        type="search"
+        id="search"
+        placeholder="Search by site name or URL..."
+        autocomplete="off"
+        aria-label="Search sites"
+      />
+      <label style="font-size:0.85rem;color:var(--ink-60);display:flex;align-items:center;gap:0.4rem;">
+        Manual test:
+        <input
+          type="number"
+          id="minutes-per-page"
+          min="1"
+          max="240"
+          step="1"
+          value="15"
+          style="width:60px;padding:0.3rem 0.4rem;border:1px solid var(--rule);border-radius:4px;font-size:0.9rem;"
+          aria-label="Estimated minutes per page for manual accessibility testing"
+        />
+        min/page
+      </label>
+      <span class="row-count" id="row-count" aria-live="polite"></span>
+    </div>
+
+    <div class="table-wrap">
+      <table id="sites-table">
+        <thead>
+          <tr>
+            <th data-key="site_name" data-type="string" aria-sort="ascending">Site</th>
+            <th data-key="score" data-type="number" title="Accessibility DCI score (0–100)">Score</th>
+            <th data-key="target_percentage" data-type="number" title="Site Target % — progress toward the configured target (TGS)">Target %</th>
+            <th data-key="pages" data-type="number" title="Site page count from Siteimprove">Pages</th>
+            <th data-key="pages_with_issues" data-type="number" title="Max pages affected by any single accessibility issue">Pages w/ issues</th>
+            <th data-key="issue_types" data-type="number" title="Distinct issue types found on the site">Types</th>
+            <th data-key="lvl_a" data-type="number" title="WCAG Level A — occurrences">A</th>
+            <th data-key="lvl_aa" data-type="number" title="WCAG Level AA — occurrences (Title II target)">AA</th>
+            <th data-key="lvl_aaa" data-type="number" title="WCAG Level AAA — occurrences">AAA</th>
+            <th data-key="lvl_aria" data-type="number" title="WAI-ARIA related occurrences">ARIA</th>
+            <th data-key="issues" data-type="number" id="th-total">Total occurrences</th>
+            <th data-key="est_hours" data-type="number" title="Estimated manual-test hours = pages × minutes/page">Est. hrs</th>
+            <th data-key="status" data-type="string">Status</th>
+          </tr>
+        </thead>
+        <tbody id="sites-body">
+          <tr><td colspan="13" class="empty">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <footer>Data refreshed weekly from the Siteimprove API via GitHub Actions.</footer>
+  </main>
+
+  <script>
+    const POLL_INTERVAL_MS = 10000;
+    let pollHandle = null;
+
+    const state = {
+      sites: [],
+      search: "",
+      levelFilters: new Set(),    // empty = no level filter
+      statusFilters: new Set(),   // empty = no status filter
+      tagFilters: new Set(),      // empty = no tag filter
+      sortKey: "site_name",
+      sortDir: "asc",
+    };
+
+    const COLORS = {
+      A:    "#4a7ca8",
+      AA:   "#00274C",
+      AAA:  "#b8855a",
+      ARIA: "#7a4a8a",
+      ok:        "#174531",
+      "no-data": "#6b3a00",
+      error:     "#5e1616",
+    };
+
+    // Manual-test estimate: minutes per page. Adjustable via the input control.
+    let manualMinutesPerPage = 15;
+
+    const fmtNumber = (v) =>
+      v === null || v === undefined ? "—" : Number(v).toLocaleString();
+
+    const fmtScore = (v) => {
+      if (v === null || v === undefined) return "—";
+      const n = Number(v);
+      return Number.isNaN(n) ? "—" : n.toFixed(1);
+    };
+
+    const fmtHours = (v) => {
+      if (v === null || v === undefined) return "—";
+      const n = Number(v);
+      if (Number.isNaN(n) || n <= 0) return "—";
+      if (n < 1)  return n.toFixed(1) + "h";
+      if (n < 100) return n.toFixed(1) + "h";
+      return Math.round(n).toLocaleString() + "h";
+    };
+
+    function estTestHours(s) {
+      const pages = s.pages || s.pages_with_issues || 0;
+      if (!pages) return 0;
+      return (pages * manualMinutesPerPage) / 60;
+    }
+
+    function median(values) {
+      const arr = values.filter(v => v !== null && v !== undefined && !Number.isNaN(v))
+                        .map(Number)
+                        .sort((a, b) => a - b);
+      if (!arr.length) return null;
+      const mid = arr.length >> 1;
+      return arr.length % 2 ? arr[mid] : (arr[mid - 1] + arr[mid]) / 2;
+    }
+
+    function mean(values) {
+      const arr = values.filter(v => v !== null && v !== undefined && !Number.isNaN(v))
+                        .map(Number);
+      if (!arr.length) return null;
+      return arr.reduce((s, v) => s + v, 0) / arr.length;
+    }
+
+    const fmtDate = (v) => {
+      if (!v) return "—";
+      const d = new Date(v);
+      return Number.isNaN(d.getTime()) ? v : d.toISOString().slice(0, 10);
+    };
+
+    const escapeHtml = (str) =>
+      String(str ?? "").replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[c]));
+
+    // Mirror of the Python derive_tags() so tags show even on snapshots written
+    // before the script learned about tags. Server-provided tags (when present)
+    // win — they include API groups we can't derive client-side.
+    const LIFECYCLE_PATTERNS = [
+      ["staging", /^(staging|stage|stg)\b/],
+      ["dev",     /^(dev|develop|development)\b/],
+      ["test",    /^(test|qa)\b/],
+      ["train",   /^(train|training)\b/],
+      ["author",  /^(author|edit|editor|aem-author)\b/],
+      ["preview", /^(preview|prev|preprod)\b/],
+    ];
+    const PLATFORM_PATTERNS = [
+      ["aem",         /(?:^aem\b|aem-|adobe[- ]experience)/i],
+      ["wordpress",   /(?:\bwordpress\b|\bwp[- ])/i],
+      ["drupal",      /\bdrupal\b/i],
+      ["squarespace", /\bsquarespace\b/i],
+      ["wix",         /\bwix\b/i],
+    ];
+
+    function deriveClientTags(site) {
+      const tags = [];
+      const name = (site.site_name || "").trim();
+      let host = "";
+      try { host = new URL(site.url || "").hostname.toLowerCase(); } catch (_) {}
+      const subdomain = host.split(".")[0] || "";
+
+      let lifecycle = "production";
+      for (const [tag, pat] of LIFECYCLE_PATTERNS) {
+        if (pat.test(subdomain)) { lifecycle = tag; break; }
+      }
+      tags.push("lifecycle:" + lifecycle);
+
+      let domainClass;
+      if (host.endsWith(".lsa.umich.edu") || host === "lsa.umich.edu") domainClass = "lsa-umich";
+      else if (host.endsWith(".umich.edu") || host === "umich.edu") domainClass = "umich";
+      else if (host) domainClass = "external";
+      else domainClass = "unknown";
+      tags.push("domain:" + domainClass);
+
+      const haystack = `${name} ${host}`;
+      for (const [tag, pat] of PLATFORM_PATTERNS) {
+        if (pat.test(haystack)) { tags.push("platform:" + tag); break; }
+      }
+      return tags;
+    }
+
+    function decorate(sites) {
+      return sites.map((s) => {
+        const a    = s.by_level?.A?.occurrences    ?? 0;
+        const aa   = s.by_level?.AA?.occurrences   ?? 0;
+        const aaa  = s.by_level?.AAA?.occurrences  ?? 0;
+        // ARIA: prefer by_level.ARIA (after script update); fall back to other_conformance.aria.
+        const aria = s.by_level?.ARIA?.occurrences
+                     ?? s.other_conformance?.aria?.occurrences
+                     ?? 0;
+        const hasErr = !!(s.errors && s.errors.length);
+        const tags = (Array.isArray(s.tags) && s.tags.length > 0) ? s.tags : deriveClientTags(s);
+        return {
+          ...s,
+          lvl_a: a,
+          lvl_aa: aa,
+          lvl_aaa: aaa,
+          lvl_aria: aria,
+          tags,
+          status: hasErr ? "error" : (s.pages || s.pages_with_issues ? "ok" : "no-data"),
+        };
+      });
+    }
+
+    function applyFilters() {
+      const search = state.search.trim().toLowerCase();
+      const levels = state.levelFilters;
+      const statuses = state.statusFilters;
+      const tags = state.tagFilters;
+      return state.sites.filter((s) => {
+        // Level: site must have occurrences at ANY of the selected levels (OR within row).
+        if (levels.size > 0) {
+          const matchA    = levels.has("A")    && s.lvl_a    > 0;
+          const matchAA   = levels.has("AA")   && s.lvl_aa   > 0;
+          const matchAAA  = levels.has("AAA")  && s.lvl_aaa  > 0;
+          const matchARIA = levels.has("ARIA") && s.lvl_aria > 0;
+          if (!(matchA || matchAA || matchAAA || matchARIA)) return false;
+        }
+        // Status: site status must be ONE of the selected (OR within row).
+        if (statuses.size > 0 && !statuses.has(s.status)) return false;
+        // Tags: site must have ANY of the selected tags (OR within row).
+        if (tags.size > 0) {
+          const siteTags = s.tags || [];
+          let any = false;
+          for (const t of tags) {
+            if (siteTags.includes(t)) { any = true; break; }
+          }
+          if (!any) return false;
+        }
+        if (search) {
+          const hay = `${s.site_name || ""} ${s.url || ""}`.toLowerCase();
+          if (!hay.includes(search)) return false;
+        }
+        return true;
+      });
+    }
+
+    // Sum of occurrences across the levels the user has chosen.
+    // Empty selection = all levels.
+    function selectedOccurrences(s) {
+      if (state.levelFilters.size === 0) return s.issues || 0;
+      let sum = 0;
+      if (state.levelFilters.has("A"))    sum += s.lvl_a    || 0;
+      if (state.levelFilters.has("AA"))   sum += s.lvl_aa   || 0;
+      if (state.levelFilters.has("AAA"))  sum += s.lvl_aaa  || 0;
+      if (state.levelFilters.has("ARIA")) sum += s.lvl_aria || 0;
+      return sum;
+    }
+
+    function activeLevelsLabel() {
+      if (state.levelFilters.size === 0) return "all levels";
+      return Array.from(state.levelFilters).sort().join(" + ");
+    }
+
+    function describeSelection(set, kind) {
+      if (set.size === 0) return "";
+      const arr = Array.from(set);
+      if (kind === "level") {
+        return `matching ${arr.join(" or ")}`;
+      }
+      if (kind === "tag") {
+        const labels = arr.map(prettyTag);
+        return labels.length > 4
+          ? `matching ${labels.slice(0, 3).join(", ")} +${labels.length - 3} more`
+          : `matching ${labels.join(" or ")}`;
+      }
+      const map = { ok: "Has data", "no-data": "No data", error: "Errors" };
+      return `matching ${arr.map(v => map[v] || v).join(" or ")}`;
+    }
+
+    function prettyTag(t) {
+      // Display "lifecycle:staging" as "staging" with the prefix used for grouping/coloring.
+      const ix = t.indexOf(":");
+      return ix >= 0 ? t.slice(ix + 1) : t;
+    }
+
+    function tagKind(t) {
+      const ix = t.indexOf(":");
+      return ix >= 0 ? t.slice(0, ix) : "other";
+    }
+
+    function buildTagIndex(sites) {
+      const counts = new Map();
+      for (const s of sites) {
+        for (const t of (s.tags || [])) {
+          counts.set(t, (counts.get(t) || 0) + 1);
+        }
+      }
+      // Sort by tag kind, then by name. Keep order consistent across renders.
+      const KIND_ORDER = { lifecycle: 0, domain: 1, platform: 2, group: 3, other: 4 };
+      return Array.from(counts.entries())
+        .sort((a, b) => {
+          const ka = KIND_ORDER[tagKind(a[0])] ?? 99;
+          const kb = KIND_ORDER[tagKind(b[0])] ?? 99;
+          if (ka !== kb) return ka - kb;
+          return a[0].localeCompare(b[0]);
+        });
+    }
+
+    function renderTagPills() {
+      const group = document.getElementById("filter-tags");
+      const entries = buildTagIndex(state.sites);
+      const allBtn = '<button class="pill" data-filter="all" title="Clear tag filters">All</button>';
+      const pills = entries.map(([t, count]) => {
+        const kind = tagKind(t);
+        return `<button class="pill" data-filter="${escapeHtml(t)}" data-tag-kind="${kind}">
+          <span style="opacity:0.7;font-size:0.7rem;margin-right:0.25rem;">${escapeHtml(kind)}:</span>${escapeHtml(prettyTag(t))}
+          <span style="opacity:0.55;margin-left:0.3rem;">${count}</span>
+        </button>`;
+      }).join("");
+      group.innerHTML = allBtn + pills;
+      syncFilterGroup("filter-tags", state.tagFilters);
+    }
+
+    function compare(a, b, key, type, dir) {
+      let av = a[key], bv = b[key];
+      const nullsLast = (v) => v === null || v === undefined ? Infinity : v;
+      if (type === "number") {
+        av = nullsLast(av); bv = nullsLast(bv);
+        return dir === "asc" ? av - bv : bv - av;
+      }
+      av = (av ?? "").toString().toLowerCase();
+      bv = (bv ?? "").toString().toLowerCase();
+      if (av < bv) return dir === "asc" ? -1 : 1;
+      if (av > bv) return dir === "asc" ? 1 : -1;
+      return 0;
+    }
+
+    function statusBadge(status) {
+      if (status === "error")   return '<span class="badge error">error</span>';
+      if (status === "no-data") return '<span class="badge warn">no data</span>';
+      return '<span class="badge ok">ok</span>';
+    }
+
+    // -- SVG donut --
+    function donutPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
+      if (endAngle - startAngle >= Math.PI * 2 - 1e-9) {
+        // full circle workaround
+        endAngle = startAngle + Math.PI * 2 - 1e-4;
+      }
+      const x0 = cx + rOuter * Math.cos(startAngle);
+      const y0 = cy + rOuter * Math.sin(startAngle);
+      const x1 = cx + rOuter * Math.cos(endAngle);
+      const y1 = cy + rOuter * Math.sin(endAngle);
+      const x2 = cx + rInner * Math.cos(endAngle);
+      const y2 = cy + rInner * Math.sin(endAngle);
+      const x3 = cx + rInner * Math.cos(startAngle);
+      const y3 = cy + rInner * Math.sin(startAngle);
+      const largeArc = (endAngle - startAngle) > Math.PI ? 1 : 0;
+      return `M ${x0} ${y0} A ${rOuter} ${rOuter} 0 ${largeArc} 1 ${x1} ${y1} L ${x2} ${y2} A ${rInner} ${rInner} 0 ${largeArc} 0 ${x3} ${y3} Z`;
+    }
+
+    function renderDonut(containerId, segments) {
+      const total = segments.reduce((s, x) => s + x.value, 0);
+      const container = document.getElementById(containerId);
+      if (total <= 0) {
+        container.innerHTML = '<div class="viz-empty">No data for current filters.</div>';
+        return;
+      }
+      const size = 180, cx = size/2, cy = size/2, rOuter = 80, rInner = 50;
+      let cumulative = 0;
+      const slices = segments.filter(s => s.value > 0).map((s) => {
+        const start = (cumulative / total) * Math.PI * 2 - Math.PI / 2;
+        cumulative += s.value;
+        const end = (cumulative / total) * Math.PI * 2 - Math.PI / 2;
+        return `<path d="${donutPath(cx, cy, rOuter, rInner, start, end)}"
+                fill="${s.color}" stroke="var(--paper-light)" stroke-width="1.5">
+                  <title>${escapeHtml(s.label)}: ${s.value.toLocaleString()} (${(s.value/total*100).toFixed(1)}%)</title>
+                </path>`;
+      }).join("");
+
+      const legend = segments.map((s) => `
+        <li>
+          <span class="swatch" style="background:${s.color}"></span>
+          <span class="lname">${escapeHtml(s.label)}</span>
+          <span class="lvalue">${s.value.toLocaleString()} (${total > 0 ? (s.value/total*100).toFixed(1) : "0"}%)</span>
+        </li>`).join("");
+
+      container.innerHTML = `
+        <div class="donut-wrap">
+          <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="Donut chart">
+            ${slices}
+            <text x="${cx}" y="${cy - 4}" text-anchor="middle" font-size="14" font-weight="600" fill="var(--um-blue)">${total.toLocaleString()}</text>
+            <text x="${cx}" y="${cy + 12}" text-anchor="middle" font-size="10" fill="var(--ink-60)">total</text>
+          </svg>
+          <ul class="legend" style="flex:1;min-width:140px;">${legend}</ul>
+        </div>`;
+    }
+
+    // -- SVG horizontal bars --
+    function renderBars(containerId, items, valueLabel) {
+      const container = document.getElementById(containerId);
+      if (!items.length) {
+        container.innerHTML = '<div class="viz-empty">No data for current filters.</div>';
+        return;
+      }
+      const maxValue = Math.max(...items.map(i => i.value));
+      const rowHeight = 32;
+      const labelWidth = 320;
+      const valueGutter = 110;
+      const innerWidth = 1100;
+      const barAreaWidth = innerWidth - labelWidth - valueGutter;
+      const height = items.length * rowHeight + 12;
+      const rows = items.map((it, i) => {
+        const y = i * rowHeight + 4;
+        const barW = maxValue > 0 ? (it.value / maxValue) * barAreaWidth : 0;
+        const truncLabel = it.label.length > 50 ? it.label.slice(0, 48) + "…" : it.label;
+        return `
+          <g transform="translate(0, ${y})">
+            <text class="bar-label" x="${labelWidth - 8}" y="${rowHeight / 2 + 4}" text-anchor="end">
+              <title>${escapeHtml(it.label)}</title>${escapeHtml(truncLabel)}
+            </text>
+            <rect x="${labelWidth}" y="2" height="${rowHeight - 6}" width="${barW}" fill="${it.color}" rx="2"></rect>
+            <text class="bar-value" x="${labelWidth + barW + 6}" y="${rowHeight / 2 + 4}">${it.value.toLocaleString()}</text>
+          </g>`;
+      }).join("");
+      container.innerHTML = `
+        <svg class="bars" width="100%" height="${height}" viewBox="0 0 ${innerWidth} ${height}"
+             preserveAspectRatio="xMinYMin meet" role="img" aria-label="${escapeHtml(valueLabel)}">
+          ${rows}
+        </svg>`;
+    }
+
+    function aggregateLevels(sites) {
+      let a = 0, aa = 0, aaa = 0, aria = 0;
+      for (const s of sites) {
+        a    += s.lvl_a    || 0;
+        aa   += s.lvl_aa   || 0;
+        aaa  += s.lvl_aaa  || 0;
+        aria += s.lvl_aria || 0;
+      }
+      const all = [
+        { key: "A",    label: "Level A",    value: a,    color: COLORS.A    },
+        { key: "AA",   label: "Level AA",   value: aa,   color: COLORS.AA   },
+        { key: "AAA",  label: "Level AAA",  value: aaa,  color: COLORS.AAA  },
+        { key: "ARIA", label: "ARIA",       value: aria, color: COLORS.ARIA },
+      ];
+      // If a level filter is active, show only those slices.
+      if (state.levelFilters.size === 0) return all;
+      return all.filter(seg => state.levelFilters.has(seg.key));
+    }
+
+    function aggregateStatus(sites) {
+      const counts = { ok: 0, "no-data": 0, error: 0 };
+      for (const s of sites) counts[s.status] = (counts[s.status] || 0) + 1;
+      return [
+        { label: "Has data", value: counts.ok,        color: COLORS.ok        },
+        { label: "No data",  value: counts["no-data"], color: COLORS["no-data"] },
+        { label: "Errors",   value: counts.error,     color: COLORS.error     },
+      ];
+    }
+
+    function topByKey(sites, key, color, n = 15) {
+      return sites
+        .filter(s => (s[key] || 0) > 0)
+        .sort((a, b) => (b[key] || 0) - (a[key] || 0))
+        .slice(0, n)
+        .map(s => ({ label: s.site_name || "(unnamed)", value: s[key] || 0, color }));
+    }
+
+    function topBySelected(sites, color, n = 15) {
+      return sites
+        .map(s => ({ label: s.site_name || "(unnamed)", value: selectedOccurrences(s), color }))
+        .filter(x => x.value > 0)
+        .sort((a, b) => b.value - a.value)
+        .slice(0, n);
+    }
+
+    function renderCharts(filteredSites) {
+      renderDonut("chart-levels", aggregateLevels(filteredSites));
+      renderDonut("chart-status", aggregateStatus(filteredSites));
+      renderBars("chart-top-aa",    topByKey(filteredSites, "lvl_aa",  COLORS.AA), "AA occurrences");
+      renderBars("chart-top-total", topBySelected(filteredSites, "#2a3441"),       "Selected-level occurrences");
+
+      // Update chart titles to reflect the active level filter.
+      const lensLabel = activeLevelsLabel();
+      document.getElementById("viz-levels-sub").textContent =
+        state.levelFilters.size > 0
+          ? `Occurrences for selected level(s): ${lensLabel}`
+          : "Total occurrences across filtered sites";
+      document.getElementById("chart-top-total-title").textContent =
+        state.levelFilters.size > 0
+          ? `Top 15 sites by ${lensLabel} occurrences`
+          : "Top 15 sites by total occurrences";
+    }
+
+    function renderSummary(filteredSites) {
+      const total = filteredSites.length;
+      const ok = filteredSites.filter(s => s.status === "ok").length;
+      const errors = filteredSites.filter(s => s.status === "error").length;
+      const totalAA = filteredSites.reduce((acc, s) => acc + s.lvl_aa, 0);
+      const totalA = filteredSites.reduce((acc, s) => acc + s.lvl_a, 0);
+      const lensTotal = filteredSites.reduce((acc, s) => acc + selectedOccurrences(s), 0);
+      const lensLabel = state.levelFilters.size > 0
+        ? `Total occurrences (${activeLevelsLabel()})`
+        : "Total occurrences";
+
+      const targetVals = filteredSites.map(s => s.target_percentage)
+                                       .filter(v => v !== null && v !== undefined);
+      const avgTarget = mean(targetVals);
+      const medTarget = median(targetVals);
+
+      const totalPages = filteredSites.reduce((acc, s) => acc + (s.pages || 0), 0);
+      const totalTestHours = filteredSites.reduce((acc, s) => acc + estTestHours(s), 0);
+
+      const cards = [
+        { label: "Sites (filtered)",     value: total.toLocaleString() },
+        { label: "Sites with data",      value: ok.toLocaleString() },
+        { label: "Sites w/ errors",      value: errors.toLocaleString(), danger: errors > 0 },
+        { label: "Avg target %",         value: avgTarget !== null ? avgTarget.toFixed(1) + "%" : "—" },
+        { label: "Median target %",      value: medTarget !== null ? medTarget.toFixed(1) + "%" : "—" },
+        { label: "Total pages",          value: totalPages.toLocaleString() },
+        { label: "Total A occurrences",  value: totalA.toLocaleString() },
+        { label: "Total AA occurrences", value: totalAA.toLocaleString() },
+        { label: lensLabel,              value: lensTotal.toLocaleString() },
+        { label: `Manual test (${manualMinutesPerPage}min/pg)`, value: fmtHours(totalTestHours) },
+      ];
+      document.getElementById("summary-cards").innerHTML = cards.map((c) => `
+        <div class="card${c.danger ? " danger" : ""}">
+          <div class="label">${escapeHtml(c.label)}</div>
+          <div class="value">${escapeHtml(c.value)}</div>
+        </div>`).join("");
+    }
+
+    function renderTable(filteredSites) {
+      const body = document.getElementById("sites-body");
+      const headers = document.querySelectorAll("#sites-table th[data-key]");
+      const sortType =
+        Array.from(headers).find((h) => h.dataset.key === state.sortKey)?.dataset.type || "string";
+
+      // Update Total column header to reflect active level lens.
+      document.getElementById("th-total").textContent =
+        state.levelFilters.size > 0
+          ? `Total (${activeLevelsLabel()})`
+          : "Total occurrences";
+
+      // When a level filter is active, sort the "issues" column by selectedOccurrences instead.
+      const sorted = filteredSites.slice().sort((a, b) => {
+        if (state.sortKey === "issues" && state.levelFilters.size > 0) {
+          const av = selectedOccurrences(a);
+          const bv = selectedOccurrences(b);
+          return state.sortDir === "asc" ? av - bv : bv - av;
+        }
+        return compare(a, b, state.sortKey, sortType, state.sortDir);
+      });
+
+      headers.forEach((th) => {
+        if (th.dataset.key === state.sortKey) {
+          th.setAttribute("aria-sort", state.sortDir === "asc" ? "ascending" : "descending");
+        } else {
+          th.removeAttribute("aria-sort");
+        }
+      });
+
+      document.getElementById("row-count").textContent =
+        `${filteredSites.length.toLocaleString()} of ${state.sites.length.toLocaleString()} sites shown`;
+
+      if (sorted.length === 0) {
+        body.innerHTML = '<tr><td colspan="13" class="empty">No sites match current filters.</td></tr>';
+        return;
+      }
+
+      body.innerHTML = sorted.map((s) => {
+        const urlCell = s.url
+          ? `<a href="${escapeHtml(s.url)}" target="_blank" rel="noopener">${escapeHtml(s.url)}</a>`
+          : "";
+        const errorTitle = s.errors && s.errors.length ? ` title="${escapeHtml(s.errors.join("; "))}"` : "";
+        const tagsHtml = (s.tags || []).map((t) => {
+          const kind = tagKind(t);
+          return `<span class="tag tag-${escapeHtml(kind)}" title="${escapeHtml(t)}">${escapeHtml(prettyTag(t))}</span>`;
+        }).join("");
+        return `
+          <tr class="${s.status === "error" ? "has-error" : ""}"${errorTitle}>
+            <td class="site-cell">
+              <strong>${escapeHtml(s.site_name || "(unnamed)")}</strong>
+              <span class="url">${urlCell}</span>
+              ${tagsHtml ? `<div style="margin-top:3px;">${tagsHtml}</div>` : ""}
+            </td>
+            <td class="num">${fmtScore(s.score)}</td>
+            <td class="num">${fmtScore(s.target_percentage)}</td>
+            <td class="num">${fmtNumber(s.pages)}</td>
+            <td class="num">${fmtNumber(s.pages_with_issues)}</td>
+            <td class="num">${fmtNumber(s.issue_types)}</td>
+            <td class="num">${fmtNumber(s.lvl_a)}</td>
+            <td class="num">${fmtNumber(s.lvl_aa)}</td>
+            <td class="num">${fmtNumber(s.lvl_aaa)}</td>
+            <td class="num">${fmtNumber(s.lvl_aria)}</td>
+            <td class="num">${fmtNumber(selectedOccurrences(s))}</td>
+            <td class="num">${fmtHours(estTestHours(s))}</td>
+            <td>${statusBadge(s.status)}</td>
+          </tr>`;
+      }).join("");
+    }
+
+    function renderAll() {
+      const filtered = applyFilters();
+      renderSummary(filtered);
+      renderCharts(filtered);
+      renderTable(filtered);
+    }
+
+    async function load() {
+      try {
+        const res = await fetch("../data/sites.json", { cache: "no-cache" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const raw = Array.isArray(data.sites) ? data.sites : [];
+        state.sites = decorate(raw);
+        document.getElementById("generated-at").textContent =
+          data.generated_at ? fmtDate(data.generated_at) : "unknown";
+
+        const anyScore = state.sites.some((s) => s.score !== null && s.score !== undefined);
+        const anyTarget = state.sites.some((s) => s.target_percentage !== null && s.target_percentage !== undefined);
+        document.getElementById("notice-stale").hidden = !(state.sites.length > 0 && !anyScore && !anyTarget);
+        document.getElementById("notice-live").hidden = !data.in_progress;
+        renderTagPills();
+
+        if (data.in_progress) {
+          if (!pollHandle) pollHandle = setInterval(load, POLL_INTERVAL_MS);
+        } else if (pollHandle) {
+          clearInterval(pollHandle);
+          pollHandle = null;
+        }
+
+        renderAll();
+      } catch (err) {
+        document.getElementById("sites-body").innerHTML =
+          `<tr><td colspan="13" class="empty">Failed to load data: ${escapeHtml(err.message)}</td></tr>`;
+      }
+    }
+
+    document.getElementById("search").addEventListener("input", (e) => {
+      state.search = e.target.value;
+      renderAll();
+    });
+
+    document.getElementById("minutes-per-page").addEventListener("input", (e) => {
+      const n = Math.max(1, Math.min(240, Number(e.target.value) || 15));
+      manualMinutesPerPage = n;
+      renderAll();
+    });
+
+    function syncFilterGroup(groupId, set) {
+      const group = document.getElementById(groupId);
+      group.querySelectorAll(".pill").forEach((p) => {
+        const v = p.dataset.filter;
+        if (v === "all") {
+          p.classList.toggle("active", set.size === 0);
+        } else {
+          p.classList.toggle("active", set.has(v));
+        }
+      });
+    }
+
+    function wireFilterGroup(groupId, stateKey, hintId, kind) {
+      const group = document.getElementById(groupId);
+      const hintEl = document.getElementById(hintId);
+      group.addEventListener("click", (e) => {
+        const pill = e.target.closest(".pill");
+        if (!pill) return;
+        const value = pill.dataset.filter;
+        const set = state[stateKey];
+        if (value === "all") {
+          set.clear();
+        } else if (set.has(value)) {
+          set.delete(value);
+        } else {
+          set.add(value);
+        }
+        syncFilterGroup(groupId, set);
+        hintEl.textContent = describeSelection(set, kind);
+        renderAll();
+      });
+    }
+    wireFilterGroup("filter-level",  "levelFilters",  "filter-level-hint",  "level");
+    wireFilterGroup("filter-status", "statusFilters", "filter-status-hint", "status");
+    wireFilterGroup("filter-tags",   "tagFilters",    "filter-tags-hint",   "tag");
+
+    document.querySelectorAll("#sites-table th[data-key]").forEach((th) => {
+      th.addEventListener("click", () => {
+        const key = th.dataset.key;
+        if (state.sortKey === key) {
+          state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
+        } else {
+          state.sortKey = key;
+          state.sortDir = th.dataset.type === "number" ? "desc" : "asc";
+        }
+        renderAll();
+      });
+    });
+
+    load();
+  </script>
+</body>
+</html>
