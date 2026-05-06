@@ -9,21 +9,32 @@ Static site published via GitHub Pages, with a live Siteimprove dashboard refres
 - `data/sites.json`, `data/rules.json` — snapshots written by the fetch script; consumed by both pages
 - `data/site-tags.csv` — optional admin-configured site labels from the Siteimprove UI (see below)
 
-## Admin-configured site labels (optional)
+## Site tags (CSV-driven)
 
-Siteimprove's site labels (e.g. `LSA`, `AEM`, `Humanities`, `WP-Sites`) live behind the management UI at `my2.us.siteimprove.com`, which requires session cookies — unreachable from a cron-driven workflow with the public API token.
+Tags are sourced **exclusively** from `data/site-tags.csv` — an export of the admin-configured site labels in Siteimprove. No heuristic / URL-derived tags are emitted; if the CSV doesn't list a site, that row simply has no tags.
 
-To make those labels flow through anyway, export them once from the Siteimprove UI and check the file in:
+### Update flow
 
-1. In Siteimprove → **Settings → Sites** → look for an **Export** action (CSV / Excel)
-2. Save the export at `data/site-tags.csv` with at minimum these columns (case-insensitive, any subset works):
+1. In Siteimprove → **Settings → Sites** → **Export** (CSV)
+2. Save / replace `data/site-tags.csv`. Columns (case-insensitive, any subset works):
    - `site_id` (preferred match key)
-   - `url` (fallback match key)
-   - `site_name` or `name` (last-resort match key)
-   - `tags` or `labels` (comma-, pipe-, or semicolon-separated label names)
-3. Commit the file. The next fetch run merges the labels onto each row as `tag:<label>` entries; the dashboard renders them as distinctive maize-on-blue chips.
+   - `url` (fallback)
+   - `site_name` or `name` (last resort)
+   - `tags` or `labels` — comma-, pipe-, or semicolon-separated label names
+3. `git commit data/site-tags.csv && git push`
+4. The **Merge site tags** workflow (`.github/workflows/merge-site-tags.yml`) auto-runs on that push, re-applies the CSV onto `data/sites.json` (no API calls), commits the refreshed snapshot, and Pages redeploys. Total round trip: ~30 seconds.
 
-Re-export and overwrite the file whenever the tag assignments change in Siteimprove.
+### Why CSV instead of API
+
+Siteimprove's site labels live behind the management UI at `my2.us.siteimprove.com`, which requires session cookies. The public API token returns 302 (redirect to login) for that endpoint. Until Siteimprove exposes labels in the public v2 API or grants the API user a management scope, the CSV is the cleanest single source of truth.
+
+### Manual merge
+
+If you want to re-apply the CSV without pushing (e.g., to verify locally before committing):
+
+```bash
+python scripts/merge_site_tags.py
+```
 - `scripts/fetch_siteimprove.py` — pulls site list and per-site accessibility summary from the Siteimprove API
 - `.github/workflows/fetch-siteimprove.yml` — runs the fetch on a schedule and commits any changes
 - `.github/workflows/pages.yml` — deploys the site to GitHub Pages on every push to `main`

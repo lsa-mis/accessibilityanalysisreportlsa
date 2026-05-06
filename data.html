@@ -666,52 +666,6 @@
         "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
       }[c]));
 
-    // Mirror of the Python derive_tags() so tags show even on snapshots written
-    // before the script learned about tags. Server-provided tags (when present)
-    // win — they include API groups we can't derive client-side.
-    const LIFECYCLE_PATTERNS = [
-      ["staging", /^(staging|stage|stg)\b/],
-      ["dev",     /^(dev|develop|development)\b/],
-      ["test",    /^(test|qa)\b/],
-      ["train",   /^(train|training)\b/],
-      ["author",  /^(author|edit|editor|aem-author)\b/],
-      ["preview", /^(preview|prev|preprod)\b/],
-    ];
-    const PLATFORM_PATTERNS = [
-      ["aem",         /(?:^aem\b|aem-|adobe[- ]experience)/i],
-      ["wordpress",   /(?:\bwordpress\b|\bwp[- ])/i],
-      ["drupal",      /\bdrupal\b/i],
-      ["squarespace", /\bsquarespace\b/i],
-      ["wix",         /\bwix\b/i],
-    ];
-
-    function deriveClientTags(site) {
-      const tags = [];
-      const name = (site.site_name || "").trim();
-      let host = "";
-      try { host = new URL(site.url || "").hostname.toLowerCase(); } catch (_) {}
-      const subdomain = host.split(".")[0] || "";
-
-      let lifecycle = "production";
-      for (const [tag, pat] of LIFECYCLE_PATTERNS) {
-        if (pat.test(subdomain)) { lifecycle = tag; break; }
-      }
-      tags.push("lifecycle:" + lifecycle);
-
-      let domainClass;
-      if (host.endsWith(".lsa.umich.edu") || host === "lsa.umich.edu") domainClass = "lsa-umich";
-      else if (host.endsWith(".umich.edu") || host === "umich.edu") domainClass = "umich";
-      else if (host) domainClass = "external";
-      else domainClass = "unknown";
-      tags.push("domain:" + domainClass);
-
-      const haystack = `${name} ${host}`;
-      for (const [tag, pat] of PLATFORM_PATTERNS) {
-        if (pat.test(haystack)) { tags.push("platform:" + tag); break; }
-      }
-      return tags;
-    }
-
     function decorate(sites) {
       return sites.map((s) => {
         const a    = s.by_level?.A?.occurrences    ?? 0;
@@ -726,7 +680,9 @@
                      ?? s.other_conformance?.si?.occurrences
                      ?? 0;
         const hasErr = !!(s.errors && s.errors.length);
-        const tags = (Array.isArray(s.tags) && s.tags.length > 0) ? s.tags : deriveClientTags(s);
+        // Tags come exclusively from data/site-tags.csv (admin-configured).
+        // Empty array = site isn't in the CSV; nothing to display.
+        const tags = Array.isArray(s.tags) ? s.tags : [];
         return {
           ...s,
           lvl_a: a,

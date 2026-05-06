@@ -430,7 +430,7 @@ def shape_site_row(
     site: dict[str, Any],
     target: dict[str, Any],
     rollup: dict[str, Any],
-    groups: list[str] | None = None,
+    groups: list[str] | None = None,  # noqa: ARG001 — kept for fetch_one signature symmetry
 ) -> dict[str, Any]:
     score = coerce_float(target.get("accessibility_dci_score"))
     target_score = coerce_float(target.get("accessibility_dci_target_score"))
@@ -444,28 +444,11 @@ def shape_site_row(
     pages = coerce_int(api_pages) if api_pages is not None else None
     pages_with_issues = rollup.get("max_pages_affected") or 0
 
-    tags = derive_tags(site_name, url)
-    # Real product/module enablement from /sites — data-driven, not a heuristic.
-    products = site.get("product") or []
-    if isinstance(products, list):
-        for product in products:
-            if product:
-                tags.append(f"product:{product}")
-    if groups:
-        tags.extend(groups)
-    # Defensive: if either /sites or /sites/{id} ever returns a tags
-    # / category / department / domain field, surface it as a tag.
-    for source in (site, target):
-        if not isinstance(source, dict):
-            continue
-        for tagish_key in ("tags", "category", "categories", "department", "domain", "labels"):
-            value = source.get(tagish_key)
-            if isinstance(value, list):
-                for v in value:
-                    if v:
-                        tags.append(f"{tagish_key}:{v}")
-            elif isinstance(value, str) and value:
-                tags.append(f"{tagish_key}:{value}")
+    # Tags are exclusively merged from data/site-tags.csv at the call site
+    # (see main()). Heuristic tags (lifecycle/domain/platform/product/group)
+    # are intentionally not emitted — admin-configured labels in Siteimprove
+    # are the single source of truth.
+    tags: list[str] = []
 
     return {
         "id": site.get("id"),
@@ -552,18 +535,16 @@ def main() -> None:
     runnable_sites = [s for s in sites if s.get("id") is not None]
 
     def fetch_one(site: dict[str, Any]) -> tuple[
-        dict[str, Any], dict[str, Any], list[dict[str, Any]], list[str],
-        dict[str, Any], dict[str, Any], str | None, dict[str, int | None]
+        dict[str, Any], dict[str, Any], list[dict[str, Any]],
+        dict[str, Any], dict[str, Any], dict[str, int | None]
     ]:
         site_id = site["id"]
         target = fetch_site_target(session, site_id)
         issues = fetch_site_issues(session, site_id)
-        groups = fetch_site_groups(session, site_id)
         detail = fetch_site_detail(session, site_id)
         pdfs = summarize_pdfs(fetch_site_pdfs(session, site_id))
-        platform = fetch_site_platform_from_meta(session, site_id)
         spelling = fetch_misspelling_counts(session, site_id)
-        return site, target, issues, groups, detail, pdfs, platform, spelling
+        return site, target, issues, detail, pdfs, spelling
 
     site_rows: list[dict[str, Any]] = []
     per_site_issues: list[tuple[dict[str, Any], list[dict[str, Any]]]] = []
@@ -593,25 +574,16 @@ def main() -> None:
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = {executor.submit(fetch_one, s): s for s in runnable_sites}
         for index, future in enumerate(as_completed(futures), start=1):
-            site, target, issues, groups, detail, pdfs, platform, spelling = future.result()
+            site, target, issues, detail, pdfs, spelling = future.result()
             per_site_issues.append((site, issues))
             rollup = aggregate_site_issues(issues)
-            row = shape_site_row(site, target, rollup, groups)
+            row = shape_site_row(site, target, rollup)
             row.update(pdfs)
             row.update(spelling)
-            # Promote a meta-generator-derived platform tag (e.g. wordpress,
-            # drupal, omeka) when name/URL heuristics didn't already pick one.
-            if platform:
-                meta_tag = f"platform:{platform}"
-                if meta_tag not in (row.get("tags") or []):
-                    row.setdefault("tags", []).append(meta_tag)
-                row["platform_source"] = "meta_generator"
-            # Merge admin-configured site labels from the CSV export.
+            # Tags come exclusively from data/site-tags.csv (admin-configured
+            # Siteimprove labels). Empty list means the site isn't in the CSV.
             csv_tags = lookup_csv_tags(site, csv_by_id, csv_by_url, csv_by_name)
-            for label in csv_tags:
-                tag_value = f"tag:{label}"
-                if tag_value not in (row.get("tags") or []):
-                    row.setdefault("tags", []).append(tag_value)
+            row["tags"] = [f"tag:{label}" for label in csv_tags]
             # Surface any extra metadata from /sites/{id} (only fields not
             # already present on the listing row), so we can audit later.
             extras = {
