@@ -799,8 +799,15 @@
       const allBtn = '<button class="pill" data-filter="all" title="Clear tag filters">All</button>';
       const pills = entries.map(([t, count]) => {
         const kind = tagKind(t);
+        // CSV-sourced tags all share kind "tag", so the prefix would be
+        // visual noise on every pill. Show the prefix only for non-tag
+        // kinds (lifecycle, domain, etc.) — those are gone for now but
+        // the rendering stays generic in case heuristics come back.
+        const prefix = kind && kind !== "tag" && kind !== "other"
+          ? `<span style="opacity:0.6;font-size:0.7rem;margin-right:0.25rem;">${escapeHtml(kind)}:</span>`
+          : "";
         return `<button class="pill" data-filter="${escapeHtml(t)}" data-tag-kind="${kind}">
-          <span style="opacity:0.7;font-size:0.7rem;margin-right:0.25rem;">${escapeHtml(kind)}:</span>${escapeHtml(prettyTag(t))}
+          ${prefix}${escapeHtml(prettyTag(t))}
           <span style="opacity:0.55;margin-left:0.3rem;">${count}</span>
         </button>`;
       }).join("");
