@@ -1176,47 +1176,47 @@ hr.divider { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
         <h3>Portfolio composition</h3>
         <span class="chart-kicker">Figure 3.1</span>
       </div>
-      <p class="chart-description">Of the 1,618 registered sites, 1,373 carry real content (2+ scanned pages). 245 are empty, placeholder, or unreachable records. Of the active sites, only 12 have reached "target met" status in Siteimprove; the remaining 1,361 are working toward it.</p>
+      <p class="chart-description">Of the <span data-stat="total_sites">1,618</span> registered sites, <span data-stat="active_sites">1,373</span> carry real content (2+ scanned pages). <span data-stat="inactive_sites">245</span> are empty, placeholder, or unreachable records. Of the active sites, only <span data-stat="sites_at_target">12</span> have reached "target met" status in Siteimprove; the remaining <span data-stat="sites_below_target">1,361</span> are working toward it.</p>
       <div class="grid-2" style="gap: 3rem; align-items: center;">
         <div class="chart-wrapper short">
-          <canvas id="portfolioChart" aria-label="Doughnut chart: 1,373 active sites, 245 empty or placeholder, of 1,618 total"></canvas>
+          <canvas id="portfolioChart" aria-label="Doughnut chart: active vs inactive sites"></canvas>
         </div>
         <div>
           <div class="progress-row">
             <div class="progress-label">
               <span class="label-text">Active sites (2+ pages)</span>
-              <span class="label-value">1,373<span class="label-pct">84.9%</span></span>
+              <span class="label-value"><span data-stat="active_sites">1,373</span><span class="label-pct" data-stat="active_sites_pct_label">84.9%</span></span>
             </div>
-            <div class="progress-track"><div class="progress-fill" data-fill="84.9"></div></div>
+            <div class="progress-track"><div class="progress-fill" data-fill="84.9" data-stat-fill="active_sites_pct"></div></div>
           </div>
           <div class="progress-row">
             <div class="progress-label">
               <span class="label-text">Empty, placeholder, unreachable</span>
-              <span class="label-value">245<span class="label-pct">15.1%</span></span>
+              <span class="label-value"><span data-stat="inactive_sites">245</span><span class="label-pct" data-stat="inactive_sites_pct_label">15.1%</span></span>
             </div>
-            <div class="progress-track"><div class="progress-fill maize" data-fill="15.1"></div></div>
+            <div class="progress-track"><div class="progress-fill maize" data-fill="15.1" data-stat-fill="inactive_sites_pct"></div></div>
           </div>
           <hr class="divider" style="margin: 1.75rem 0;">
           <div class="progress-row">
             <div class="progress-label">
               <span class="label-text">Sites with "Target met" status</span>
-              <span class="label-value">12<span class="label-pct">0.9%</span></span>
+              <span class="label-value"><span data-stat="sites_at_target">12</span><span class="label-pct" data-stat="sites_at_target_pct_label">0.9%</span></span>
             </div>
-            <div class="progress-track"><div class="progress-fill" data-fill="0.9"></div></div>
+            <div class="progress-track"><div class="progress-fill" data-fill="0.9" data-stat-fill="sites_at_target_pct"></div></div>
           </div>
           <div class="progress-row">
             <div class="progress-label">
               <span class="label-text">Sites within 1.5 points of target</span>
-              <span class="label-value">268<span class="label-pct">19.5%</span></span>
+              <span class="label-value"><span data-stat="sites_near_target">268</span><span class="label-pct" data-stat="sites_near_target_pct_label">19.5%</span></span>
             </div>
-            <div class="progress-track"><div class="progress-fill" data-fill="19.5"></div></div>
+            <div class="progress-track"><div class="progress-fill" data-fill="19.5" data-stat-fill="sites_near_target_pct"></div></div>
           </div>
           <div class="progress-row">
             <div class="progress-label">
               <span class="label-text">Sites needing 5+ points</span>
-              <span class="label-value">255<span class="label-pct">18.6%</span></span>
+              <span class="label-value"><span data-stat="sites_far_from_target">255</span><span class="label-pct" data-stat="sites_far_from_target_pct_label">18.6%</span></span>
             </div>
-            <div class="progress-track"><div class="progress-fill maize" data-fill="18.6"></div></div>
+            <div class="progress-track"><div class="progress-fill maize" data-fill="18.6" data-stat-fill="sites_far_from_target_pct"></div></div>
           </div>
         </div>
       </div>
@@ -1971,6 +1971,13 @@ function computeLSAStats(data) {
     s.target_percentage < 100 &&
     s.target_percentage >= 95   // ~within ~1.5 points equivalent on percentage scale
   ).length;
+  const sitesFarFromTarget = active.filter(s =>
+    typeof s.target_percentage === 'number' && s.target_percentage < 75
+  ).length;
+  const sitesBelowTarget = active.length - sitesAtTarget;
+
+  const pct = (num, denom) => denom > 0 ? +(num / denom * 100).toFixed(1) : 0;
+  const totalForShare = sites.length || 1;
 
   // AEM platform breakdown (server tags + URL heuristics).
   const isAEM = (s) => (s.tags || []).includes('platform:aem');
@@ -1994,6 +2001,19 @@ function computeLSAStats(data) {
     inactive_sites: sites.length - active.length,
     sites_at_target: sitesAtTarget,
     sites_near_target: sitesNearTarget,
+    sites_far_from_target: sitesFarFromTarget,
+    sites_below_target: sitesBelowTarget,
+    // Percentage shares (of total registered sites) for progress bars and labels.
+    active_sites_pct: pct(active.length, totalForShare),
+    inactive_sites_pct: pct(sites.length - active.length, totalForShare),
+    sites_at_target_pct: pct(sitesAtTarget, totalForShare),
+    sites_near_target_pct: pct(sitesNearTarget, totalForShare),
+    sites_far_from_target_pct: pct(sitesFarFromTarget, totalForShare),
+    active_sites_pct_label: pct(active.length, totalForShare).toFixed(1) + '%',
+    inactive_sites_pct_label: pct(sites.length - active.length, totalForShare).toFixed(1) + '%',
+    sites_at_target_pct_label: pct(sitesAtTarget, totalForShare).toFixed(1) + '%',
+    sites_near_target_pct_label: pct(sitesNearTarget, totalForShare).toFixed(1) + '%',
+    sites_far_from_target_pct_label: pct(sitesFarFromTarget, totalForShare).toFixed(1) + '%',
     pages_monitored: totalPages,
     automated_issues: totalIssues,
     automated_issues_millions: +(totalIssues / 1_000_000).toFixed(1),
@@ -2028,6 +2048,18 @@ function applyLSAStats(stats) {
     } else {
       // Static span — set its text directly.
       el.textContent = typeof val === 'number' ? val.toLocaleString() : String(val);
+    }
+  });
+  // Progress bars: data-stat-fill drives both data-fill and the visible width.
+  document.querySelectorAll('[data-stat-fill]').forEach((el) => {
+    const key = el.dataset.statFill;
+    const val = stats[key];
+    if (typeof val !== 'number') return;
+    el.dataset.fill = String(val);
+    // If the bar's section is already revealed, the IntersectionObserver
+    // has already applied a transform — refresh it to match the new value.
+    if (el.style.transform || el.closest('.visible')) {
+      el.style.transform = 'scaleX(' + (val / 100) + ')';
     }
   });
 }
@@ -2124,7 +2156,7 @@ document.addEventListener('lsa-stats-ready', animateHero);
 // ============================================================
 // Chart: Portfolio composition (doughnut)
 // ============================================================
-new Chart(document.getElementById('portfolioChart'), {
+const portfolioChart = new Chart(document.getElementById('portfolioChart'), {
   type: 'doughnut',
   data: {
     labels: ['Active sites (2+ pages)', 'Empty, placeholder, or unreachable'],
@@ -2139,9 +2171,20 @@ new Chart(document.getElementById('portfolioChart'), {
     plugins: {
       legend: { position: 'bottom' },
       tooltip: { callbacks: {
-        label: (ctx) => `${ctx.label}: ${ctx.parsed.toLocaleString()} (${(ctx.parsed / 1618 * 100).toFixed(1)}%)`
+        label: (ctx) => {
+          const total = ctx.dataset.data.reduce((a, b) => a + b, 0) || 1;
+          return `${ctx.label}: ${ctx.parsed.toLocaleString()} (${(ctx.parsed / total * 100).toFixed(1)}%)`;
+        }
       }}
     }
+  }
+});
+document.addEventListener('lsa-stats-ready', (e) => {
+  const s = e.detail;
+  if (!s) return;
+  if (typeof s.active_sites === 'number' && typeof s.inactive_sites === 'number') {
+    portfolioChart.data.datasets[0].data = [s.active_sites, s.inactive_sites];
+    portfolioChart.update();
   }
 });
 
