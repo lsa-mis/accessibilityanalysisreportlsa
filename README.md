@@ -7,7 +7,12 @@ Static site published via GitHub Pages, with a live Siteimprove dashboard refres
 - `index.html` — narrative accessibility report (manually authored, with live data wiring)
 - `data.html` — live dashboard (searchable, filterable per-site view)
 - `data/sites.json`, `data/rules.json` — snapshots written by the fetch script; consumed by both pages
-- `data/site-tags.csv` — optional admin-configured site labels from the Siteimprove UI (see below)
+- `data/site-tags.csv` — admin-configured site labels exported from the Siteimprove UI (see [Site tags](#site-tags-csv-driven))
+- `scripts/fetch_siteimprove.py` — pulls site list and per-site accessibility summary from the Siteimprove API
+- `scripts/merge_site_tags.py` — lightweight tag-only refresh; re-applies the CSV onto `data/sites.json` without hitting the API
+- `.github/workflows/fetch-siteimprove.yml` — weekly fetch (Mondays 11:00 UTC) plus manual trigger
+- `.github/workflows/merge-site-tags.yml` — fires on push to `data/site-tags.csv`; runs `merge_site_tags.py` and commits the refreshed snapshot
+- `.github/workflows/pages.yml` — deploys the site to GitHub Pages on every push to `main`
 
 ## Site tags (CSV-driven)
 
@@ -35,9 +40,27 @@ If you want to re-apply the CSV without pushing (e.g., to verify locally before 
 ```bash
 python scripts/merge_site_tags.py
 ```
-- `scripts/fetch_siteimprove.py` — pulls site list and per-site accessibility summary from the Siteimprove API
-- `.github/workflows/fetch-siteimprove.yml` — runs the fetch on a schedule and commits any changes
-- `.github/workflows/pages.yml` — deploys the site to GitHub Pages on every push to `main`
+
+### Keep the CSV fresh
+
+`data/site-tags.csv` is a **manual snapshot** of Siteimprove's admin labels. Nothing in this repo refreshes it on its own — the public API token can't reach the management endpoint. If someone retags a site in Siteimprove and the CSV doesn't get re-exported, the dashboard won't know.
+
+**Recommended cadence:** re-export once a month, or whenever you know the tagging changed (new department site rolled out, platform migration, restructuring of WP-Sites groups, etc.).
+
+**To check how stale the CSV is:**
+
+```bash
+git log -1 --format='%ar  (%ad)' --date=short -- data/site-tags.csv
+# Example output:  3 weeks ago  (2026-04-15)
+```
+
+**Refresh procedure** (same three steps as above):
+
+1. Siteimprove → **Settings → Sites → Export** → CSV
+2. Save / overwrite `data/site-tags.csv`
+3. `git commit data/site-tags.csv && git push` — the merge workflow does the rest
+
+The weekly cron at `.github/workflows/fetch-siteimprove.yml` (Mondays 11:00 UTC) **always reads whatever CSV is in the repo** when it runs. So a stale CSV will keep producing stale tags on every weekly snapshot. The cron does not refresh the CSV itself.
 
 ## Running the fetch script locally
 
