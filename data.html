@@ -594,6 +594,30 @@
       fill: var(--ink-60);
       font-variant-numeric: tabular-nums;
     }
+
+    /* Hover highlights on charts.
+       - Bars: entire row gets a subtle tint via an invisible hit-area rect
+         behind each row group, plus the value bar brightens and labels
+         go bold. The hit area lets hover work anywhere across the row,
+         not just on the bar itself.
+       - Donuts: hovered slice brightens and grows a faint glow. */
+    svg.bars g.bar-row .hover-bg { fill: transparent; transition: fill 0.12s; }
+    svg.bars g.bar-row:hover .hover-bg { fill: rgba(0, 39, 76, 0.05); }
+    svg.bars g.bar-row rect:not(.hover-bg) { transition: filter 0.12s; }
+    svg.bars g.bar-row:hover rect:not(.hover-bg) { filter: brightness(1.15); }
+    svg.bars g.bar-row text { transition: font-weight 0.12s, fill 0.12s; }
+    svg.bars g.bar-row:hover text.bar-label { font-weight: 600; fill: var(--um-blue); }
+    svg.bars g.bar-row:hover text.bar-value { font-weight: 700; fill: var(--ink); }
+    svg.bars g.bar-row { cursor: default; }
+
+    .viz-card svg path { transition: filter 0.15s, opacity 0.15s; }
+    .viz-card svg path:hover {
+      filter: brightness(1.12) drop-shadow(0 1px 4px rgba(0, 0, 0, 0.18));
+      cursor: pointer;
+    }
+    /* When you hover one slice, fade the others slightly so the focus
+       slice pops without being garish. */
+    .viz-card svg:hover path:not(:hover) { opacity: 0.78; }
     .table-wrap {
       background: var(--paper-light);
       border: 1px solid var(--rule);
@@ -842,7 +866,7 @@
     <div class="viz-grid">
       <div class="viz-card full" style="border-left: 4px solid var(--um-maize);">
         <h3>Top 15 sites by Title II occurrences</h3>
-        <div class="viz-sub">A + AA + ARIA combined — the fixed-lens compliance view, regardless of active level filters. AAA and Best Practices are excluded.</div>
+        <div class="viz-sub">A + AA + ARIA combined — the fixed-lens compliance view. The mini bar between the site name and the volume bar shows that site's progress toward target (green ≥100, blue ≥95, amber ≥75, red below). AAA and Best Practices excluded. Hover any row to highlight.</div>
         <div id="chart-top-titleii"></div>
       </div>
       <div class="viz-card">
@@ -1211,32 +1235,59 @@
     }
 
     // -- SVG horizontal bars --
-    function renderBars(containerId, items, valueLabel) {
+    // opts.showTarget = true renders a small target-% mini-bar + label
+    // between the site name and the main bar, using targetTierColor.
+    function renderBars(containerId, items, valueLabel, opts = {}) {
       const container = document.getElementById(containerId);
       if (!items.length) {
         container.innerHTML = '<div class="viz-empty">No data for current filters.</div>';
         return;
       }
+      const showTarget = !!opts.showTarget;
       const maxValue = Math.max(...items.map(i => i.value));
-      const rowHeight = 32;
-      const labelWidth = 320;
+      const rowHeight = showTarget ? 36 : 32;
+      const labelWidth = showTarget ? 260 : 320;
+      const targetColX = labelWidth + 10;
+      const targetBarWidth = 70;
+      const targetTextWidth = 50;
+      const targetColWidth = showTarget ? (targetBarWidth + targetTextWidth + 14) : 0;
       const valueGutter = 110;
       const innerWidth = 1100;
-      const barAreaWidth = innerWidth - labelWidth - valueGutter;
+      const barStartX = labelWidth + targetColWidth;
+      const barAreaWidth = innerWidth - barStartX - valueGutter;
       const height = items.length * rowHeight + 12;
+
       const rows = items.map((it, i) => {
         const y = i * rowHeight + 4;
         const barW = maxValue > 0 ? (it.value / maxValue) * barAreaWidth : 0;
-        const truncLabel = it.label.length > 50 ? it.label.slice(0, 48) + "…" : it.label;
+        const truncLabel = it.label.length > 42 ? it.label.slice(0, 40) + "…" : it.label;
+
+        let targetSvg = "";
+        if (showTarget) {
+          const pct = it.target_pct;
+          const tcolor = targetTierColor(pct);
+          const fillW = pct == null ? 0 : Math.max(0, Math.min(100, pct)) / 100 * targetBarWidth;
+          const tLabel = pct == null ? "—" : pct.toFixed(1) + "%";
+          targetSvg = `
+            <g transform="translate(${targetColX}, ${rowHeight / 2 - 4})">
+              <rect x="0" y="0" width="${targetBarWidth}" height="8" rx="4" fill="rgba(0,0,0,0.08)"></rect>
+              <rect x="0" y="0" width="${fillW}" height="8" rx="4" fill="${tcolor}"></rect>
+              <text x="${targetBarWidth + 6}" y="7" font-size="11" fill="${tcolor}" font-weight="600" font-variant-numeric="tabular-nums">${tLabel}</text>
+            </g>`;
+        }
+
         return `
-          <g transform="translate(0, ${y})">
+          <g class="bar-row" transform="translate(0, ${y})">
+            <rect class="hover-bg" x="0" y="0" width="${innerWidth}" height="${rowHeight - 2}" rx="3"></rect>
             <text class="bar-label" x="${labelWidth - 8}" y="${rowHeight / 2 + 4}" text-anchor="end">
-              <title>${escapeHtml(it.label)}</title>${escapeHtml(truncLabel)}
+              <title>${escapeHtml(it.label)}${showTarget && it.target_pct != null ? " — target " + it.target_pct.toFixed(1) + "%" : ""}</title>${escapeHtml(truncLabel)}
             </text>
-            <rect x="${labelWidth}" y="2" height="${rowHeight - 6}" width="${barW}" fill="${it.color}" rx="2"></rect>
-            <text class="bar-value" x="${labelWidth + barW + 6}" y="${rowHeight / 2 + 4}">${it.value.toLocaleString()}</text>
+            ${targetSvg}
+            <rect x="${barStartX}" y="2" height="${rowHeight - 8}" width="${barW}" fill="${it.color}" rx="2"></rect>
+            <text class="bar-value" x="${barStartX + barW + 6}" y="${rowHeight / 2 + 4}">${it.value.toLocaleString()}</text>
           </g>`;
       }).join("");
+
       container.innerHTML = `
         <svg class="bars" width="100%" height="${height}" viewBox="0 0 ${innerWidth} ${height}"
              preserveAspectRatio="xMinYMin meet" role="img" aria-label="${escapeHtml(valueLabel)}">
@@ -1292,10 +1343,25 @@
 
     function topByTitleII(sites, color, n = 15) {
       return sites
-        .map(s => ({ label: s.site_name || "(unnamed)", value: titleIIOccurrences(s), color }))
+        .map(s => ({
+          label: s.site_name || "(unnamed)",
+          value: titleIIOccurrences(s),
+          color,
+          target_pct: typeof s.target_percentage === "number" ? s.target_percentage : null,
+        }))
         .filter(x => x.value > 0)
         .sort((a, b) => b.value - a.value)
         .slice(0, n);
+    }
+
+    // Tier color for the target-% mini-bar in the Title II chart row.
+    // Same thresholds as the compliance hero band so reading is consistent.
+    function targetTierColor(pct) {
+      if (pct == null) return "#999";
+      if (pct >= 100)  return "#1f7f3f"; // at target — green
+      if (pct >= 95)   return "#4a7ca8"; // near — light blue
+      if (pct >= 75)   return "#b8855a"; // working — amber/tan
+      return "#9c2929";                  // at risk — red
     }
 
     function topBySelected(sites, color, n = 15) {
@@ -1307,7 +1373,7 @@
     }
 
     function renderCharts(filteredSites) {
-      renderBars("chart-top-titleii", topByTitleII(filteredSites, "#00274C"), "Title II occurrences (A+AA+ARIA)");
+      renderBars("chart-top-titleii", topByTitleII(filteredSites, "#00274C"), "Title II occurrences (A+AA+ARIA)", { showTarget: true });
       renderDonut("chart-levels", aggregateLevels(filteredSites));
       renderDonut("chart-status", aggregateStatus(filteredSites));
       renderBars("chart-top-total", topBySelected(filteredSites, "#2a3441"), "Selected-level occurrences");
