@@ -634,13 +634,8 @@
         <div id="chart-status"></div>
       </div>
       <div class="viz-card full">
-        <h3>Top 15 sites by ARIA occurrences</h3>
-        <div class="viz-sub">WAI-ARIA findings only — separate from WCAG levels. Often concentrated in template-level fixes (landmarks, labelled regions, focus management).</div>
-        <div id="chart-top-aria"></div>
-      </div>
-      <div class="viz-card full">
         <h3 id="chart-top-total-title">Top 15 sites by total occurrences</h3>
-        <div class="viz-sub">Worst overall offenders across the active level lens</div>
+        <div class="viz-sub">Reflects the active <strong>Level</strong> filter — pick A, AA, AAA, ARIA, BP, or any combination via the pills above and this chart re-ranks accordingly. With no level filter, shows total occurrences across every level.</div>
         <div id="chart-top-total"></div>
       </div>
     </div>
@@ -1104,8 +1099,7 @@
       renderBars("chart-top-titleii", topByTitleII(filteredSites, "#00274C"), "Title II occurrences (A+AA+ARIA)");
       renderDonut("chart-levels", aggregateLevels(filteredSites));
       renderDonut("chart-status", aggregateStatus(filteredSites));
-      renderBars("chart-top-aria",  topByKey(filteredSites, "lvl_aria", COLORS.ARIA), "ARIA occurrences");
-      renderBars("chart-top-total", topBySelected(filteredSites, "#2a3441"),       "Selected-level occurrences");
+      renderBars("chart-top-total", topBySelected(filteredSites, "#2a3441"), "Selected-level occurrences");
 
       // Update chart titles to reflect the active level filter.
       const lensLabel = activeLevelsLabel();
