@@ -57,6 +57,103 @@
       color: var(--ink-60);
     }
     .meta strong { color: var(--ink); }
+
+    /* ============================================================
+       Compliance hero band — the page's headline answer.
+       Lives right under the header/meta. Reflects the active filters
+       so users can see compliance status for any subset (e.g. all
+       AEM sites, all LSA sites) without leaving the page.
+       ============================================================ */
+    .compliance-band {
+      background: linear-gradient(135deg, #00274C 0%, #0a3866 100%);
+      color: #fff;
+      border-radius: 8px;
+      padding: 1.75rem 2rem;
+      margin-bottom: 1.75rem;
+      border-left: 4px solid var(--um-maize);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .compliance-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 2rem;
+      align-items: center;
+    }
+    .compliance-headline {
+      font-size: clamp(3rem, 6vw, 4.25rem);
+      font-weight: 700;
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      color: var(--um-maize);
+      font-feature-settings: "tnum";
+    }
+    .compliance-count {
+      font-size: 1rem;
+      margin-top: 0.6rem;
+      color: rgba(255,255,255,0.88);
+      line-height: 1.4;
+    }
+    .compliance-deadline-label {
+      font-size: 0.75rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 0.25rem;
+    }
+    .compliance-deadline-num {
+      font-size: clamp(2.25rem, 4.5vw, 3.25rem);
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      color: var(--um-maize);
+      font-feature-settings: "tnum";
+    }
+    .compliance-deadline-meta {
+      font-size: 0.85rem;
+      opacity: 0.78;
+      margin-top: 0.3rem;
+    }
+    .compliance-bar-wrap { margin-top: 1.5rem; }
+    .compliance-bar {
+      display: flex;
+      height: 14px;
+      border-radius: 7px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.12);
+    }
+    .compliance-bar-segment { transition: flex 0.3s ease; }
+    .compliance-legend {
+      margin-top: 0.7rem;
+      display: flex;
+      gap: 1.1rem;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.88);
+      flex-wrap: wrap;
+    }
+    .compliance-legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .compliance-legend-swatch {
+      width: 11px; height: 11px; border-radius: 2px;
+    }
+    .compliance-blurb {
+      margin-top: 1.1rem;
+      font-size: 0.86rem;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.5;
+      max-width: 60rem;
+    }
+    @media (max-width: 720px) {
+      .compliance-band { padding: 1.4rem 1.2rem; }
+      .compliance-grid { grid-template-columns: 1fr; gap: 1.1rem; }
+      .compliance-headline { font-size: 3rem; }
+      .compliance-deadline-num { font-size: 2.25rem; }
+      .compliance-bar { height: 11px; }
+      .compliance-legend { font-size: 0.74rem; gap: 0.6rem; }
+      .compliance-blurb { font-size: 0.8rem; }
+    }
     .back-btn {
       display: inline-flex;
       align-items: center;
@@ -627,6 +724,35 @@
       <a href="index.html" class="back-btn"><span class="arrow" aria-hidden="true">←</span>Back to narrative report</a>
       <span>Last refreshed: <strong id="generated-at">—</strong></span>
     </div>
+
+    <!-- Compliance hero band — leads the page with the answer to
+         "where do we stand?". Reflects the active filters so subsets
+         (e.g. only AEM sites) can be evaluated against the same lens. -->
+    <section class="compliance-band" aria-labelledby="compliance-heading">
+      <h2 id="compliance-heading" class="visually-hidden" style="position:absolute;width:1px;height:1px;clip:rect(0,0,0,0);overflow:hidden;">Title II compliance status</h2>
+      <div class="compliance-grid">
+        <div>
+          <div class="compliance-headline" id="compliance-pct">—</div>
+          <div class="compliance-count">
+            <strong id="compliance-at-target">—</strong>
+            of <strong id="compliance-total">—</strong>
+            sites currently meet their Title II target<span id="compliance-filter-suffix"></span>.
+          </div>
+        </div>
+        <div>
+          <div class="compliance-deadline-label">Title II deadline</div>
+          <div class="compliance-deadline-num"><span id="compliance-days">—</span> days</div>
+          <div class="compliance-deadline-meta" id="compliance-deadline-meta">April 24, 2027 · WCAG 2.1 AA</div>
+        </div>
+      </div>
+      <div class="compliance-bar-wrap">
+        <div class="compliance-bar" id="compliance-bar" role="img" aria-label="Distribution of sites by Title II target progress"></div>
+        <div class="compliance-legend" id="compliance-legend"></div>
+      </div>
+      <div class="compliance-blurb">
+        Title II of the ADA requires WCAG 2.1 Level AA conformance for U-M's public-facing sites by April 24, 2027. The bar above shows the distribution of active LSA sites by their progress toward the configured Siteimprove target — at-target sites pass today, near-target sites are within editor reach, and sites below 75% need template-level remediation.
+      </div>
+    </section>
 
     <div id="notice-stale" class="notice warning" hidden>
       This snapshot was generated before the score/target field-mapping fix. Re-run <code>python scripts/fetch_siteimprove.py</code> to populate Score and Target % columns.
@@ -1374,6 +1500,85 @@
       }).join("");
     }
 
+    // Title II deadline: ADA Title II requires WCAG 2.1 AA conformance for
+    // public-facing sites of public entities by April 24, 2027.
+    const TITLE_II_DEADLINE = new Date("2027-04-24T00:00:00");
+
+    // Tier colors — picked for at-a-glance triage on the dark hero band.
+    const COMPLIANCE_TIERS = [
+      { key: "at",      label: "At target",     color: "#FFCB05" },
+      { key: "near",    label: "Near (≥95%)",   color: "#a4d4a4" },
+      { key: "working", label: "Working (75–94%)", color: "#e2b665" },
+      { key: "risk",    label: "At risk (<75%)",   color: "#e58a8a" },
+      { key: "noscore", label: "No score yet",  color: "rgba(255,255,255,0.22)" },
+    ];
+
+    function renderCompliance(filteredSites) {
+      const active = filteredSites.filter(s => s.status === "ok");
+      const total = active.length;
+
+      const buckets = { at: 0, near: 0, working: 0, risk: 0, noscore: 0 };
+      for (const s of active) {
+        const v = s.target_percentage;
+        if (typeof v !== "number") buckets.noscore++;
+        else if (v >= 100) buckets.at++;
+        else if (v >= 95)  buckets.near++;
+        else if (v >= 75)  buckets.working++;
+        else                buckets.risk++;
+      }
+      const pct = total > 0 ? (buckets.at / total * 100) : 0;
+      const pctLabel = pct >= 10 ? pct.toFixed(1) + "%" : pct.toFixed(2) + "%";
+
+      // Days to Title II deadline.
+      const msPerDay = 24 * 60 * 60 * 1000;
+      const daysToDeadline = Math.max(
+        0,
+        Math.ceil((TITLE_II_DEADLINE.getTime() - Date.now()) / msPerDay)
+      );
+
+      // Filter suffix in the count line so users see the band reflects
+      // their selection (e.g. "across filtered AEM sites").
+      const filterParts = [];
+      if (state.tagFilters.size  > 0) filterParts.push(Array.from(state.tagFilters).map(prettyTag).join(" or "));
+      if (state.search.trim() !== "") filterParts.push(`matching "${state.search.trim()}"`);
+      const filterSuffix = filterParts.length
+        ? ` (filtered: ${filterParts.join(", ")})`
+        : "";
+
+      const set = (id, text) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
+      };
+      set("compliance-pct",        pctLabel);
+      set("compliance-at-target",  buckets.at.toLocaleString());
+      set("compliance-total",      total.toLocaleString());
+      set("compliance-filter-suffix", filterSuffix);
+      set("compliance-days",       daysToDeadline.toLocaleString());
+
+      // Render distribution bar — proportional flex per tier.
+      const bar = document.getElementById("compliance-bar");
+      const legend = document.getElementById("compliance-legend");
+      if (!bar || !legend) return;
+      if (total === 0) {
+        bar.innerHTML = `<div class="compliance-bar-segment" style="background:rgba(255,255,255,0.18);flex:1"></div>`;
+        legend.innerHTML = `<span class="compliance-legend-item" style="opacity:0.65;">No sites in current filter</span>`;
+        return;
+      }
+      bar.innerHTML = COMPLIANCE_TIERS
+        .filter(t => buckets[t.key] > 0)
+        .map(t => `<div class="compliance-bar-segment"
+            style="background:${t.color};flex:${buckets[t.key]}"
+            title="${t.label}: ${buckets[t.key].toLocaleString()} sites"></div>`)
+        .join("");
+      legend.innerHTML = COMPLIANCE_TIERS
+        .filter(t => buckets[t.key] > 0)
+        .map(t => `<span class="compliance-legend-item">
+            <span class="compliance-legend-swatch" style="background:${t.color}"></span>
+            ${escapeHtml(t.label)}
+            <strong style="margin-left:0.15rem;">${buckets[t.key].toLocaleString()}</strong>
+          </span>`).join("");
+    }
+
     function renderManualTesting(filteredSites) {
       const totalTestHours = filteredSites.reduce((acc, s) => acc + estTestHours(s), 0);
       const hoursEl = document.getElementById("manual-test-hours");
@@ -1384,6 +1589,7 @@
 
     function renderAll() {
       const filtered = applyFilters();
+      renderCompliance(filtered);
       renderSummary(filtered);
       renderManualTesting(filtered);
       renderCharts(filtered);
