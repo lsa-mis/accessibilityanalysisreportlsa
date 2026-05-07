@@ -119,6 +119,42 @@
     .stats-section.cat-pdf   { --cat-color: #5e1616; }
     .stats-section.cat-spell { --cat-color: #6b3a00; }
     .stats-section.cat-time  { --cat-color: #3d434a; }
+    /* The Manual Testing card embeds an editable rate input. The card sits
+       in static HTML (not regenerated on render) so the input keeps focus
+       while you type. */
+    .card-with-input { padding-bottom: 0.85rem; }
+    .card-input-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 0.55rem;
+      padding-top: 0.55rem;
+      border-top: 1px dashed var(--rule);
+      font-size: 0.78rem;
+      color: var(--ink-60);
+    }
+    .card-input-row input {
+      width: 56px;
+      padding: 0.3rem 0.45rem;
+      border: 1px solid var(--um-blue);
+      border-radius: 3px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: inherit;
+      color: var(--um-blue);
+      background: #fff;
+    }
+    .card-input-row input:focus {
+      outline: 2px solid var(--um-blue);
+      outline-offset: 0;
+      border-color: var(--um-blue);
+    }
+    .card-input-row .reconfig-hint {
+      font-style: italic;
+      color: var(--ink-60);
+      margin-left: 0.15rem;
+    }
     .card {
       background: var(--paper-light);
       border: 1px solid var(--rule);
@@ -640,6 +676,43 @@
 
     <div class="summary-cards" id="summary-cards"></div>
 
+    <!-- Manual testing block sits in static HTML so the rate input stays
+         focused while you type. renderManualTesting() updates only the
+         hours value + the in-blurb rate echo. -->
+    <div class="stats-block">
+      <div class="stats-section cat-time">
+        <div class="stats-section-title">
+          <span class="accent" aria-hidden="true"></span>
+          <span class="label">Manual testing</span>
+          <span class="blurb">
+            Estimated first-pass effort at
+            <strong><span id="manual-rate-echo">15</span> min / page</strong>
+            across the filtered portfolio. Adjust the rate below to model different scenarios.
+          </span>
+        </div>
+        <div class="stats-section-grid">
+          <div class="card cat-time card-with-input">
+            <div class="label">Total hours estimate</div>
+            <div class="value" id="manual-test-hours">—</div>
+            <div class="card-input-row">
+              <label for="minutes-per-page" style="font-weight:500;color:var(--ink);">Rate:</label>
+              <input
+                type="number"
+                id="minutes-per-page"
+                min="1"
+                max="240"
+                step="1"
+                value="15"
+                aria-label="Estimated minutes per page for manual accessibility testing"
+              />
+              <span>min / page</span>
+              <span class="reconfig-hint">— reconfigurable, recomputes on change</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="viz-grid">
       <div class="viz-card full" style="border-left: 4px solid var(--um-maize);">
         <h3>Top 15 sites by Title II occurrences</h3>
@@ -671,20 +744,6 @@
         autocomplete="off"
         aria-label="Search sites"
       />
-      <label style="font-size:0.85rem;color:var(--ink-60);display:flex;align-items:center;gap:0.4rem;">
-        Manual test:
-        <input
-          type="number"
-          id="minutes-per-page"
-          min="1"
-          max="240"
-          step="1"
-          value="15"
-          style="width:60px;padding:0.3rem 0.4rem;border:1px solid var(--rule);border-radius:4px;font-size:0.9rem;"
-          aria-label="Estimated minutes per page for manual accessibility testing"
-        />
-        min/page
-      </label>
       <button type="button" id="export-csv" class="export-btn" aria-label="Export filtered table to CSV (opens in Excel)">
         <span class="icon" aria-hidden="true">⤓</span> Export CSV
       </button>
@@ -1219,13 +1278,9 @@
             { label: "Sites w/ misspellings", value: sitesWithMisspellings.toLocaleString() },
           ],
         },
-        {
-          cat: "time", title: "Manual testing",
-          blurb: `Estimated first-pass effort at ${manualMinutesPerPage} min / page across the filtered portfolio.`,
-          cards: [
-            { label: `Total hours (${manualMinutesPerPage}min/pg)`, value: fmtHours(totalTestHours) },
-          ],
-        },
+        // Manual testing lives in static HTML below the summary grid so the
+        // rate input stays focused while you type. renderManualTesting()
+        // updates its value separately.
       ];
 
       document.getElementById("summary-cards").innerHTML = sections.map((sec) => `
@@ -1319,9 +1374,18 @@
       }).join("");
     }
 
+    function renderManualTesting(filteredSites) {
+      const totalTestHours = filteredSites.reduce((acc, s) => acc + estTestHours(s), 0);
+      const hoursEl = document.getElementById("manual-test-hours");
+      const echoEl = document.getElementById("manual-rate-echo");
+      if (hoursEl) hoursEl.textContent = fmtHours(totalTestHours);
+      if (echoEl) echoEl.textContent = String(manualMinutesPerPage);
+    }
+
     function renderAll() {
       const filtered = applyFilters();
       renderSummary(filtered);
+      renderManualTesting(filtered);
       renderCharts(filtered);
       renderTable(filtered);
       if (typeof syncClearButton === "function") syncClearButton();
