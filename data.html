@@ -865,8 +865,8 @@
 
     <div class="viz-grid">
       <div class="viz-card full" style="border-left: 4px solid var(--um-maize);">
-        <h3>Top 15 sites by Title II occurrences</h3>
-        <div class="viz-sub">A + AA + ARIA combined — the fixed-lens compliance view. The mini bar between the site name and the volume bar shows that site's progress toward target (green ≥100, blue ≥95, amber ≥75, red below). AAA and Best Practices excluded. Hover any row to highlight.</div>
+        <h3>15 sites furthest from Title II target</h3>
+        <div class="viz-sub">Ranked by Title II target % (lowest first) — these are the most urgent compliance gaps. The mini bar shows that site's target progress (red &lt;75, amber ≥75, blue ≥95, green ≥100); the volume bar shows A + AA + ARIA occurrences so you can also see the size of the remediation. AAA and Best Practices excluded. Hover any row to highlight.</div>
         <div id="chart-top-titleii"></div>
       </div>
       <div class="viz-card">
@@ -1350,7 +1350,16 @@
           target_pct: typeof s.target_percentage === "number" ? s.target_percentage : null,
         }))
         .filter(x => x.value > 0)
-        .sort((a, b) => b.value - a.value)
+        // Rank by Title II target % ascending — sites furthest from
+        // target appear first (most urgent triage). Nulls sink to the
+        // bottom so they don't crowd out scored sites.
+        .sort((a, b) => {
+          if (a.target_pct == null && b.target_pct == null) return b.value - a.value;
+          if (a.target_pct == null) return 1;
+          if (b.target_pct == null) return -1;
+          if (a.target_pct !== b.target_pct) return a.target_pct - b.target_pct;
+          return b.value - a.value;
+        })
         .slice(0, n);
     }
 
