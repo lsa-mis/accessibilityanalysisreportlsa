@@ -1130,6 +1130,8 @@
       const medTarget = median(targetVals);
 
       const totalPages = filteredSites.reduce((acc, s) => acc + (s.pages || 0), 0);
+      const totalPagesWithIssues = filteredSites.reduce((acc, s) => acc + (s.pages_with_issues || 0), 0);
+      const sitesWithIssuePages = filteredSites.filter(s => (s.pages_with_issues || 0) > 0).length;
       const totalTestHours = filteredSites.reduce((acc, s) => acc + estTestHours(s), 0);
       const totalPdfs = filteredSites.reduce((acc, s) => acc + (s.pdf_count || 0), 0);
       const totalPdfsWithIssues = filteredSites.reduce((acc, s) => acc + (s.pdfs_with_issues || 0), 0);
@@ -1159,9 +1161,11 @@
         },
         {
           cat: "pages", title: "Pages",
-          blurb: "Total pages crawled by Siteimprove across the filtered set.",
+          blurb: "Total crawled pages and the subset carrying at least one accessibility issue.",
           cards: [
-            { label: "Total pages", value: totalPages.toLocaleString() },
+            { label: "Total pages",       value: totalPages.toLocaleString() },
+            { label: "Pages with issues", value: totalPagesWithIssues.toLocaleString(), danger: totalPagesWithIssues > 0 },
+            { label: "Sites w/ issue pages", value: sitesWithIssuePages.toLocaleString() },
           ],
         },
         {
