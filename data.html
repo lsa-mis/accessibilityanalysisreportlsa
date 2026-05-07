@@ -214,6 +214,29 @@
       color: var(--ink-60);
       border-color: var(--rule);
     }
+    .export-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 0.85rem;
+      border: 1px solid var(--um-blue);
+      background: #fff;
+      color: var(--um-blue);
+      font-size: 0.88rem;
+      font-weight: 500;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+      white-space: nowrap;
+    }
+    .export-btn:hover {
+      background: var(--um-blue);
+      color: #fff;
+    }
+    .export-btn .icon {
+      font-size: 1.05em;
+      line-height: 1;
+    }
     .filter-row {
       display: flex;
       flex-wrap: wrap;
@@ -662,6 +685,9 @@
         />
         min/page
       </label>
+      <button type="button" id="export-csv" class="export-btn" aria-label="Export filtered table to CSV (opens in Excel)">
+        <span class="icon" aria-hidden="true">⤓</span> Export CSV
+      </button>
       <span class="row-count" id="row-count" aria-live="polite"></span>
     </div>
 
@@ -1341,6 +1367,80 @@
       manualMinutesPerPage = n;
       renderAll();
     });
+
+    // ============================================================
+    // CSV export of the currently-filtered + sorted table.
+    // Excel opens UTF-8 CSV correctly when prefixed with a BOM.
+    // ============================================================
+    function csvCell(value) {
+      if (value === null || value === undefined) return "";
+      const s = String(value);
+      return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    }
+
+    function buildCSV() {
+      // Same filter + sort as renderTable so the file matches what's on screen.
+      const filtered = applyFilters();
+      const headers = document.querySelectorAll("#sites-table th[data-key]");
+      const sortType =
+        Array.from(headers).find((h) => h.dataset.key === state.sortKey)?.dataset.type || "string";
+      const sorted = filtered.slice().sort((a, b) => {
+        if (state.sortKey === "issues" && state.levelFilters.size > 0) {
+          const av = selectedOccurrences(a);
+          const bv = selectedOccurrences(b);
+          return state.sortDir === "asc" ? av - bv : bv - av;
+        }
+        return compare(a, b, state.sortKey, sortType, state.sortDir);
+      });
+
+      const lensSuffix = state.levelFilters.size > 0 ? ` (${activeLevelsLabel()})` : "";
+      const cols = [
+        ["Site name",                    s => s.site_name || ""],
+        ["URL",                          s => s.url || ""],
+        ["Site ID",                      s => s.id ?? ""],
+        ["Tags",                         s => (s.tags || []).map(prettyTag).join(", ")],
+        ["Score",                        s => s.score ?? ""],
+        ["Target %",                     s => s.target_percentage ?? ""],
+        ["Pages",                        s => s.pages ?? ""],
+        ["Pages with issues",            s => s.pages_with_issues ?? ""],
+        ["Issue types",                  s => s.issue_types ?? ""],
+        ["A occurrences",                s => s.lvl_a ?? 0],
+        ["AA occurrences",               s => s.lvl_aa ?? 0],
+        ["AAA occurrences",              s => s.lvl_aaa ?? 0],
+        ["ARIA occurrences",             s => s.lvl_aria ?? 0],
+        ["BP occurrences",               s => s.lvl_bp ?? 0],
+        [`Total occurrences${lensSuffix}`, s => selectedOccurrences(s)],
+        ["PDFs",                         s => s.pdf_count ?? ""],
+        ["PDFs with issues",             s => s.pdfs_with_issues ?? ""],
+        ["Misspellings",                 s => s.misspellings ?? ""],
+        [`Est. test hours (${manualMinutesPerPage}min/pg)`, s => estTestHours(s).toFixed(2)],
+        ["Status",                       s => s.status],
+      ];
+      const lines = [cols.map(([h]) => csvCell(h)).join(",")];
+      for (const s of sorted) {
+        lines.push(cols.map(([, fn]) => csvCell(fn(s))).join(","));
+      }
+      return { csv: lines.join("\r\n"), rowCount: sorted.length };
+    }
+
+    function exportCSV() {
+      const { csv, rowCount } = buildCSV();
+      // BOM so Excel auto-detects UTF-8 (preserves non-ASCII site names).
+      const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const stamp = new Date().toISOString().slice(0, 10);
+      const filterSlug = anyFilterActive() ? "-filtered" : "";
+      const filename = `lsa-accessibility-${stamp}${filterSlug}-${rowCount}sites.csv`;
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    document.getElementById("export-csv").addEventListener("click", exportCSV);
 
     function syncFilterGroup(groupId, set) {
       const group = document.getElementById(groupId);
