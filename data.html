@@ -774,7 +774,7 @@
         <div class="compliance-legend" id="compliance-legend"></div>
       </div>
       <div class="compliance-blurb">
-        Title II of the ADA requires WCAG 2.1 Level AA conformance for U-M's public-facing sites by April 24, 2027. The bar above shows the distribution of active LSA sites by their progress toward the configured Siteimprove target — at-target sites pass today, near-target sites are within editor reach, and sites below 75% need template-level remediation.
+        Title II of the ADA requires WCAG 2.1 Level AA conformance for U-M's public-facing sites by April 24, 2027. The bar above tracks the <strong>Title II target % (A + AA + ARIA)</strong> across active LSA sites — at-target sites pass today, near-target sites are within editor reach, and sites below 75% need template-level remediation. The separate <em>Score</em> column in the table below uses the broader Siteimprove DCI which also includes AAA and Best Practices, so it tends to read lower than the Title II target % for the same site.
       </div>
     </section>
 
@@ -905,8 +905,8 @@
         <thead>
           <tr>
             <th data-key="site_name" data-type="string" aria-sort="ascending">Site</th>
-            <th data-key="score" data-type="number" class="col-score" title="Accessibility DCI score (0–100)">Score</th>
-            <th data-key="target_percentage" data-type="number" class="col-score" title="Site Target % — progress toward the configured target (TGS)">Target %</th>
+            <th data-key="score" data-type="number" class="col-score" title="Siteimprove accessibility DCI score (0–100). Reflects all WCAG levels INCLUDING AAA and Best Practices — broader than the Title II target lens.">Score (DCI · incl. AAA)</th>
+            <th data-key="target_percentage" data-type="number" class="col-score" title="Progress toward the Title II target — A + AA + ARIA only. 100% = meets target. Excludes AAA and Best Practices.">Target % (Title II)</th>
             <th data-key="pages" data-type="number" class="col-pages" title="Site page count from Siteimprove">Pages</th>
             <th data-key="pages_with_issues" data-type="number" class="col-pages" title="Max pages affected by any single accessibility issue">Pages w/ issues</th>
             <th data-key="issue_types" data-type="number" class="col-occ" title="Distinct issue types found on the site">Types</th>
@@ -1438,8 +1438,8 @@
           ],
         },
         {
-          cat: "score", title: "Score & Compliance",
-          blurb: "Average and median target % — distance from the configured Siteimprove goal.",
+          cat: "score", title: "Title II target progress",
+          blurb: "Average and median target % across active sites — progress toward the Title II lens (A + AA + ARIA only). 100% = meets target. The Score column in the table uses the broader Siteimprove DCI which includes AAA and Best Practices.",
           cards: [
             { label: "Avg target %",    value: avgTarget !== null ? avgTarget.toFixed(1) + "%" : "—" },
             { label: "Median target %", value: medTarget !== null ? medTarget.toFixed(1) + "%" : "—" },
