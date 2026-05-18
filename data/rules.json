@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-11T12:53:02+00:00",
+  "generated_at": "2026-05-18T12:58:15+00:00",
   "rules": [
     {
       "rule_id": 57,
@@ -8,8 +8,8 @@
       "conformance": "aria",
       "level": "ARIA",
       "difficulty": 4,
-      "sites_affected": 696,
-      "total_occurrences": 16073989,
+      "sites_affected": 692,
+      "total_occurrences": 15965286,
       "max_pages": 26275
     },
     {
@@ -19,9 +19,9 @@
       "conformance": "aaa",
       "level": "AAA",
       "difficulty": 2,
-      "sites_affected": 1428,
-      "total_occurrences": 8178947,
-      "max_pages": 38443
+      "sites_affected": 1422,
+      "total_occurrences": 7607044,
+      "max_pages": 26178
     },
     {
       "rule_id": 66,
@@ -31,8 +31,8 @@
       "level": "AAA",
       "difficulty": 2,
       "sites_affected": 1288,
-      "total_occurrences": 4709152,
-      "max_pages": 32919
+      "total_occurrences": 4013079,
+      "max_pages": 26276
     },
     {
       "rule_id": 113,
@@ -41,8 +41,8 @@
       "conformance": "aa",
       "level": "AA",
       "difficulty": 4,
-      "sites_affected": 404,
-      "total_occurrences": 1081282,
+      "sites_affected": 406,
+      "total_occurrences": 1002031,
       "max_pages": 24980
     },
     {
@@ -52,8 +52,8 @@
       "conformance": "aaa",
       "level": "AAA",
       "difficulty": 2,
-      "sites_affected": 733,
-      "total_occurrences": 918970,
+      "sites_affected": 741,
+      "total_occurrences": 905133,
       "max_pages": 25775
     },
     {
@@ -63,9 +63,9 @@
       "conformance": "aa",
       "level": "AA",
       "difficulty": 2,
-      "sites_affected": 712,
-      "total_occurrences": 708059,
-      "max_pages": 22093
+      "sites_affected": 723,
+      "total_occurrences": 577759,
+      "max_pages": 22176
     },
     {
       "rule_id": 74,
@@ -74,9 +74,9 @@
       "conformance": "aaa",
       "level": "AAA",
       "difficulty": 3,
-      "sites_affected": 731,
-      "total_occurrences": 324678,
-      "max_pages": 19239
+      "sites_affected": 743,
+      "total_occurrences": 314997,
+      "max_pages": 16415
     },
     {
       "rule_id": 11,
@@ -85,9 +85,9 @@
       "conformance": "a",
       "level": "A",
       "difficulty": 3,
-      "sites_affected": 927,
-      "total_occurrences": 252593,
-      "max_pages": 19239
+      "sites_affected": 937,
+      "total_occurrences": 209791,
+      "max_pages": 16415
     },
     {
       "rule_id": 80,
@@ -96,8 +96,8 @@
       "conformance": "aaa",
       "level": "AAA",
       "difficulty": 3,
-      "sites_affected": 140,
-      "total_occurrences": 172819,
+      "sites_affected": 143,
+      "total_occurrences": 171895,
       "max_pages": 4860
     },
     {
@@ -107,9 +107,9 @@
       "conformance": "si",
       "level": "BP",
       "difficulty": 2,
-      "sites_affected": 998,
-      "total_occurrences": 141324,
-      "max_pages": 14120
+      "sites_affected": 1003,
+      "total_occurrences": 128782,
+      "max_pages": 11205
     },
     {
       "rule_id": 62,
@@ -118,9 +118,9 @@
       "conformance": "a",
       "level": "A",
       "difficulty": 2,
-      "sites_affected": 803,
-      "total_occurrences": 105134,
-      "max_pages": 14982
+      "sites_affected": 815,
+      "total_occurrences": 78925,
+      "max_pages": 6580
     },
     {
       "rule_id": 2,
@@ -129,8 +129,8 @@
       "conformance": "a",
       "level": "A",
       "difficulty": 1,
-      "sites_affected": 355,
-      "total_occurrences": 77486,
+      "sites_affected": 358,
+      "total_occurrences": 72235,
       "max_pages": 6406
     },
     {
@@ -140,9 +140,9 @@
       "conformance": "aria",
       "level": "ARIA",
       "difficulty": 4,
-      "sites_affected": 275,
-      "total_occurrences": 64137,
-      "max_pages": 9351
+      "sites_affected": 273,
+      "total_occurrences": 50912,
+      "max_pages": 3711
     },
     {
       "rule_id": 85,
@@ -151,8 +151,8 @@
       "conformance": "si",
       "level": "BP",
       "difficulty": 2,
-      "sites_affected": 295,
-      "total_occurrences": 39942,
+      "sites_affected": 300,
+      "total_occurrences": 37924,
       "max_pages": 10554
     },
     {
@@ -162,20 +162,9 @@
       "conformance": "a",
       "level": "A",
       "difficulty": 3,
-      "sites_affected": 264,
-      "total_occurrences": 36524,
-      "max_pages": 4932
-    },
-    {
-      "rule_id": 90,
-      "title": "Role with implied hidden content has keyboard focus",
-      "description": "Some elements have a role that implies their internal structure should be hidden from assistive technologies. In other words, their sub-elements have a presentational role.\n\nIf a sub-element has keyboard focus, it should be moved outside of the `presentation` role.",
-      "conformance": "a",
-      "level": "A",
-      "difficulty": 2,
-      "sites_affected": 61,
-      "total_occurrences": 36140,
-      "max_pages": 6742
+      "sites_affected": 270,
+      "total_occurrences": 35436,
+      "max_pages": 4912
     },
     {
       "rule_id": 8,
@@ -184,9 +173,20 @@
       "conformance": "a",
       "level": "A",
       "difficulty": 3,
-      "sites_affected": 40,
-      "total_occurrences": 33155,
-      "max_pages": 1096
+      "sites_affected": 39,
+      "total_occurrences": 28292,
+      "max_pages": 1109
+    },
+    {
+      "rule_id": 90,
+      "title": "Role with implied hidden content has keyboard focus",
+      "description": "Some elements have a role that implies their internal structure should be hidden from assistive technologies. In other words, their sub-elements have a presentational role.\n\nIf a sub-element has keyboard focus, it should be moved outside of the `presentation` role.",
+      "conformance": "a",
+      "level": "A",
+      "difficulty": 2,
+      "sites_affected": 62,
+      "total_occurrences": 25032,
+      "max_pages": 2849
     },
     {
       "rule_id": 78,
@@ -195,9 +195,9 @@
       "conformance": "si",
       "level": "BP",
       "difficulty": 2,
-      "sites_affected": 609,
-      "total_occurrences": 27827,
-      "max_pages": 5632
+      "sites_affected": 601,
+      "total_occurrences": 23936,
+      "max_pages": 1791
     },
     {
       "rule_id": 72,
@@ -206,9 +206,9 @@
       "conformance": "si",
       "level": "BP",
       "difficulty": 2,
-      "sites_affected": 284,
-      "total_occurrences": 14768,
-      "max_pages": 2285
+      "sites_affected": 290,
+      "total_occurrences": 12792,
+      "max_pages": 729
     },
     {
       "rule_id": 64,
@@ -217,9 +217,9 @@
       "conformance": "a",
       "level": "A",
       "difficulty": 2,
-      "sites_affected": 396,
-      "total_occurrences": 10213,
-      "max_pages": 1225
+      "sites_affected": 401,
+      "total_occurrences": 8533,
+      "max_pages": 870
     },
     {
       "rule_id": 61,
@@ -228,9 +228,20 @@
       "conformance": "si",
       "level": "BP",
       "difficulty": 2,
-      "sites_affected": 442,
-      "total_occurrences": 8312,
-      "max_pages": 1843
+      "sites_affected": 454,
+      "total_occurrences": 7184,
+      "max_pages": 1109
+    },
+    {
+      "rule_id": 14,
+      "title": "Visible label and accessible name do not match",
+      "description": "The accessible name of any interactive element should contain its visible text label.",
+      "conformance": "a",
+      "level": "A",
+      "difficulty": 3,
+      "sites_affected": 107,
+      "total_occurrences": 5465,
+      "max_pages": 1514
     },
     {
       "rule_id": 86,
@@ -240,8 +251,8 @@
       "level": "BP",
       "difficulty": 1,
       "sites_affected": 52,
-      "total_occurrences": 6397,
-      "max_pages": 390
+      "total_occurrences": 4309,
+      "max_pages": 115
     },
     {
       "rule_id": 67,
@@ -250,20 +261,9 @@
       "conformance": "a",
       "level": "A",
       "difficulty": 1,
-      "sites_affected": 49,
-      "total_occurrences": 6301,
-      "max_pages": 390
-    },
-    {
-      "rule_id": 14,
-      "title": "Visible label and accessible name do not match",
-      "description": "The accessible name of any interactive element should contain its visible text label.",
-      "conformance": "a",
-      "level": "A",
-      "difficulty": 3,
-      "sites_affected": 106,
-      "total_occurrences": 5576,
-      "max_pages": 1514
+      "sites_affected": 51,
+      "total_occurrences": 4308,
+      "max_pages": 115
     },
     {
       "rule_id": 42,
@@ -273,7 +273,7 @@
       "level": "A",
       "difficulty": 3,
       "sites_affected": 125,
-      "total_occurrences": 3384,
+      "total_occurrences": 3387,
       "max_pages": 321
     },
     {
@@ -283,8 +283,8 @@
       "conformance": "aaa",
       "level": "AAA",
       "difficulty": 2,
-      "sites_affected": 60,
-      "total_occurrences": 2423,
+      "sites_affected": 61,
+      "total_occurrences": 2144,
       "max_pages": 119
     },
     {
@@ -294,8 +294,8 @@
       "conformance": "a",
       "level": "A",
       "difficulty": 2,
-      "sites_affected": 160,
-      "total_occurrences": 2157,
+      "sites_affected": 158,
+      "total_occurrences": 1972,
       "max_pages": 258
     },
     {
@@ -305,9 +305,9 @@
       "conformance": "a",
       "level": "A",
       "difficulty": 2,
-      "sites_affected": 137,
-      "total_occurrences": 1509,
-      "max_pages": 246
+      "sites_affected": 138,
+      "total_occurrences": 1525,
+      "max_pages": 275
     },
     {
       "rule_id": 77,
@@ -317,7 +317,7 @@
       "level": "A",
       "difficulty": 3,
       "sites_affected": 15,
-      "total_occurrences": 1406,
+      "total_occurrences": 1395,
       "max_pages": 6
     },
     {
@@ -327,9 +327,9 @@
       "conformance": "si",
       "level": "BP",
       "difficulty": 3,
-      "sites_affected": 35,
-      "total_occurrences": 1313,
-      "max_pages": 263
+      "sites_affected": 38,
+      "total_occurrences": 1077,
+      "max_pages": 163
     },
     {
       "rule_id": 41,
@@ -339,30 +339,8 @@
       "level": "AAA",
       "difficulty": 3,
       "sites_affected": 4,
-      "total_occurrences": 708,
-      "max_pages": 271
-    },
-    {
-      "rule_id": 59,
-      "title": "Page missing headings",
-      "description": "This page does not appear to have any heading tags (`h1` through to `h6`), or any other elements with the `role` of heading.",
-      "conformance": "si",
-      "level": "BP",
-      "difficulty": 1,
-      "sites_affected": 106,
-      "total_occurrences": 521,
-      "max_pages": 77
-    },
-    {
-      "rule_id": 70,
-      "title": "HTML element is deprecated or obsolete",
-      "description": "HTML elements are updated over time and older versions are deprecated before becoming obsolete. If a deprecated or obsolete element is used, it may create usability issues.\n\n- <a href=\"https://www.w3.org/TR/2014/REC-html5-20141028/obsolete.html\" target=\"_blank\">Learn more about deprecated elements</a> ",
-      "conformance": "si",
-      "level": "BP",
-      "difficulty": 2,
-      "sites_affected": 53,
-      "total_occurrences": 500,
-      "max_pages": 141
+      "total_occurrences": 706,
+      "max_pages": 270
     },
     {
       "rule_id": 12,
@@ -371,20 +349,31 @@
       "conformance": "a",
       "level": "A",
       "difficulty": 3,
-      "sites_affected": 21,
-      "total_occurrences": 440,
-      "max_pages": 35
+      "sites_affected": 16,
+      "total_occurrences": 484,
+      "max_pages": 94
     },
     {
-      "rule_id": 87,
-      "title": "Skip to main content link is missing",
-      "description": "The first item reached by keyboard should be a link to the main content of the page. This link should be visible when receiving focus from the keyboard.",
+      "rule_id": 59,
+      "title": "Page missing headings",
+      "description": "This page does not appear to have any heading tags (`h1` through to `h6`), or any other elements with the `role` of heading.",
       "conformance": "si",
       "level": "BP",
-      "difficulty": 4,
-      "sites_affected": 23,
-      "total_occurrences": 241,
-      "max_pages": 132
+      "difficulty": 1,
+      "sites_affected": 108,
+      "total_occurrences": 469,
+      "max_pages": 68
+    },
+    {
+      "rule_id": 70,
+      "title": "HTML element is deprecated or obsolete",
+      "description": "HTML elements are updated over time and older versions are deprecated before becoming obsolete. If a deprecated or obsolete element is used, it may create usability issues.\n\n- <a href=\"https://www.w3.org/TR/2014/REC-html5-20141028/obsolete.html\" target=\"_blank\">Learn more about deprecated elements</a> ",
+      "conformance": "si",
+      "level": "BP",
+      "difficulty": 2,
+      "sites_affected": 51,
+      "total_occurrences": 437,
+      "max_pages": 141
     },
     {
       "rule_id": 60,
@@ -394,8 +383,19 @@
       "level": "BP",
       "difficulty": 3,
       "sites_affected": 114,
-      "total_occurrences": 218,
+      "total_occurrences": 220,
       "max_pages": 37
+    },
+    {
+      "rule_id": 87,
+      "title": "Skip to main content link is missing",
+      "description": "The first item reached by keyboard should be a link to the main content of the page. This link should be visible when receiving focus from the keyboard.",
+      "conformance": "si",
+      "level": "BP",
+      "difficulty": 4,
+      "sites_affected": 24,
+      "total_occurrences": 215,
+      "max_pages": 128
     },
     {
       "rule_id": 17,
@@ -404,9 +404,9 @@
       "conformance": "a",
       "level": "A",
       "difficulty": 4,
-      "sites_affected": 9,
-      "total_occurrences": 195,
-      "max_pages": 83
+      "sites_affected": 8,
+      "total_occurrences": 148,
+      "max_pages": 58
     },
     {
       "rule_id": 4,
@@ -415,8 +415,8 @@
       "conformance": "a",
       "level": "A",
       "difficulty": 3,
-      "sites_affected": 14,
-      "total_occurrences": 100,
+      "sites_affected": 15,
+      "total_occurrences": 101,
       "max_pages": 81
     },
     {
@@ -426,8 +426,8 @@
       "conformance": "a",
       "level": "A",
       "difficulty": 3,
-      "sites_affected": 4,
-      "total_occurrences": 49,
+      "sites_affected": 5,
+      "total_occurrences": 50,
       "max_pages": 12
     },
     {
@@ -437,9 +437,9 @@
       "conformance": "a",
       "level": "A",
       "difficulty": 1,
-      "sites_affected": 23,
-      "total_occurrences": 35,
-      "max_pages": 7
+      "sites_affected": 24,
+      "total_occurrences": 32,
+      "max_pages": 6
     },
     {
       "rule_id": 75,
@@ -453,6 +453,17 @@
       "max_pages": 2
     },
     {
+      "rule_id": 81,
+      "title": "Links in the same context with the same text alternative",
+      "description": "Two or more links in the <a href=\"https://www.w3.org/TR/WCAG21/#dfn-programmatically-determined-link-context\" target=\"_blank\">same context</a> have the exact same link text \u2014 despite pointing to different pages.\n\n",
+      "conformance": "a",
+      "level": "A",
+      "difficulty": 2,
+      "sites_affected": 4,
+      "total_occurrences": 22,
+      "max_pages": 12
+    },
+    {
       "rule_id": 76,
       "title": "Table header cell is missing a header role",
       "description": "A table header cell should have the role of `columnheader` or `rowheader` as this describes its relationship to other cells in the table.  \n",
@@ -464,26 +475,15 @@
       "max_pages": 3
     },
     {
-      "rule_id": 81,
-      "title": "Links in the same context with the same text alternative",
-      "description": "Two or more links in the <a href=\"https://www.w3.org/TR/WCAG21/#dfn-programmatically-determined-link-context\" target=\"_blank\">same context</a> have the exact same link text \u2014 despite pointing to different pages.\n\n",
-      "conformance": "a",
-      "level": "A",
-      "difficulty": 2,
-      "sites_affected": 4,
-      "total_occurrences": 20,
-      "max_pages": 10
-    },
-    {
       "rule_id": 46,
       "title": "No data cells assigned to table header",
       "description": "Every header cell in a table should have at least one data cell assigned to it.",
       "conformance": "a",
       "level": "A",
       "difficulty": 2,
-      "sites_affected": 8,
-      "total_occurrences": 16,
-      "max_pages": 5
+      "sites_affected": 10,
+      "total_occurrences": 19,
+      "max_pages": 4
     },
     {
       "rule_id": 40,
@@ -493,26 +493,15 @@
       "level": "ARIA",
       "difficulty": 3,
       "sites_affected": 5,
-      "total_occurrences": 8,
-      "max_pages": 4
+      "total_occurrences": 7,
+      "max_pages": 3
     },
     {
-      "rule_id": 20,
-      "title": "ARIA attribute does not exist",
-      "description": "The specified `aria-*` attribute does not exist in WAI-ARIA. It may have been mistyped. \n",
+      "rule_id": 19,
+      "title": "Invalid state or property",
+      "description": "An ARIA state or property has an invalid value. It may have been mistyped.",
       "conformance": "aria",
       "level": "ARIA",
-      "difficulty": 3,
-      "sites_affected": 2,
-      "total_occurrences": 6,
-      "max_pages": 1
-    },
-    {
-      "rule_id": 16,
-      "title": "Required ARIA attribute is missing",
-      "description": "This element has a `role` that should be accompanied by specific ARIA attributes.",
-      "conformance": "a",
-      "level": "A",
       "difficulty": 3,
       "sites_affected": 4,
       "total_occurrences": 5,
@@ -525,19 +514,30 @@
       "conformance": "a",
       "level": "A",
       "difficulty": 2,
-      "sites_affected": 3,
+      "sites_affected": 4,
       "total_occurrences": 5,
-      "max_pages": 3
+      "max_pages": 2
     },
     {
-      "rule_id": 19,
-      "title": "Invalid state or property",
-      "description": "An ARIA state or property has an invalid value. It may have been mistyped.",
+      "rule_id": 20,
+      "title": "ARIA attribute does not exist",
+      "description": "The specified `aria-*` attribute does not exist in WAI-ARIA. It may have been mistyped. \n",
       "conformance": "aria",
       "level": "ARIA",
       "difficulty": 3,
-      "sites_affected": 3,
-      "total_occurrences": 4,
+      "sites_affected": 1,
+      "total_occurrences": 3,
+      "max_pages": 1
+    },
+    {
+      "rule_id": 16,
+      "title": "Required ARIA attribute is missing",
+      "description": "This element has a `role` that should be accompanied by specific ARIA attributes.",
+      "conformance": "a",
+      "level": "A",
+      "difficulty": 3,
+      "sites_affected": 2,
+      "total_occurrences": 3,
       "max_pages": 2
     },
     {
