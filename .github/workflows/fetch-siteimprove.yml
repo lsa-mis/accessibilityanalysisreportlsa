@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  actions: write  # so we can dispatch the Pages deploy after pushing
 
 concurrency:
   group: siteimprove-refresh
@@ -35,12 +36,14 @@ jobs:
         run: python scripts/fetch_siteimprove.py
 
       - name: Commit refreshed snapshot
+        id: commit
         run: |
           set -e
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if git diff --quiet -- data/sites.json data/rules.json; then
             echo "No changes to commit."
+            echo "did_push=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git add data/sites.json data/rules.json
@@ -50,6 +53,7 @@ jobs:
           for attempt in 1 2 3 4 5; do
             if git push; then
               echo "Push succeeded on attempt $attempt."
+              echo "did_push=true" >> "$GITHUB_OUTPUT"
               exit 0
             fi
             echo "Push attempt $attempt rejected — pulling latest main and rebasing."
@@ -58,3 +62,16 @@ jobs:
           done
           echo "Push failed after 5 attempts."
           exit 1
+
+      - name: Trigger Pages deploy
+        if: steps.commit.outputs.did_push == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # GitHub's loop-protection prevents commits pushed via GITHUB_TOKEN
+          # from triggering other workflows on push. workflow_dispatch is
+          # exempt from that protection, so we explicitly kick the Pages
+          # deploy here. The 'if' above skips this when the script produced
+          # no diff (nothing to redeploy).
+          gh workflow run pages.yml --ref main
+          echo "Pages deploy dispatched."
