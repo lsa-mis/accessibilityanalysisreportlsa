@@ -498,9 +498,8 @@ def shape_site_row(
     }
 
 
-def build_rule_rollup(per_site_issues: list[tuple[dict[str, Any], list[dict[str, Any]]]]) -> list[dict[str, Any]]:
-    """Aggregate confirmed issues across all sites by rule_id."""
-    by_rule: dict[int, dict[str, Any]] = defaultdict(lambda: {
+def _new_rule_bucket() -> dict[str, Any]:
+    return {
         "rule_id": None,
         "title": None,
         "description": None,
@@ -510,35 +509,69 @@ def build_rule_rollup(per_site_issues: list[tuple[dict[str, Any], list[dict[str,
         "sites_affected": set(),
         "total_occurrences": 0,
         "max_pages": 0,
-    })
+    }
 
-    for site, issues in per_site_issues:
-        site_id = site.get("id")
-        for issue in issues:
-            rule_id = issue.get("rule_id")
-            if rule_id is None:
-                continue
-            help_block = issue.get("help") or {}
-            bucket = by_rule[rule_id]
-            bucket["rule_id"] = rule_id
-            bucket["title"] = bucket["title"] or help_block.get("title")
-            bucket["description"] = bucket["description"] or help_block.get("description")
-            bucket["conformance"] = bucket["conformance"] or issue.get("conformance")
-            bucket["level"] = bucket["level"] or normalize_level(issue.get("conformance"))
-            bucket["difficulty"] = bucket["difficulty"] or coerce_int(issue.get("difficulty"))
-            if site_id is not None:
-                bucket["sites_affected"].add(site_id)
-            bucket["total_occurrences"] += coerce_int(issue.get("occurrences")) or 0
-            pages = coerce_int(issue.get("pages")) or 0
-            if pages > bucket["max_pages"]:
-                bucket["max_pages"] = pages
 
+def _accumulate_rule(bucket: dict[str, Any], issue: dict[str, Any], site_id: Any) -> None:
+    rule_id = issue.get("rule_id")
+    help_block = issue.get("help") or {}
+    bucket["rule_id"] = rule_id
+    bucket["title"] = bucket["title"] or help_block.get("title")
+    bucket["description"] = bucket["description"] or help_block.get("description")
+    bucket["conformance"] = bucket["conformance"] or issue.get("conformance")
+    bucket["level"] = bucket["level"] or normalize_level(issue.get("conformance"))
+    bucket["difficulty"] = bucket["difficulty"] or coerce_int(issue.get("difficulty"))
+    if site_id is not None:
+        bucket["sites_affected"].add(site_id)
+    bucket["total_occurrences"] += coerce_int(issue.get("occurrences")) or 0
+    pages = coerce_int(issue.get("pages")) or 0
+    if pages > bucket["max_pages"]:
+        bucket["max_pages"] = pages
+
+
+def _finalize_rule_rows(by_rule: dict[int, dict[str, Any]]) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for bucket in by_rule.values():
         bucket["sites_affected"] = len(bucket["sites_affected"])
         rows.append(bucket)
     rows.sort(key=lambda r: -r["total_occurrences"])
     return rows
+
+
+def build_rule_rollup(
+    per_site_issues: list[tuple[dict[str, Any], list[dict[str, Any]]]],
+    site_tags: dict[Any, list[str]] | None = None,
+) -> dict[str, Any]:
+    """Aggregate confirmed issues across all sites by rule_id (global), and
+    additionally per admin tag when site_tags is provided.
+
+    Returns:
+      {
+        "rules":   [ ...global rule rollup, sorted by total_occurrences DESC ],
+        "by_tag":  { "<tag label>": [ ...same shape rollup for sites carrying that tag ] },
+      }
+
+    site_tags maps site_id -> list of raw tag strings (e.g. ['tag:LSA', 'tag:AEM']).
+    """
+    site_tags = site_tags or {}
+    global_by_rule: dict[int, dict[str, Any]] = defaultdict(_new_rule_bucket)
+    tag_by_rule: dict[str, dict[int, dict[str, Any]]] = defaultdict(lambda: defaultdict(_new_rule_bucket))
+
+    for site, issues in per_site_issues:
+        site_id = site.get("id")
+        tags = site_tags.get(site_id) or []
+        for issue in issues:
+            rule_id = issue.get("rule_id")
+            if rule_id is None:
+                continue
+            _accumulate_rule(global_by_rule[rule_id], issue, site_id)
+            for tag in tags:
+                _accumulate_rule(tag_by_rule[tag][rule_id], issue, site_id)
+
+    return {
+        "rules":  _finalize_rule_rows(global_by_rule),
+        "by_tag": {tag: _finalize_rule_rows(rules) for tag, rules in tag_by_rule.items()},
+    }
 
 
 def main() -> None:
@@ -636,13 +669,28 @@ def main() -> None:
     # Final write — clears in_progress flag.
     write_partial(in_progress=False)
 
+    # Build a site_id -> tags lookup so the rule rollup can also produce
+    # per-tag breakdowns (e.g. top issues across AEM-tagged sites only).
+    site_tags_map: dict[Any, list[str]] = {
+        row["id"]: list(row.get("tags") or [])
+        for row in site_rows
+        if row.get("id") is not None
+    }
+
     generated_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    rule_rollup = build_rule_rollup(per_site_issues, site_tags_map)
     rules_snapshot = {
         "generated_at": generated_at,
-        "rules": build_rule_rollup(per_site_issues),
+        "rules":  rule_rollup["rules"],
+        "by_tag": rule_rollup["by_tag"],
     }
     (out_dir / "rules.json").write_text(json.dumps(rules_snapshot, indent=2) + "\n", encoding="utf-8")
-    print(f"Wrote {out_dir / 'sites.json'} and {out_dir / 'rules.json'}", file=sys.stderr)
+    print(
+        f"Wrote {out_dir / 'sites.json'} and {out_dir / 'rules.json'} "
+        f"(global rules: {len(rule_rollup['rules'])}, "
+        f"per-tag rollups: {len(rule_rollup['by_tag'])} tags)",
+        file=sys.stderr,
+    )
 
 
 if __name__ == "__main__":

@@ -595,6 +595,86 @@
       font-variant-numeric: tabular-nums;
     }
 
+    /* ============================================================
+       Top accessibility rules panel
+       ============================================================ */
+    .rules-panel { margin-top: 0.25rem; }
+    .rules-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+    .rule-row {
+      display: grid;
+      grid-template-columns: 38px 1fr 110px 130px;
+      gap: 0.85rem;
+      align-items: center;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--rule-light);
+      border-radius: 4px;
+      background: #fff;
+      transition: background 0.12s;
+    }
+    .rule-row:hover { background: var(--um-blue-50); }
+    .rule-row .rule-level {
+      display: inline-block;
+      padding: 0.18rem 0.4rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      border-radius: 3px;
+      text-align: center;
+      letter-spacing: 0.04em;
+    }
+    .rule-row .lvl-A    { background: #d8e4f0; color: #1a3a5c; }
+    .rule-row .lvl-AA   { background: #00274C; color: #fff; }
+    .rule-row .lvl-AAA  { background: #efd9c4; color: #6b4a1a; }
+    .rule-row .lvl-ARIA { background: #e6dbef; color: #4a2e6a; }
+    .rule-row .lvl-BP   { background: #d5e3d8; color: #1a4a2a; }
+    .rule-row .lvl-other{ background: #eee;    color: #555; }
+    .rule-row .rule-title {
+      font-size: 0.9rem;
+      color: var(--ink);
+      line-height: 1.3;
+    }
+    .rule-row .rule-difficulty {
+      display: block;
+      font-size: 0.7rem;
+      color: var(--ink-60);
+      margin-top: 2px;
+    }
+    .rule-row .rule-sites {
+      font-size: 0.82rem;
+      color: var(--ink-60);
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .rule-row .rule-occ {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--um-blue);
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .rules-empty {
+      padding: 1.5rem 0.5rem;
+      text-align: center;
+      color: var(--ink-60);
+      font-size: 0.85rem;
+    }
+    @media (max-width: 720px) {
+      .rule-row {
+        grid-template-columns: 38px 1fr;
+        grid-template-areas:
+          "level title"
+          "level meta";
+        gap: 0.4rem 0.65rem;
+      }
+      .rule-row .rule-level { grid-area: level; }
+      .rule-row .rule-title { grid-area: title; }
+      .rule-row .rule-sites { grid-area: meta; text-align: left; font-size: 0.75rem; }
+      .rule-row .rule-occ   { grid-area: meta; text-align: right; margin-top: -1.05rem; }
+    }
+
     /* Hover highlights on charts.
        - Bars: entire row gets a subtle tint via an invisible hit-area rect
          behind each row group, plus the value bar brightens and labels
@@ -883,6 +963,12 @@
         <h3 id="chart-top-total-title">Top 15 sites by total occurrences</h3>
         <div class="viz-sub">Reflects the active <strong>Level</strong> filter — pick A, AA, AAA, ARIA, BP, or any combination via the pills above and this chart re-ranks accordingly. With no level filter, shows total occurrences across every level.</div>
         <div id="chart-top-total"></div>
+      </div>
+
+      <div class="viz-card full">
+        <h3 id="rules-panel-title">Top accessibility rules across LSA</h3>
+        <div class="viz-sub" id="rules-panel-sub">Rules that produce the most occurrences across active sites. Click one of the Tag pills above to scope this list to a single tag (e.g. only AEM, only WP).</div>
+        <div class="rules-panel" id="rules-panel"></div>
       </div>
     </div>
 
@@ -1654,6 +1740,74 @@
           </span>`).join("");
     }
 
+    function renderRules() {
+      const panel = document.getElementById("rules-panel");
+      const sub   = document.getElementById("rules-panel-sub");
+      if (!panel) return;
+
+      if (!rulesData) {
+        panel.innerHTML = '<div class="rules-empty">Rules snapshot not loaded yet.</div>';
+        return;
+      }
+
+      // Pick the right list to display:
+      //   - 1 tag selected: per-tag rollup (if present in snapshot)
+      //   - 0 or 2+ tags:   global rollup
+      const selected = Array.from(state.tagFilters);
+      const byTag = rulesData.by_tag || {};
+      const hasByTag = Object.keys(byTag).length > 0;
+
+      let rules = rulesData.rules || [];
+      let scopeLabel = "across all active LSA sites";
+      let noteHtml   = "";
+
+      if (selected.length === 1 && hasByTag) {
+        const tag = selected[0];
+        const tagRules = byTag[tag];
+        if (Array.isArray(tagRules) && tagRules.length > 0) {
+          rules = tagRules;
+          scopeLabel = `across sites tagged <strong>${escapeHtml(prettyTag(tag))}</strong>`;
+        } else {
+          noteHtml = `<div class="rules-empty">No rule data for tag <strong>${escapeHtml(prettyTag(tag))}</strong> in this snapshot.</div>`;
+        }
+      } else if (selected.length > 1) {
+        noteHtml = `<div class="rules-empty" style="text-align:left;padding:0.4rem 0.1rem 0.7rem;">Showing the portfolio-wide list — select exactly one Tag pill to see a per-tag breakdown.</div>`;
+      } else if (!hasByTag && selected.length === 0 && rulesData.generated_at) {
+        // Older snapshot: no per-tag map. Quietly proceed with global.
+      }
+
+      if (sub) {
+        sub.innerHTML = `Rules that produce the most occurrences <span id="rules-scope">${scopeLabel}</span>. Click one of the Tag pills above to scope this list to a single tag (e.g. only AEM, only WP).`;
+      }
+
+      if (!rules.length) {
+        panel.innerHTML = noteHtml || '<div class="rules-empty">No rules to display.</div>';
+        return;
+      }
+
+      const top = rules.slice(0, 15);
+      const rows = top.map((r) => {
+        const lvl = r.level || "other";
+        const lvlClass = "lvl-" + (["A","AA","AAA","ARIA","BP"].includes(lvl) ? lvl : "other");
+        const diffNum = typeof r.difficulty === "number" ? r.difficulty : null;
+        const diffText = diffNum != null
+          ? `Difficulty ${diffNum}/5 · max pages affected: ${(r.max_pages || 0).toLocaleString()}`
+          : `Max pages affected: ${(r.max_pages || 0).toLocaleString()}`;
+        return `
+          <div class="rule-row" title="${escapeHtml(r.description || "")}">
+            <span class="rule-level ${lvlClass}">${escapeHtml(lvl)}</span>
+            <div>
+              <div class="rule-title">${escapeHtml(r.title || `Rule ${r.rule_id}`)}</div>
+              <span class="rule-difficulty">${escapeHtml(diffText)}</span>
+            </div>
+            <span class="rule-sites">${(r.sites_affected || 0).toLocaleString()} sites</span>
+            <span class="rule-occ">${(r.total_occurrences || 0).toLocaleString()}</span>
+          </div>`;
+      }).join("");
+
+      panel.innerHTML = noteHtml + `<div class="rules-list">${rows}</div>`;
+    }
+
     function renderManualTesting(filteredSites) {
       const totalTestHours = filteredSites.reduce((acc, s) => acc + estTestHours(s), 0);
       const hoursEl = document.getElementById("manual-test-hours");
@@ -1668,17 +1822,37 @@
       renderSummary(filtered);
       renderManualTesting(filtered);
       renderCharts(filtered);
+      renderRules();
       renderTable(filtered);
       if (typeof syncClearButton === "function") syncClearButton();
     }
 
+    // Rules data loaded once alongside sites.json. May be missing on
+    // snapshots written before the per-tag rollup landed; renderRules
+    // falls back gracefully.
+    let rulesData = null;
+
+    async function loadRulesQuietly() {
+      try {
+        const res = await fetch("data/rules.json", { cache: "no-cache" });
+        if (!res.ok) return null;
+        return await res.json();
+      } catch (_) {
+        return null;
+      }
+    }
+
     async function load() {
       try {
-        const res = await fetch("data/sites.json", { cache: "no-cache" });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
+        const [sitesRes, rulesPayload] = await Promise.all([
+          fetch("data/sites.json", { cache: "no-cache" }),
+          loadRulesQuietly(),
+        ]);
+        if (!sitesRes.ok) throw new Error(`HTTP ${sitesRes.status}`);
+        const data = await sitesRes.json();
         const raw = Array.isArray(data.sites) ? data.sites : [];
         state.sites = decorate(raw);
+        rulesData = rulesPayload;
         document.getElementById("generated-at").textContent =
           data.generated_at ? fmtDate(data.generated_at) : "unknown";
 
