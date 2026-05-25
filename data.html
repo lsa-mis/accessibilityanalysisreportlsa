@@ -879,7 +879,6 @@
           <button class="pill active" data-filter="all" title="Clear level filters">All</button>
           <button class="pill" data-filter="A">A</button>
           <button class="pill" data-filter="AA">AA</button>
-          <button class="pill" data-filter="AAA">AAA</button>
           <button class="pill" data-filter="ARIA" title="WAI-ARIA related issues (separate from WCAG levels)">ARIA</button>
           <button class="pill" data-filter="BP" title="Siteimprove Best Practices — guidance beyond WCAG conformance">BP</button>
         </div>
@@ -998,7 +997,6 @@
             <th data-key="issue_types" data-type="number" class="col-occ" title="Distinct issue types found on the site">Types</th>
             <th data-key="lvl_a" data-type="number" class="col-occ" title="WCAG Level A — occurrences">A</th>
             <th data-key="lvl_aa" data-type="number" class="col-occ" title="WCAG Level AA — occurrences (Title II target)">AA</th>
-            <th data-key="lvl_aaa" data-type="number" class="col-occ" title="WCAG Level AAA — occurrences">AAA</th>
             <th data-key="lvl_aria" data-type="number" class="col-occ" title="WAI-ARIA related occurrences">ARIA</th>
             <th data-key="lvl_bp" data-type="number" class="col-occ" title="Siteimprove Best Practices occurrences">BP</th>
             <th data-key="issues" data-type="number" id="th-total" class="col-occ">Total occurrences</th>
@@ -1010,7 +1008,7 @@
           </tr>
         </thead>
         <tbody id="sites-body">
-          <tr><td colspan="17" class="empty">Loading…</td></tr>
+          <tr><td colspan="16" class="empty">Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -1133,13 +1131,13 @@
       const tags = state.tagFilters;
       return state.sites.filter((s) => {
         // Level: site must have occurrences at ANY of the selected levels (OR within row).
+        // AAA is intentionally excluded from display per LSA preference.
         if (levels.size > 0) {
           const matchA    = levels.has("A")    && s.lvl_a    > 0;
           const matchAA   = levels.has("AA")   && s.lvl_aa   > 0;
-          const matchAAA  = levels.has("AAA")  && s.lvl_aaa  > 0;
           const matchARIA = levels.has("ARIA") && s.lvl_aria > 0;
           const matchBP   = levels.has("BP")   && s.lvl_bp   > 0;
-          if (!(matchA || matchAA || matchAAA || matchARIA || matchBP)) return false;
+          if (!(matchA || matchAA || matchARIA || matchBP)) return false;
         }
         // Status: site status must be ONE of the selected (OR within row).
         if (statuses.size > 0 && !statuses.has(s.status)) return false;
@@ -1161,13 +1159,14 @@
     }
 
     // Sum of occurrences across the levels the user has chosen.
-    // Empty selection = all levels.
+    // Empty selection = all *visible* levels (A + AA + ARIA + BP, AAA excluded).
     function selectedOccurrences(s) {
-      if (state.levelFilters.size === 0) return s.issues || 0;
+      if (state.levelFilters.size === 0) {
+        return (s.lvl_a || 0) + (s.lvl_aa || 0) + (s.lvl_aria || 0) + (s.lvl_bp || 0);
+      }
       let sum = 0;
       if (state.levelFilters.has("A"))    sum += s.lvl_a    || 0;
       if (state.levelFilters.has("AA"))   sum += s.lvl_aa   || 0;
-      if (state.levelFilters.has("AAA"))  sum += s.lvl_aaa  || 0;
       if (state.levelFilters.has("ARIA")) sum += s.lvl_aria || 0;
       if (state.levelFilters.has("BP"))   sum += s.lvl_bp   || 0;
       return sum;
@@ -1382,18 +1381,19 @@
     }
 
     function aggregateLevels(sites) {
-      let a = 0, aa = 0, aaa = 0, aria = 0, bp = 0;
+      // AAA is intentionally excluded from the dashboard. The data is still
+      // captured in by_level.AAA in sites.json (and rolls into Score / DCI),
+      // but it's not displayed in the donut, filters, or table.
+      let a = 0, aa = 0, aria = 0, bp = 0;
       for (const s of sites) {
         a    += s.lvl_a    || 0;
         aa   += s.lvl_aa   || 0;
-        aaa  += s.lvl_aaa  || 0;
         aria += s.lvl_aria || 0;
         bp   += s.lvl_bp   || 0;
       }
       const all = [
         { key: "A",    label: "Level A",       value: a,    color: COLORS.A    },
         { key: "AA",   label: "Level AA",      value: aa,   color: COLORS.AA   },
-        { key: "AAA",  label: "Level AAA",     value: aaa,  color: COLORS.AAA  },
         { key: "ARIA", label: "ARIA",          value: aria, color: COLORS.ARIA },
         { key: "BP",   label: "Best Practices", value: bp,   color: COLORS.BP   },
       ];
@@ -1621,7 +1621,7 @@
         `${filteredSites.length.toLocaleString()} of ${state.sites.length.toLocaleString()} sites shown`;
 
       if (sorted.length === 0) {
-        body.innerHTML = '<tr><td colspan="17" class="empty">No sites match current filters.</td></tr>';
+        body.innerHTML = '<tr><td colspan="16" class="empty">No sites match current filters.</td></tr>';
         return;
       }
 
@@ -1648,7 +1648,6 @@
             <td class="num col-occ">${fmtNumber(s.issue_types)}</td>
             <td class="num col-occ">${fmtNumber(s.lvl_a)}</td>
             <td class="num col-occ">${fmtNumber(s.lvl_aa)}</td>
-            <td class="num col-occ">${fmtNumber(s.lvl_aaa)}</td>
             <td class="num col-occ">${fmtNumber(s.lvl_aria)}</td>
             <td class="num col-occ">${fmtNumber(s.lvl_bp)}</td>
             <td class="num col-occ">${fmtNumber(selectedOccurrences(s))}</td>
@@ -1772,12 +1771,14 @@
         }
       } else if (selected.length > 1) {
         noteHtml = `<div class="rules-empty" style="text-align:left;padding:0.4rem 0.1rem 0.7rem;">Showing the portfolio-wide list — select exactly one Tag pill to see a per-tag breakdown.</div>`;
-      } else if (!hasByTag && selected.length === 0 && rulesData.generated_at) {
-        // Older snapshot: no per-tag map. Quietly proceed with global.
       }
 
+      // AAA is hidden from the dashboard per LSA preference; drop those rules
+      // from the displayed list. Data is still in the JSON if anyone needs it.
+      rules = rules.filter(r => (r.level || "").toUpperCase() !== "AAA");
+
       if (sub) {
-        sub.innerHTML = `Rules that produce the most occurrences <span id="rules-scope">${scopeLabel}</span>. Click one of the Tag pills above to scope this list to a single tag (e.g. only AEM, only WP).`;
+        sub.innerHTML = `Rules that produce the most occurrences <span id="rules-scope">${scopeLabel}</span> (AAA excluded). Click one of the Tag pills above to scope this list to a single tag (e.g. only AEM, only WP).`;
       }
 
       if (!rules.length) {
@@ -1872,7 +1873,7 @@
         renderAll();
       } catch (err) {
         document.getElementById("sites-body").innerHTML =
-          `<tr><td colspan="17" class="empty">Failed to load data: ${escapeHtml(err.message)}</td></tr>`;
+          `<tr><td colspan="16" class="empty">Failed to load data: ${escapeHtml(err.message)}</td></tr>`;
       }
     }
 
@@ -1925,7 +1926,6 @@
         ["Issue types",                  s => s.issue_types ?? ""],
         ["A occurrences",                s => s.lvl_a ?? 0],
         ["AA occurrences",               s => s.lvl_aa ?? 0],
-        ["AAA occurrences",              s => s.lvl_aaa ?? 0],
         ["ARIA occurrences",             s => s.lvl_aria ?? 0],
         ["BP occurrences",               s => s.lvl_bp ?? 0],
         [`Total occurrences${lensSuffix}`, s => selectedOccurrences(s)],
