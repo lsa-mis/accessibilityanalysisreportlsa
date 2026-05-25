@@ -869,6 +869,9 @@
     <div class="filters">
       <div class="filters-header">
         <span class="filters-title">Filters</span>
+        <span id="exclusion-note"
+              style="margin-right:auto;margin-left:0.85rem;font-size:0.78rem;color:var(--ink-60);font-style:italic;"
+              hidden></span>
         <button type="button" id="clear-filters" class="clear-filters-btn" disabled aria-label="Clear all active filters">
           <span aria-hidden="true">✕</span> Clear all filters
         </button>
@@ -1094,8 +1097,34 @@
         "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
       }[c]));
 
+    // Tags whose sites are excluded from every aggregate on this dashboard:
+    // summary cards, donuts, bars, table, CSV export, compliance band, and
+    // the rules panel (when scoped). These are non-production environments
+    // that would otherwise inflate the 'work remaining' picture for LSA's
+    // user-facing portfolio. Comparison is case-insensitive against the
+    // human-readable tag name (after stripping the 'tag:' prefix).
+    const EXCLUDED_TAG_NAMES = new Set(["test sites", "development"]);
+
+    function isExcludedSite(site) {
+      const tags = site.tags || [];
+      for (const t of tags) {
+        if (EXCLUDED_TAG_NAMES.has(prettyTag(t).trim().toLowerCase())) return true;
+      }
+      return false;
+    }
+
+    let excludedSiteCount = 0;
+
     function decorate(sites) {
-      return sites.map((s) => {
+      excludedSiteCount = 0;
+      const out = [];
+      for (const s of sites) {
+        // Drop Test Sites / Development tagged sites entirely so nothing
+        // downstream (filters, charts, table, CSV) ever sees them.
+        if (isExcludedSite(s)) {
+          excludedSiteCount++;
+          continue;
+        }
         const a    = s.by_level?.A?.occurrences    ?? 0;
         const aa   = s.by_level?.AA?.occurrences   ?? 0;
         const aaa  = s.by_level?.AAA?.occurrences  ?? 0;
@@ -1111,7 +1140,7 @@
         // Tags come exclusively from data/site-tags.csv (admin-configured).
         // Empty array = site isn't in the CSV; nothing to display.
         const tags = Array.isArray(s.tags) ? s.tags : [];
-        return {
+        out.push({
           ...s,
           lvl_a: a,
           lvl_aa: aa,
@@ -1120,8 +1149,9 @@
           lvl_bp: bp,
           tags,
           status: hasErr ? "error" : (s.pages || s.pages_with_issues ? "ok" : "no-data"),
-        };
-      });
+        });
+      }
+      return out;
     }
 
     function applyFilters() {
@@ -1861,6 +1891,19 @@
         const anyTarget = state.sites.some((s) => s.target_percentage !== null && s.target_percentage !== undefined);
         document.getElementById("notice-stale").hidden = !(state.sites.length > 0 && !anyScore && !anyTarget);
         document.getElementById("notice-live").hidden = !data.in_progress;
+        // Surface the exclusion count so users know the dashboard is
+        // intentionally hiding a non-zero number of sites.
+        const excEl = document.getElementById("exclusion-note");
+        if (excEl) {
+          if (excludedSiteCount > 0) {
+            excEl.textContent =
+              `${excludedSiteCount.toLocaleString()} site${excludedSiteCount === 1 ? "" : "s"} ` +
+              "tagged Test Sites or Development hidden from this view.";
+            excEl.hidden = false;
+          } else {
+            excEl.hidden = true;
+          }
+        }
         renderTagPills();
 
         if (data.in_progress) {
