@@ -596,6 +596,85 @@
     }
 
     /* ============================================================
+       Ready for manual testing panel
+       ============================================================ */
+    .ready-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-bottom: 0.85rem;
+      padding: 0.75rem 1rem;
+      background: #f0f7f1;
+      border: 1px solid #cfe3d2;
+      border-radius: 5px;
+    }
+    .ready-stat .num {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #174531;
+      font-variant-numeric: tabular-nums;
+    }
+    .ready-stat .lbl {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #3d5a45;
+    }
+    .ready-list {
+      max-height: 420px;
+      overflow-y: auto;
+      border: 1px solid var(--rule-light);
+      border-radius: 4px;
+    }
+    .ready-row {
+      display: grid;
+      grid-template-columns: 1fr 120px 90px 90px;
+      gap: 0.85rem;
+      align-items: center;
+      padding: 0.45rem 0.75rem;
+      border-bottom: 1px solid var(--rule-light);
+      font-size: 0.86rem;
+      background: #fff;
+    }
+    .ready-row:last-child { border-bottom: none; }
+    .ready-row:hover { background: #f0f7f1; }
+    .ready-row .r-name { color: var(--ink); font-weight: 500; line-height: 1.25; }
+    .ready-row .r-url {
+      display: block; font-size: 0.74rem; color: var(--ink-60);
+      text-decoration: none; margin-top: 1px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .ready-row .r-url:hover { text-decoration: underline; color: var(--um-blue); }
+    .ready-row .r-pct {
+      font-weight: 700; color: #1f7f3f; text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .ready-row .r-pages, .ready-row .r-hours {
+      text-align: right; color: var(--ink-60);
+      font-variant-numeric: tabular-nums;
+    }
+    .ready-head {
+      display: grid;
+      grid-template-columns: 1fr 120px 90px 90px;
+      gap: 0.85rem;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--um-blue);
+      background: var(--um-blue-50);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    .ready-head span:not(:first-child) { text-align: right; }
+    @media (max-width: 600px) {
+      .ready-row, .ready-head { grid-template-columns: 1fr 70px 60px; }
+      .ready-row .r-hours, .ready-head .h-hours { display: none; }
+    }
+
+    /* ============================================================
        Top accessibility rules panel
        ============================================================ */
     .rules-panel { margin-top: 0.25rem; }
@@ -971,6 +1050,18 @@
         <h3 id="rules-panel-title">Top accessibility rules across LSA</h3>
         <div class="viz-sub" id="rules-panel-sub">Rules that produce the most occurrences across active sites. Click one of the Tag pills above to scope this list to a single tag (e.g. only AEM, only WP).</div>
         <div class="rules-panel" id="rules-panel"></div>
+      </div>
+
+      <div class="viz-card full" style="border-left: 4px solid #1f7f3f;">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+          <h3 style="margin:0;">Ready for manual testing</h3>
+          <button type="button" id="export-ready" class="export-btn" aria-label="Export the ready-for-manual-testing list to CSV">
+            <span class="icon" aria-hidden="true">⤓</span> Export this list
+          </button>
+        </div>
+        <div class="viz-sub">Sites at <strong>≥97.5% of their Title II target</strong> — automated remediation is essentially done, so the next step is human review (keyboard navigation, screen-reader flow, focus order, meaningful alt text). Respects the active filters above. Sorted by page count so the smallest manual-testing jobs surface first.</div>
+        <div class="ready-stats" id="ready-stats"></div>
+        <div class="ready-list" id="ready-list"></div>
       </div>
     </div>
 
@@ -1839,6 +1930,97 @@
       panel.innerHTML = noteHtml + `<div class="rules-list">${rows}</div>`;
     }
 
+    // ============================================================
+    // Ready for manual testing — sites at >=97.5% of Title II target.
+    // Automated remediation is effectively done for these; the next
+    // step is human review.
+    // ============================================================
+    const READY_THRESHOLD = 97.5;
+
+    function readySites(filteredSites) {
+      return filteredSites
+        .filter(s =>
+          s.status === "ok" &&
+          typeof s.target_percentage === "number" &&
+          s.target_percentage >= READY_THRESHOLD
+        )
+        // Smallest manual-testing jobs first (page count ASC); ties break
+        // toward the most-complete site (target % DESC).
+        .sort((a, b) =>
+          (a.pages || 0) - (b.pages || 0) ||
+          (b.target_percentage || 0) - (a.target_percentage || 0)
+        );
+    }
+
+    function renderReady(filteredSites) {
+      const statsEl = document.getElementById("ready-stats");
+      const listEl  = document.getElementById("ready-list");
+      if (!statsEl || !listEl) return;
+
+      const ready = readySites(filteredSites);
+      const totalPages = ready.reduce((acc, s) => acc + (s.pages || 0), 0);
+      const totalHours = ready.reduce((acc, s) => acc + estTestHours(s), 0);
+
+      statsEl.innerHTML = [
+        { num: ready.length.toLocaleString(), lbl: "sites ready" },
+        { num: totalPages.toLocaleString(),   lbl: "pages to review" },
+        { num: fmtHours(totalHours),          lbl: `est. effort (${manualMinutesPerPage}min/pg)` },
+      ].map(s => `
+        <div class="ready-stat">
+          <div class="num">${escapeHtml(String(s.num))}</div>
+          <div class="lbl">${escapeHtml(s.lbl)}</div>
+        </div>`).join("");
+
+      if (!ready.length) {
+        listEl.innerHTML = '<div class="rules-empty">No sites at ≥97.5% of target in the current filter.</div>';
+        return;
+      }
+
+      const head = `
+        <div class="ready-head">
+          <span>Site</span>
+          <span>Target %</span>
+          <span>Pages</span>
+          <span class="h-hours">Est. hrs</span>
+        </div>`;
+      const rows = ready.map(s => `
+        <div class="ready-row">
+          <div>
+            <div class="r-name">${escapeHtml(s.site_name || "(unnamed)")}</div>
+            ${s.url ? `<a class="r-url" href="${escapeHtml(s.url)}" target="_blank" rel="noopener">${escapeHtml(s.url)}</a>` : ""}
+          </div>
+          <span class="r-pct">${s.target_percentage.toFixed(2)}%</span>
+          <span class="r-pages">${fmtNumber(s.pages)}</span>
+          <span class="r-hours">${fmtHours(estTestHours(s))}</span>
+        </div>`).join("");
+      listEl.innerHTML = head + rows;
+    }
+
+    function exportReadyCSV() {
+      const ready = readySites(applyFilters());
+      const cols = [
+        ["Site name", s => s.site_name || ""],
+        ["URL",       s => s.url || ""],
+        ["Site ID",   s => s.id ?? ""],
+        ["Tags",      s => (s.tags || []).map(prettyTag).join(", ")],
+        ["Target %",  s => s.target_percentage ?? ""],
+        ["Pages",     s => s.pages ?? ""],
+        [`Est. test hours (${manualMinutesPerPage}min/pg)`, s => estTestHours(s).toFixed(2)],
+      ];
+      const lines = [cols.map(([h]) => csvCell(h)).join(",")];
+      for (const s of ready) lines.push(cols.map(([, fn]) => csvCell(fn(s))).join(","));
+      const blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const stamp = new Date().toISOString().slice(0, 10);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `lsa-ready-for-manual-testing-${stamp}-${ready.length}sites.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
     function renderManualTesting(filteredSites) {
       const totalTestHours = filteredSites.reduce((acc, s) => acc + estTestHours(s), 0);
       const hoursEl = document.getElementById("manual-test-hours");
@@ -1854,6 +2036,7 @@
       renderManualTesting(filtered);
       renderCharts(filtered);
       renderRules();
+      renderReady(filtered);
       renderTable(filtered);
       if (typeof syncClearButton === "function") syncClearButton();
     }
@@ -2003,6 +2186,7 @@
     }
 
     document.getElementById("export-csv").addEventListener("click", exportCSV);
+    document.getElementById("export-ready").addEventListener("click", exportReadyCSV);
 
     function syncFilterGroup(groupId, set) {
       const group = document.getElementById(groupId);
