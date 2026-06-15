@@ -1053,13 +1053,29 @@
       </div>
 
       <div class="viz-card full" style="border-left: 4px solid #1f7f3f;">
-        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
           <h3 style="margin:0;">Ready for manual testing</h3>
-          <button type="button" id="export-ready" class="export-btn" aria-label="Export the ready-for-manual-testing list to CSV">
-            <span class="icon" aria-hidden="true">⤓</span> Export this list
-          </button>
+          <div style="display:flex;align-items:center;gap:0.85rem;flex-wrap:wrap;">
+            <label style="font-size:0.82rem;color:var(--ink-60);display:inline-flex;align-items:center;gap:0.4rem;">
+              <span style="font-weight:600;color:var(--ink);">Rate:</span>
+              <input
+                type="number"
+                id="minutes-per-page-ready"
+                min="1"
+                max="240"
+                step="1"
+                value="15"
+                style="width:56px;padding:0.3rem 0.45rem;border:1px solid #1f7f3f;border-radius:3px;font-size:0.95rem;font-weight:600;color:#174531;font-family:inherit;background:#fff;"
+                aria-label="Estimated minutes per page for manual accessibility testing"
+              />
+              <span>min / page</span>
+            </label>
+            <button type="button" id="export-ready" class="export-btn" aria-label="Export the ready-for-manual-testing list to CSV">
+              <span class="icon" aria-hidden="true">⤓</span> Export this list
+            </button>
+          </div>
         </div>
-        <div class="viz-sub">Sites at <strong>≥97.5% of their Title II target</strong> — automated remediation is essentially done, so the next step is human review (keyboard navigation, screen-reader flow, focus order, meaningful alt text). Respects the active filters above. Sorted by page count so the smallest manual-testing jobs surface first.</div>
+        <div class="viz-sub">Sites at <strong>≥97.5% of their Title II target</strong> — automated remediation is essentially done, so the next step is human review (keyboard navigation, screen-reader flow, focus order, meaningful alt text). Respects the active filters above. Sorted by page count so the smallest manual-testing jobs surface first. The rate here is shared with the Manual testing stat above.</div>
         <div class="ready-stats" id="ready-stats"></div>
         <div class="ready-list" id="ready-list"></div>
       </div>
@@ -2108,11 +2124,26 @@
       renderAll();
     });
 
-    document.getElementById("minutes-per-page").addEventListener("input", (e) => {
-      const n = Math.max(1, Math.min(240, Number(e.target.value) || 15));
-      manualMinutesPerPage = n;
-      renderAll();
-    });
+    // Two rate inputs (Manual testing stat + Ready-for-manual-testing
+    // section) both drive the same manualMinutesPerPage. Whichever the
+    // user edits, mirror the value into the other and re-render. The
+    // edited input keeps focus because we only set the OTHER input's value.
+    const rateInputIds = ["minutes-per-page", "minutes-per-page-ready"];
+    function wireRateInput(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener("input", (e) => {
+        const n = Math.max(1, Math.min(240, Number(e.target.value) || 15));
+        manualMinutesPerPage = n;
+        for (const otherId of rateInputIds) {
+          if (otherId === id) continue;
+          const other = document.getElementById(otherId);
+          if (other && other.value !== String(n)) other.value = String(n);
+        }
+        renderAll();
+      });
+    }
+    rateInputIds.forEach(wireRateInput);
 
     // ============================================================
     // CSV export of the currently-filtered + sorted table.
