@@ -158,40 +158,44 @@ def lookup_csv_tags(
     return []
 
 
-def derive_tags(site_name: str | None, url: str | None) -> list[str]:
-    tags: list[str] = []
-    name = (site_name or "").strip()
-    parsed = urlparse(url or "")
+def derive_fallback_tags(site_name: str | None, url: str | None) -> list[str]:
+    """Infer a platform label from the URL for sites the CSV leaves
+    untagged. This is a GAP-FILLER only — it runs solely when the
+    Siteimprove export has no tags for a site, and never overrides a
+    human-assigned tag. Returns plain labels (e.g. 'WP') to be matched
+    by the same section logic as real tags.
+
+    Heuristics (host-based, conservative):
+      sites.lsa.umich.edu/*        -> WP   (WordPress multisite)
+      courses.lsa.umich.edu/*      -> WP   (WP Courses)
+      digitalscholarship[-dev]…    -> WP   (WP DigitalScholarship)
+      lsa.umich.edu/<path>         -> AEM  (path-based AEM pages)
+      ii.umich.edu/*               -> AEM  (International Institute on AEM)
+      websites.umich.edu/~user     -> External
+      non-umich host (.org, .io …) -> External
+    Anything else (other *.lsa.umich.edu subdomains that are often
+    Omeka/Rails/custom) is left untagged so a human/CSV can classify it
+    rather than the heuristic guessing wrong.
+    """
+    parsed = urlparse(url if (url and "://" in url) else "https://" + (url or ""))
     host = (parsed.hostname or "").lower()
-    subdomain = host.split(".")[0] if host else ""
+    if not host:
+        return []
 
-    # Lifecycle
-    lifecycle = "production"
-    for tag, pat in LIFECYCLE_PATTERNS:
-        if pat.search(subdomain):
-            lifecycle = tag
-            break
-    tags.append(f"lifecycle:{lifecycle}")
+    wp_hosts = {"sites.lsa.umich.edu", "courses.lsa.umich.edu",
+                "digitalscholarship.umich.edu", "digitalscholarship-dev.lsa.umich.edu"}
+    aem_hosts = {"lsa.umich.edu", "ii.umich.edu"}
 
-    # Domain class
-    if host.endswith(".lsa.umich.edu") or host == "lsa.umich.edu":
-        domain_class = "lsa-umich"
-    elif host.endswith(".umich.edu") or host == "umich.edu":
-        domain_class = "umich"
-    elif host:
-        domain_class = "external"
-    else:
-        domain_class = "unknown"
-    tags.append(f"domain:{domain_class}")
-
-    # Platform — search both name and host (without subdomain) for signals.
-    haystack = f"{name} {host}"
-    for tag, pat in PLATFORM_PATTERNS:
-        if pat.search(haystack):
-            tags.append(f"platform:{tag}")
-            break
-
-    return tags
+    if host in wp_hosts:
+        return ["WP"]
+    if host in aem_hosts:
+        return ["AEM"]
+    if host == "websites.umich.edu":
+        return ["External"]
+    if not (host.endswith(".umich.edu") or host == "umich.edu"):
+        return ["External"]
+    # Unknown umich subdomain — don't guess (likely Omeka/Rails/custom).
+    return []
 
 
 def env(name: str) -> str:
@@ -641,10 +645,20 @@ def main() -> None:
             row = shape_site_row(site, target, rollup)
             row.update(pdfs)
             row.update(spelling)
-            # Tags come exclusively from data/site-tags.csv (admin-configured
-            # Siteimprove labels). Empty list means the site isn't in the CSV.
+            # Tags: prefer admin-assigned labels from data/site-tags.csv.
+            # When the CSV has none for a site, fall back to a URL-based
+            # platform guess so untagged sites still land in the right
+            # section instead of Uncategorized. CSV always wins; the
+            # fallback only fills gaps.
             csv_tags = lookup_csv_tags(site, csv_by_id, csv_by_url, csv_by_name)
-            row["tags"] = [f"tag:{label}" for label in csv_tags]
+            if csv_tags:
+                row["tags"] = [f"tag:{label}" for label in csv_tags]
+                row["tags_inferred"] = False
+            else:
+                fallback = derive_fallback_tags(
+                    row.get("site_name"), row.get("url"))
+                row["tags"] = [f"tag:{label}" for label in fallback]
+                row["tags_inferred"] = bool(fallback)
             # Surface any extra metadata from /sites/{id} (only fields not
             # already present on the listing row), so we can audit later.
             extras = {

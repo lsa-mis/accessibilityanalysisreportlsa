@@ -19,7 +19,11 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from fetch_siteimprove import load_site_tag_csv, lookup_csv_tags  # noqa: E402
+from fetch_siteimprove import (  # noqa: E402
+    derive_fallback_tags,
+    load_site_tag_csv,
+    lookup_csv_tags,
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 SITES_PATH = ROOT / "data" / "sites.json"
@@ -44,20 +48,28 @@ def main() -> None:
 
     sites = snapshot.get("sites") or []
     matched = 0
-    cleared = 0
+    inferred = 0
+    untagged = 0
     for site in sites:
         labels = lookup_csv_tags(site, by_id, by_url, by_name)
-        had_tags = bool(site.get("tags"))
-        site["tags"] = [f"tag:{label}" for label in labels]
         if labels:
+            site["tags"] = [f"tag:{label}" for label in labels]
+            site["tags_inferred"] = False
             matched += 1
-        elif had_tags:
-            cleared += 1
+        else:
+            # Gap-filler: URL-based platform guess when the CSV has nothing.
+            fallback = derive_fallback_tags(site.get("site_name"), site.get("url"))
+            site["tags"] = [f"tag:{label}" for label in fallback]
+            site["tags_inferred"] = bool(fallback)
+            if fallback:
+                inferred += 1
+            else:
+                untagged += 1
 
     SITES_PATH.write_text(json.dumps(snapshot, indent=2) + "\n", encoding="utf-8")
     print(
-        f"Merged tags for {matched}/{len(sites)} sites; "
-        f"cleared previously-tagged but unmatched: {cleared}.",
+        f"Tags: {matched} from CSV, {inferred} inferred from URL, "
+        f"{untagged} still untagged (of {len(sites)} sites).",
         file=sys.stderr,
     )
 
