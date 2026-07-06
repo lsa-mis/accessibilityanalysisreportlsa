@@ -28,8 +28,8 @@ import requests
 
 API_ROOT = os.environ.get("SITEIMPROVE_API_ROOT", "https://api.siteimprove.com/v2").rstrip("/")
 PAGE_SIZE = 100
-REQUEST_TIMEOUT = 60
-MAX_RETRIES = 4
+REQUEST_TIMEOUT = int(os.environ.get("SITEIMPROVE_TIMEOUT", "120"))
+MAX_RETRIES = 5
 RETRY_BACKOFF_SECONDS = 5
 MAX_WORKERS = int(os.environ.get("SITEIMPROVE_MAX_WORKERS", "8"))
 FLUSH_EVERY_SECONDS = int(os.environ.get("SITEIMPROVE_FLUSH_SECONDS", "10"))
@@ -207,7 +207,21 @@ def env(name: str) -> str:
 
 def get(session: requests.Session, url: str) -> dict[str, Any]:
     for attempt in range(1, MAX_RETRIES + 1):
-        response = session.get(url, timeout=REQUEST_TIMEOUT)
+        # Network-level failures (read/connect timeouts, dropped connections)
+        # raise before we get a response. Retry them with backoff just like
+        # 429/5xx — a single transient timeout must not kill the whole run.
+        try:
+            response = session.get(url, timeout=REQUEST_TIMEOUT)
+        except (requests.exceptions.Timeout,
+                requests.exceptions.ConnectionError,
+                requests.exceptions.ChunkedEncodingError) as exc:
+            if attempt == MAX_RETRIES:
+                raise
+            sleep_for = RETRY_BACKOFF_SECONDS * attempt
+            print(f"  retry {attempt} after {sleep_for}s (network: {type(exc).__name__})",
+                  file=sys.stderr)
+            time.sleep(sleep_for)
+            continue
         if response.status_code == 429 or response.status_code >= 500:
             if attempt == MAX_RETRIES:
                 response.raise_for_status()
@@ -638,8 +652,20 @@ def main() -> None:
     print(f"Fetching per-site data with {MAX_WORKERS} workers...", file=sys.stderr)
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = {executor.submit(fetch_one, s): s for s in runnable_sites}
+        failed_sites = 0
         for index, future in enumerate(as_completed(futures), start=1):
-            site, target, issues, detail, pdfs, spelling = future.result()
+            # Isolate per-site failures: after in-request retries are
+            # exhausted, one unreachable site shouldn't abort the whole run.
+            # Log it and move on so the snapshot still covers everything else.
+            try:
+                site, target, issues, detail, pdfs, spelling = future.result()
+            except Exception as exc:  # noqa: BLE001 — resilience over precision
+                bad = futures[future]
+                failed_sites += 1
+                print(f"  ! skipping site {bad.get('id')} "
+                      f"({bad.get('site_name') or bad.get('url')}): "
+                      f"{type(exc).__name__}", file=sys.stderr)
+                continue
             per_site_issues.append((site, issues))
             rollup = aggregate_site_issues(issues)
             row = shape_site_row(site, target, rollup)
@@ -705,6 +731,9 @@ def main() -> None:
         f"per-tag rollups: {len(rule_rollup['by_tag'])} tags)",
         file=sys.stderr,
     )
+    if failed_sites:
+        print(f"  note: {failed_sites} site(s) skipped after exhausting retries.",
+              file=sys.stderr)
 
 
 if __name__ == "__main__":
