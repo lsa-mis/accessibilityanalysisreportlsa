@@ -2,8 +2,9 @@ name: Refresh Siteimprove data
 
 on:
   schedule:
-    # Mondays at 11:00 UTC (07:00 ET)
-    - cron: "0 11 * * 1"
+    # Saturdays and Sundays at 11:00 UTC (07:00 ET summer / 06:00 ET winter).
+    # 6 = Saturday, 0 = Sunday.
+    - cron: "0 11 * * 6,0"
   workflow_dispatch:
 
 permissions:
@@ -75,3 +76,29 @@ jobs:
           # no diff (nothing to redeploy).
           gh workflow run pages.yml --ref main
           echo "Pages deploy dispatched."
+
+      - name: Record commit SHA
+        id: sha
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger Asana sync
+        # Chain: once the refresh has committed fresh data, fire the sync in
+        # the (separate) siteimprove-asana-sync repo via repository_dispatch.
+        # We pass the exact commit SHA so the sync reads the data from a
+        # SHA-pinned raw URL — immediately available, no wait for the Pages
+        # deploy to finish. Runs on success even when there was no data diff
+        # (the checked-out SHA still points at current data).
+        if: success()
+        env:
+          # Fine-grained PAT (Actions: write on rayraycodes/siteimprove-asana-sync).
+          GH_TOKEN: ${{ secrets.ASANA_SYNC_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "ASANA_SYNC_DISPATCH_TOKEN not set — skipping Asana sync trigger."
+            exit 0
+          fi
+          gh api repos/rayraycodes/siteimprove-asana-sync/dispatches \
+            --method POST \
+            -f event_type=siteimprove-refreshed \
+            -f "client_payload[sha]=${{ steps.sha.outputs.sha }}"
+          echo "Dispatched Asana sync for commit ${{ steps.sha.outputs.sha }}."
