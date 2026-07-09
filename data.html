@@ -977,6 +977,13 @@
         <span class="filter-hint" id="filter-status-hint"></span>
       </div>
       <div class="filter-row">
+        <span class="filter-label">Platform</span>
+        <div id="filter-platform" role="group" aria-label="Platform filter" style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+          <button class="pill active" data-filter="all" title="Clear platform filters">All</button>
+        </div>
+        <span class="filter-hint" id="filter-platform-hint"></span>
+      </div>
+      <div class="filter-row">
         <span class="filter-label">Tags</span>
         <div id="filter-tags" role="group" aria-label="Tag filter" style="display:flex;gap:0.4rem;flex-wrap:wrap;">
           <button class="pill active" data-filter="all" title="Clear tag filters">All</button>
@@ -1135,6 +1142,7 @@
       levelFilters: new Set(),    // empty = no level filter
       statusFilters: new Set(),   // empty = no status filter
       tagFilters: new Set(),      // empty = no tag filter
+      platformFilters: new Set(), // empty = no platform filter
       sortKey: "site_name",
       sortDir: "asc",
     };
@@ -1212,6 +1220,34 @@
     // human-readable tag name (after stripping the 'tag:' prefix).
     const EXCLUDED_TAG_NAMES = new Set(["test sites", "development"]);
 
+    // Platform buckets derived from Siteimprove's admin labels — the same
+    // mapping the Asana board uses for its sections. Siteimprove's label
+    // vocabulary doesn't always match platform names (Rails sites carry the
+    // "RSE" label), so this gives users the platform-level filter they
+    // expect regardless of label naming. First rule whose ANY key matches
+    // one of the site's tags wins; order matters.
+    // Order mirrors asana_sync/config.py SECTIONS exactly so a site lands in
+    // the same bucket on the dashboard and the Asana board. Omeka must come
+    // before Rails: every Omeka site also carries the RSE team label, and
+    // RSE is what routes remaining sites to Rails.
+    const PLATFORM_RULES = [
+      ["Omeka",        ["omeka"]],
+      ["Google Sites", ["google-sites", "google sites", "gsites"]],
+      ["AEM",          ["aem"]],
+      ["WordPress",    ["wp", "wp-sites", "wp-courses", "wp-digitalscholarship", "wordpress"]],
+      ["Rails",        ["rails", "rse"]],
+      ["dotNet",       ["dotnet", ".net", "asp.net"]],
+      ["External",     ["external"]],
+    ];
+
+    function platformFor(tags) {
+      const plain = new Set((tags || []).map(t => prettyTag(t).trim().toLowerCase()));
+      for (const [name, keys] of PLATFORM_RULES) {
+        if (keys.some(k => plain.has(k))) return name;
+      }
+      return "Uncategorized";
+    }
+
     function isExcludedSite(site) {
       const tags = site.tags || [];
       for (const t of tags) {
@@ -1255,6 +1291,7 @@
           lvl_aria: aria,
           lvl_bp: bp,
           tags,
+          platform: platformFor(tags),
           status: hasErr ? "error" : (s.pages || s.pages_with_issues ? "ok" : "no-data"),
         });
       }
@@ -1278,6 +1315,8 @@
         }
         // Status: site status must be ONE of the selected (OR within row).
         if (statuses.size > 0 && !statuses.has(s.status)) return false;
+        // Platform: site's derived platform must be one of the selected.
+        if (state.platformFilters.size > 0 && !state.platformFilters.has(s.platform)) return false;
         // Tags: site must have ANY of the selected tags (OR within row).
         if (tags.size > 0) {
           const siteTags = s.tags || [];
@@ -1357,6 +1396,28 @@
           if (ka !== kb) return ka - kb;
           return a[0].localeCompare(b[0]);
         });
+    }
+
+    function renderPlatformPills() {
+      const group = document.getElementById("filter-platform");
+      if (!group) return;
+      const counts = new Map();
+      for (const s of state.sites) {
+        counts.set(s.platform, (counts.get(s.platform) || 0) + 1);
+      }
+      // Keep PLATFORM_RULES order, then Uncategorized last; only show
+      // platforms that actually have sites.
+      const order = PLATFORM_RULES.map(([name]) => name).concat(["Uncategorized"]);
+      const allBtn = '<button class="pill" data-filter="all" title="Clear platform filters">All</button>';
+      const pills = order
+        .filter(name => counts.get(name))
+        .map(name => `<button class="pill" data-filter="${escapeHtml(name)}">
+            ${escapeHtml(name)}
+            <span style="opacity:0.55;margin-left:0.3rem;">${counts.get(name)}</span>
+          </button>`)
+        .join("");
+      group.innerHTML = allBtn + pills;
+      syncFilterGroup("filter-platform", state.platformFilters);
     }
 
     function renderTagPills() {
@@ -2019,6 +2080,7 @@
         ["URL",       s => s.url || ""],
         ["Site ID",   s => s.id ?? ""],
         ["Tags",      s => (s.tags || []).map(prettyTag).join(", ")],
+        ["Platform",  s => s.platform || ""],
         ["Target %",  s => s.target_percentage ?? ""],
         ["Pages",     s => s.pages ?? ""],
         [`Est. test hours (${manualMinutesPerPage}min/pg)`, s => estTestHours(s).toFixed(2)],
@@ -2103,6 +2165,7 @@
             excEl.hidden = true;
           }
         }
+        renderPlatformPills();
         renderTagPills();
 
         if (data.in_progress) {
@@ -2176,6 +2239,7 @@
         ["URL",                          s => s.url || ""],
         ["Site ID",                      s => s.id ?? ""],
         ["Tags",                         s => (s.tags || []).map(prettyTag).join(", ")],
+        ["Platform",                     s => s.platform || ""],
         ["Score",                        s => s.score ?? ""],
         ["Target %",                     s => s.target_percentage ?? ""],
         ["Pages",                        s => s.pages ?? ""],
@@ -2251,15 +2315,17 @@
         renderAll();
       });
     }
-    wireFilterGroup("filter-level",  "levelFilters",  "filter-level-hint",  "level");
-    wireFilterGroup("filter-status", "statusFilters", "filter-status-hint", "status");
-    wireFilterGroup("filter-tags",   "tagFilters",    "filter-tags-hint",   "tag");
+    wireFilterGroup("filter-level",    "levelFilters",    "filter-level-hint",    "level");
+    wireFilterGroup("filter-status",   "statusFilters",   "filter-status-hint",   "status");
+    wireFilterGroup("filter-platform", "platformFilters", "filter-platform-hint", "platform");
+    wireFilterGroup("filter-tags",     "tagFilters",      "filter-tags-hint",     "tag");
 
     function anyFilterActive() {
       return state.search.trim() !== "" ||
-             state.levelFilters.size  > 0 ||
-             state.statusFilters.size > 0 ||
-             state.tagFilters.size    > 0;
+             state.levelFilters.size    > 0 ||
+             state.statusFilters.size   > 0 ||
+             state.platformFilters.size > 0 ||
+             state.tagFilters.size      > 0;
     }
 
     function syncClearButton() {
@@ -2271,18 +2337,21 @@
       state.search = "";
       state.levelFilters.clear();
       state.statusFilters.clear();
+      state.platformFilters.clear();
       state.tagFilters.clear();
       const searchEl = document.getElementById("search");
       if (searchEl) searchEl.value = "";
-      syncFilterGroup("filter-level",  state.levelFilters);
-      syncFilterGroup("filter-status", state.statusFilters);
-      syncFilterGroup("filter-tags",   state.tagFilters);
+      syncFilterGroup("filter-level",    state.levelFilters);
+      syncFilterGroup("filter-status",   state.statusFilters);
+      syncFilterGroup("filter-platform", state.platformFilters);
+      syncFilterGroup("filter-tags",     state.tagFilters);
       const clearHint = (id) => {
         const el = document.getElementById(id);
         if (el) el.textContent = "";
       };
       clearHint("filter-level-hint");
       clearHint("filter-status-hint");
+      clearHint("filter-platform-hint");
       clearHint("filter-tags-hint");
       renderAll();
     });
