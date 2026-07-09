@@ -171,6 +171,33 @@ def main() -> None:
             pages=m.pages if m else None,
             tags=row.tags,
         ))
+    # Union with the API snapshot: sites that appear in sites.json but not
+    # in the inventory CSV (newly created sites that postdate the last CSV
+    # export). Without this, a new Siteimprove site never reaches the board
+    # until someone re-exports the CSV. These Site rows come straight from
+    # the snapshot, whose tags already carry the CSV-merge + URL-inference
+    # applied at fetch time.
+    covered_ids = {s.site_id for s in sites if s.site_id}
+    covered_urls = {s.norm_url for s in sites if s.norm_url}
+    api_only = 0
+    for m in metrics:
+        if (m.site_id and m.site_id in covered_ids) or \
+           (m.norm_url and m.norm_url in covered_urls):
+            continue
+        plain = {(t.split(":", 1)[1] if ":" in t else t).strip().lower() for t in m.tags}
+        if plain & config.EXCLUDED_TAGS:
+            excluded += 1
+            continue
+        sites.append(m)
+        if m.site_id:
+            covered_ids.add(m.site_id)
+        if m.norm_url:
+            covered_urls.add(m.norm_url)
+        api_only += 1
+    if api_only:
+        print(f"  + {api_only} site(s) from the API snapshot not in the "
+              f"inventory CSV (new since last export)")
+
     print(f"  {len(sites)} sites to reconcile "
           f"({excluded} excluded by tag, "
           f"{sum(1 for s in sites if s.target_percentage is not None)} scored)")
