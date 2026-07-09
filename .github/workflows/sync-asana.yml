@@ -1,0 +1,72 @@
+name: Sync Siteimprove → Asana
+
+# Chained natively (same repo) to the "Refresh Siteimprove data" workflow:
+# when a refresh run completes successfully, this runs and pushes the fresh
+# Siteimprove data to the Asana board. Reads data/sites.json and
+# data/site-tags.csv straight from the checkout — no URLs, no Pages-deploy
+# race. Also runnable on demand from the Actions tab.
+on:
+  workflow_run:
+    workflows: ["Refresh Siteimprove data"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (log only, write nothing)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: siteimprove-asana-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    # On the chained path, only run when the refresh actually succeeded.
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (latest main — includes the fresh data commit)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Manual run uses the checkbox; a chained run uses the DRY_RUN repo
+      # variable (defaults true until you opt in).
+      - name: Resolve dry-run flag
+        id: flags
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "dry_run=${{ inputs.dry_run }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "dry_run=${{ vars.DRY_RUN || 'true' }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run sync
+        env:
+          ASANA_TOKEN: ${{ secrets.ASANA_TOKEN }}
+          DRY_RUN: ${{ steps.flags.outputs.dry_run }}
+          CREATE_MISSING: ${{ vars.CREATE_MISSING || 'true' }}
+          UPDATE_EXISTING: ${{ vars.UPDATE_EXISTING || 'true' }}
+          MAX_CREATES: ${{ vars.MAX_CREATES || '2000' }}
+          REMEDIATION_THRESHOLD: ${{ vars.REMEDIATION_THRESHOLD || '98' }}
+          # Target-% number field: off until you opt into creating the field.
+          CREATE_MISSING_FIELDS: ${{ vars.CREATE_MISSING_FIELDS || 'false' }}
+          TARGET_PCT_FIELD: ${{ vars.TARGET_PCT_FIELD }}
+          NUMBER_FIELD_PRECISION: ${{ vars.NUMBER_FIELD_PRECISION || '1' }}
+          # Optional overrides (repo variables):
+          ASANA_PROJECT_GID: ${{ vars.ASANA_PROJECT_GID }}
+          ASANA_WORKSPACE_GID: ${{ vars.ASANA_WORKSPACE_GID }}
+          ASANA_PROJECT_NAME: ${{ vars.ASANA_PROJECT_NAME }}
+          NEW_TASK_STATUS_ACCESSIBILITY: ${{ vars.NEW_TASK_STATUS_ACCESSIBILITY }}
+          # Data source left unset → config defaults to the repo's local
+          # data/sites.json + data/site-tags.csv from this checkout.
+        run: python -m asana_sync.sync

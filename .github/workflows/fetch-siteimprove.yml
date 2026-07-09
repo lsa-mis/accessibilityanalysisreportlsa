@@ -77,28 +77,6 @@ jobs:
           gh workflow run pages.yml --ref main
           echo "Pages deploy dispatched."
 
-      - name: Record commit SHA
-        id: sha
-        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
-      - name: Trigger Asana sync
-        # Chain: once the refresh has committed fresh data, fire the sync in
-        # the (separate) siteimprove-asana-sync repo via repository_dispatch.
-        # We pass the exact commit SHA so the sync reads the data from a
-        # SHA-pinned raw URL — immediately available, no wait for the Pages
-        # deploy to finish. Runs on success even when there was no data diff
-        # (the checked-out SHA still points at current data).
-        if: success()
-        env:
-          # Fine-grained PAT (Actions: write on rayraycodes/siteimprove-asana-sync).
-          GH_TOKEN: ${{ secrets.ASANA_SYNC_DISPATCH_TOKEN }}
-        run: |
-          if [ -z "$GH_TOKEN" ]; then
-            echo "ASANA_SYNC_DISPATCH_TOKEN not set — skipping Asana sync trigger."
-            exit 0
-          fi
-          gh api repos/rayraycodes/siteimprove-asana-sync/dispatches \
-            --method POST \
-            -f event_type=siteimprove-refreshed \
-            -f "client_payload[sha]=${{ steps.sha.outputs.sha }}"
-          echo "Dispatched Asana sync for commit ${{ steps.sha.outputs.sha }}."
+      # The Asana sync is chained natively via workflow_run in
+      # .github/workflows/sync-asana.yml — it fires automatically when this
+      # workflow completes successfully. No cross-repo dispatch / PAT needed.
