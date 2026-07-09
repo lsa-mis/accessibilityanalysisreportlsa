@@ -47,16 +47,26 @@ jobs:
           fi
           git add data/sites.json
           git commit -m "Refresh site tags from data/site-tags.csv"
-          # Retry-with-rebase so a concurrent dev push doesn't lose this commit.
+          # Push with retry. Never rebase a regenerated data file (conflicts
+          # can't auto-resolve) — instead reset onto latest main and re-run
+          # the merge there: it's deterministic from main's sites.json + CSV.
           for attempt in 1 2 3 4 5; do
             if git push; then
               echo "Push succeeded on attempt $attempt."
               echo "did_push=true" >> "$GITHUB_OUTPUT"
               exit 0
             fi
-            echo "Push attempt $attempt rejected — pulling latest main and rebasing."
+            echo "Push attempt $attempt rejected — regenerating on latest main."
             git fetch origin main
-            git rebase origin/main || { git rebase --abort; exit 1; }
+            git reset --hard origin/main
+            python scripts/merge_site_tags.py
+            if git diff --quiet -- data/sites.json; then
+              echo "Latest main already has equivalent tags. Nothing to push."
+              echo "did_push=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            git add data/sites.json
+            git commit -m "Refresh site tags from data/site-tags.csv"
           done
           echo "Push failed after 5 attempts."
           exit 1
