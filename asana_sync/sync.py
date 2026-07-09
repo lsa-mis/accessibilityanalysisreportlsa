@@ -236,8 +236,12 @@ def main() -> None:
     print(f"  {len(tasks)} existing tasks ({len(by_url)} URL-matchable)")
 
     # 5. Reconcile
+    # Field updates are queued and flushed through Asana's batch API
+    # (10 actions per request) instead of one request per task — the
+    # difference between ~20 minutes and ~2 for a full-portfolio update.
     updated = created = skipped_cap = unmatched_status = 0
     status_meta = field_map.get(config.STATUS_ACCESSIBILITY_FIELD)
+    pending_updates: list[tuple[str, str, dict]] = []
 
     for site in sites:
         existing = by_url.get(site.norm_url)
@@ -249,9 +253,8 @@ def main() -> None:
                 continue
             payload, notes = build_field_payload(site, field_map, existing)
             if payload:
-                asana.update_task_fields(existing["gid"], site.name, payload)
+                pending_updates.append((existing["gid"], site.name, payload))
                 print(f"  ~ {site.name}  [{', '.join(notes)}]")
-                updated += 1
         else:
             if not config.CREATE_MISSING:
                 continue
@@ -270,6 +273,11 @@ def main() -> None:
                               section_gid, section_name)
             print(f"  + {site.url}  → {section_name}")
             created += 1
+
+    # Flush all queued field updates through the batch API.
+    if pending_updates:
+        print(f"\nApplying {len(pending_updates)} field update(s) via batch API …")
+        updated = asana.batch_update_tasks(pending_updates)
 
     # 6. Summary
     print("\nSummary")

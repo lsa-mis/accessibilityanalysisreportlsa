@@ -34,6 +34,11 @@ jobs:
         env:
           SITEIMPROVE_EMAIL: ${{ secrets.SITEIMPROVE_EMAIL }}
           SITEIMPROVE_API_KEY: ${{ secrets.SITEIMPROVE_API_KEY }}
+          # Speed knobs (repo variables, optional). More workers = faster but
+          # closer to Siteimprove's rate limit — 429s are retried with backoff,
+          # so pushing to 12 is usually safe; back off if runs get slower.
+          SITEIMPROVE_MAX_WORKERS: ${{ vars.SITEIMPROVE_MAX_WORKERS || '8' }}
+          SITEIMPROVE_TIMEOUT: ${{ vars.SITEIMPROVE_TIMEOUT || '120' }}
         run: python scripts/fetch_siteimprove.py
 
       - name: Commit refreshed snapshot

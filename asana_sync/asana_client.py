@@ -99,6 +99,54 @@ class AsanaClient:
     def write_count(self) -> int:
         return self._writes
 
+    # ---- batched writes ---------------------------------------------------
+    # Asana's batch API packs up to 10 actions into one POST /batch request.
+    # For a steady-state sync (~1,400 field updates) this turns ~1,400
+    # round-trips into ~140, cutting the write phase from ~20 minutes to
+    # ~2. Each action still counts toward Asana's rate limit individually,
+    # but the limit (150/min free, 1500/min premium) is enforced via the
+    # existing 429 Retry-After handling in _request, so we can pace by
+    # request rather than by action.
+    BATCH_SIZE = 10
+
+    def batch_update_tasks(self, updates: list[tuple[str, str, dict]]) -> int:
+        """Apply [(task_gid, label, custom_fields), ...] via /batch in chunks
+        of 10. Returns the number of successfully applied updates. Dry-run
+        counts (per-task logging is the caller's job) without writing."""
+        if not updates:
+            return 0
+        if self.dry_run:
+            print(f"  [DRY-RUN] would apply {len(updates)} field update(s) "
+                  f"in {(len(updates) + self.BATCH_SIZE - 1) // self.BATCH_SIZE} batch request(s)")
+            return len(updates)
+
+        applied = 0
+        total_chunks = (len(updates) + self.BATCH_SIZE - 1) // self.BATCH_SIZE
+        for i in range(0, len(updates), self.BATCH_SIZE):
+            chunk = updates[i:i + self.BATCH_SIZE]
+            actions = [
+                {"relative_path": f"/tasks/{gid}", "method": "put",
+                 "data": {"custom_fields": fields}}
+                for gid, _label, fields in chunk
+            ]
+            result = self._request("POST", "/batch", {"actions": actions})
+            self._writes += 1
+            statuses = result.get("data") or []
+            for (gid, label, _f), st in zip(chunk, statuses):
+                code = st.get("status_code")
+                if code and code < 400:
+                    applied += 1
+                else:
+                    print(f"  ! batch item failed ({code}) for {label!r} [{gid}]",
+                          file=sys.stderr)
+            chunk_no = i // self.BATCH_SIZE + 1
+            if chunk_no % 20 == 0 or chunk_no == total_chunks:
+                print(f"  … batch {chunk_no}/{total_chunks} "
+                      f"({applied} updates applied)")
+            if self.write_delay:
+                time.sleep(self.write_delay)
+        return applied
+
     # ---- project resolution ---------------------------------------------
     def resolve_project(self, *, project_gid: str | None, project_name: str,
                         workspace_gid: str | None) -> dict:
