@@ -1,18 +1,38 @@
-# LSA Accessibility Report
+# LSA Accessibility Data and Automations
 
-Static site published via GitHub Pages, with a live Siteimprove dashboard refreshed weekly by a scheduled GitHub Action.
+Data pipeline, live dashboards, and workflow automations for LSA's web-accessibility program (ADA Title II, deadline April 24, 2027). Siteimprove data is refreshed on a weekend schedule, published to GitHub Pages, and pushed onward to the team's Asana board — all automatically.
 
-## Layout
+## Structure
 
-- `index.html` — narrative accessibility report (manually authored, with live data wiring)
-- `data.html` — live dashboard (searchable, filterable per-site view)
-- `data/sites.json`, `data/rules.json` — snapshots written by the fetch script; consumed by both pages
-- `data/site-tags.csv` — admin-configured site labels exported from the Siteimprove UI (see [Site tags](#site-tags-csv-driven))
-- `scripts/fetch_siteimprove.py` — pulls site list and per-site accessibility summary from the Siteimprove API
-- `scripts/merge_site_tags.py` — lightweight tag-only refresh; re-applies the CSV onto `data/sites.json` without hitting the API
-- `.github/workflows/fetch-siteimprove.yml` — weekly fetch (Mondays 11:00 UTC) plus manual trigger
-- `.github/workflows/merge-site-tags.yml` — fires on push to `data/site-tags.csv`; runs `merge_site_tags.py` and commits the refreshed snapshot
-- `.github/workflows/pages.yml` — deploys the site to GitHub Pages on every push to `main`
+```
+index.html            Narrative accessibility report (published via Pages)
+data.html             Live dashboard — searchable, filterable per-site view
+favicon.svg           Shared favicon for both pages
+data/
+  sites.json          Per-site snapshot written by the fetch (consumed by both pages + Asana sync)
+  rules.json          Cross-site rule rollups (global + per-tag)
+  site-tags.csv       Admin site labels exported from the Siteimprove UI
+scripts/
+  fetch_siteimprove.py   Pulls per-site accessibility data from the Siteimprove API
+  merge_site_tags.py     Tag-only refresh; re-applies the CSV onto sites.json (no API)
+asana_sync/           Siteimprove → Asana board sync (fields, sections, task creation)
+source-data/          Original analysis spreadsheets (manual exports)
+.github/workflows/
+  fetch-siteimprove.yml  Refresh data — Sat & Sun 11:00 UTC + manual
+  sync-asana.yml         Chained to the refresh via workflow_run + manual
+  merge-site-tags.yml    Fires on push to data/site-tags.csv
+  pages.yml              Deploys the site on every push to main
+```
+
+## Automation flow
+
+```
+Sat & Sun 11:00 UTC  Refresh Siteimprove data
+   ├─ commits data/sites.json + data/rules.json
+   ├─ triggers Pages deploy (dashboard + report go live)
+   └─ workflow_run → Sync Siteimprove → Asana
+        └─ updates fields / sections, creates missing tasks
+```
 
 ## Site tags (CSV-driven)
 
@@ -60,7 +80,7 @@ git log -1 --format='%ar  (%ad)' --date=short -- data/site-tags.csv
 2. Save / overwrite `data/site-tags.csv`
 3. `git commit data/site-tags.csv && git push` — the merge workflow does the rest
 
-The weekly cron at `.github/workflows/fetch-siteimprove.yml` (Mondays 11:00 UTC) **always reads whatever CSV is in the repo** when it runs. So a stale CSV will keep producing stale tags on every weekly snapshot. The cron does not refresh the CSV itself.
+The scheduled fetch at `.github/workflows/fetch-siteimprove.yml` (Saturdays and Sundays, 11:00 UTC) **always reads whatever CSV is in the repo** when it runs. So a stale CSV will keep producing stale tags on every snapshot. The cron does not refresh the CSV itself.
 
 ## Running the fetch script locally
 
@@ -108,7 +128,7 @@ The workflow reads credentials from repo secrets. In GitHub:
    - `SITEIMPROVE_API_KEY` — the API token
 3. Trigger a first run: Actions tab → **Refresh Siteimprove data** → **Run workflow**
 
-The schedule is `0 11 * * 1` (Mondays at 11:00 UTC ≈ 07:00 ET). Edit `.github/workflows/fetch-siteimprove.yml` to change cadence.
+The schedule is `0 11 * * 6,0` (Saturdays and Sundays at 11:00 UTC ≈ 07:00 ET). Edit `.github/workflows/fetch-siteimprove.yml` to change cadence. The Asana sync chains automatically after each successful refresh — no separate schedule.
 
 ## Rotating the API token
 
