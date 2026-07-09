@@ -139,6 +139,93 @@ def load_site_tag_csv(path: Path = SITE_TAG_CSV_PATH) -> tuple[
     return by_id, by_url, by_name
 
 
+def _norm_site_url(url: str | None) -> str:
+    """Canonical URL for matching: lowercased, scheme/www stripped, no
+    trailing slash — so 'https://www.LSA.umich.edu/anthro/' matches
+    'lsa.umich.edu/anthro'."""
+    u = (url or "").strip().lower()
+    for prefix in ("https://", "http://"):
+        if u.startswith(prefix):
+            u = u[len(prefix):]
+            break
+    if u.startswith("www."):
+        u = u[4:]
+    return u.rstrip("/")
+
+
+def load_inventory_rows(path: Path = SITE_TAG_CSV_PATH) -> list[dict[str, Any]]:
+    """Parse the Siteimprove CSV export into full rows (id, name, url, tags).
+    Unlike load_site_tag_csv (tag lookups only), this keeps rows WITHOUT
+    tags too — the inventory is the authoritative list of which sites
+    exist, including ~100+ that the public API doesn't return."""
+    if not path.exists():
+        return []
+    encoding = _detect_csv_encoding(path)
+    delimiter = _detect_csv_delimiter(path, encoding)
+    rows: list[dict[str, Any]] = []
+    with path.open(newline="", encoding=encoding) as handle:
+        reader = csv.DictReader(handle, delimiter=delimiter)
+        for raw in reader:
+            row = {_norm_header(k): (v or "") for k, v in raw.items()}
+            url = (row.get("site_url") or row.get("url") or "").strip()
+            name = (row.get("site_name") or row.get("name") or "").strip()
+            if not url and not name:
+                continue
+            site_id = None
+            site_id_raw = row.get("site_id") or row.get("id")
+            if site_id_raw:
+                try:
+                    site_id = int(str(site_id_raw).strip())
+                except ValueError:
+                    pass
+            tags_field = row.get("tags") or row.get("labels") or ""
+            tags = [t.strip() for t in TAG_SPLIT_RE.split(tags_field) if t.strip()]
+            rows.append({"site_id": site_id, "name": name or url,
+                         "url": url, "tags": tags})
+    return rows
+
+
+def append_inventory_only_sites(
+    site_rows: list[dict[str, Any]],
+    inventory_rows: list[dict[str, Any]],
+) -> int:
+    """Append stub rows for inventory sites the API didn't return, so the
+    dashboard shows the FULL portfolio. Stubs carry identity + tags but no
+    metrics (they render as 'no data' and are excluded from score/page
+    aggregates, which key off pages > 0). Returns how many were added."""
+    known_ids = {r.get("id") for r in site_rows if r.get("id") is not None}
+    known_urls = {_norm_site_url(r.get("url")) for r in site_rows if r.get("url")}
+    added = 0
+    for inv in inventory_rows:
+        norm = _norm_site_url(inv["url"])
+        if (inv["site_id"] in known_ids) or (norm and norm in known_urls):
+            continue
+        if norm:
+            known_urls.add(norm)  # dedupe repeated inventory rows
+        if inv["site_id"] is not None:
+            known_ids.add(inv["site_id"])
+        labels = inv["tags"] or derive_fallback_tags(inv["name"], inv["url"])
+        site_rows.append({
+            "id": inv["site_id"],
+            "site_name": inv["name"],
+            "url": inv["url"],
+            "score": None, "target_score": None, "target_percentage": None,
+            "pages": None, "pages_with_issues": 0,
+            "visits": None, "policies": None,
+            "issues": 0, "issue_types": 0,
+            "by_level": {}, "other_conformance": {},
+            "tags": [f"tag:{t}" for t in labels],
+            "tags_inferred": not inv["tags"] and bool(labels),
+            "pdf_count": None, "pdfs_with_issues": None, "pdf_total_issues": None,
+            "misspellings": None, "potential_misspellings": None,
+            "misspelling_pages": None,
+            "errors": None,
+            "source": "inventory",  # not returned by the Siteimprove API
+        })
+        added += 1
+    return added
+
+
 def lookup_csv_tags(
     site: dict[str, Any],
     by_id: dict[int, list[str]],
@@ -705,6 +792,13 @@ def main() -> None:
                 rate = index / elapsed if elapsed else 0
                 eta = (total - index) / rate if rate else 0
                 print(f"  {index}/{total} done ({rate:.1f}/s, ~{eta:.0f}s remaining)", file=sys.stderr)
+
+    # Add inventory-only sites (in the CSV but not returned by the API) so
+    # the dashboard reflects the full portfolio, with tags kept current.
+    inventory_added = append_inventory_only_sites(site_rows, load_inventory_rows())
+    if inventory_added:
+        print(f"  + {inventory_added} inventory-only site(s) appended "
+              f"(in Siteimprove CSV, not returned by API)", file=sys.stderr)
 
     # Final write — clears in_progress flag.
     write_partial(in_progress=False)

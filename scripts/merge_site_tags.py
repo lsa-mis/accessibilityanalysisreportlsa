@@ -20,7 +20,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fetch_siteimprove import (  # noqa: E402
+    append_inventory_only_sites,
     derive_fallback_tags,
+    load_inventory_rows,
     load_site_tag_csv,
     lookup_csv_tags,
 )
@@ -66,10 +68,17 @@ def main() -> None:
             else:
                 untagged += 1
 
+    # New sites in the CSV that aren't in the snapshot yet get stub rows,
+    # so a CSV push surfaces them on the dashboard immediately (~30s)
+    # instead of waiting for the next full API fetch.
+    added = append_inventory_only_sites(sites, load_inventory_rows())
+    snapshot["site_count"] = len(sites)
+
     SITES_PATH.write_text(json.dumps(snapshot, indent=2) + "\n", encoding="utf-8")
     print(
         f"Tags: {matched} from CSV, {inferred} inferred from URL, "
-        f"{untagged} still untagged (of {len(sites)} sites).",
+        f"{untagged} still untagged; {added} inventory-only site(s) added "
+        f"(of {len(sites)} total sites).",
         file=sys.stderr,
     )
 
