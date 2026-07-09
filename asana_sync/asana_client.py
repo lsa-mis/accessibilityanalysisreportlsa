@@ -109,43 +109,59 @@ class AsanaClient:
     # request rather than by action.
     BATCH_SIZE = 10
 
-    def batch_update_tasks(self, updates: list[tuple[str, str, dict]]) -> int:
-        """Apply [(task_gid, label, custom_fields), ...] via /batch in chunks
-        of 10. Returns the number of successfully applied updates. Dry-run
-        counts (per-task logging is the caller's job) without writing."""
-        if not updates:
+    def _batch(self, labeled_actions: list[tuple[str, dict]], what: str) -> int:
+        """Run [(label, action), ...] through POST /batch in chunks of 10.
+        Returns the number of successfully applied actions. Dry-run counts
+        (per-item logging is the caller's job) without writing."""
+        if not labeled_actions:
             return 0
+        total_chunks = (len(labeled_actions) + self.BATCH_SIZE - 1) // self.BATCH_SIZE
         if self.dry_run:
-            print(f"  [DRY-RUN] would apply {len(updates)} field update(s) "
-                  f"in {(len(updates) + self.BATCH_SIZE - 1) // self.BATCH_SIZE} batch request(s)")
-            return len(updates)
+            print(f"  [DRY-RUN] would apply {len(labeled_actions)} {what} "
+                  f"in {total_chunks} batch request(s)")
+            return len(labeled_actions)
 
         applied = 0
-        total_chunks = (len(updates) + self.BATCH_SIZE - 1) // self.BATCH_SIZE
-        for i in range(0, len(updates), self.BATCH_SIZE):
-            chunk = updates[i:i + self.BATCH_SIZE]
-            actions = [
-                {"relative_path": f"/tasks/{gid}", "method": "put",
-                 "data": {"custom_fields": fields}}
-                for gid, _label, fields in chunk
-            ]
+        for i in range(0, len(labeled_actions), self.BATCH_SIZE):
+            chunk = labeled_actions[i:i + self.BATCH_SIZE]
+            actions = [action for _label, action in chunk]
             result = self._request("POST", "/batch", {"actions": actions})
             self._writes += 1
             statuses = result.get("data") or []
-            for (gid, label, _f), st in zip(chunk, statuses):
+            for (label, _a), st in zip(chunk, statuses):
                 code = st.get("status_code")
                 if code and code < 400:
                     applied += 1
                 else:
-                    print(f"  ! batch item failed ({code}) for {label!r} [{gid}]",
+                    print(f"  ! batch item failed ({code}) for {label!r}",
                           file=sys.stderr)
             chunk_no = i // self.BATCH_SIZE + 1
             if chunk_no % 20 == 0 or chunk_no == total_chunks:
-                print(f"  … batch {chunk_no}/{total_chunks} "
-                      f"({applied} updates applied)")
+                print(f"  … batch {chunk_no}/{total_chunks} ({applied} {what} applied)")
             if self.write_delay:
                 time.sleep(self.write_delay)
         return applied
+
+    def batch_update_tasks(self, updates: list[tuple[str, str, dict]]) -> int:
+        """Apply [(task_gid, label, custom_fields), ...] via /batch."""
+        labeled = [
+            (label, {"relative_path": f"/tasks/{gid}", "method": "put",
+                     "data": {"custom_fields": fields}})
+            for gid, label, fields in updates
+        ]
+        return self._batch(labeled, "field update(s)")
+
+    def batch_move_tasks(self, moves: list[tuple[str, str, str]]) -> int:
+        """Move tasks between sections: [(task_gid, label, section_gid), ...].
+        Uses POST /sections/{gid}/addTask, which re-homes the task within the
+        project (a task has one section per project, so this is a move, not
+        an add)."""
+        labeled = [
+            (label, {"relative_path": f"/sections/{section_gid}/addTask",
+                     "method": "post", "data": {"task": task_gid}})
+            for task_gid, label, section_gid in moves
+        ]
+        return self._batch(labeled, "section move(s)")
 
     # ---- project resolution ---------------------------------------------
     def resolve_project(self, *, project_gid: str | None, project_name: str,

@@ -226,24 +226,67 @@ def main() -> None:
             sections[name] = gid  # None in dry-run; create_task tolerates it
             print(f"  + section {name!r}")
 
-    # 4. Index existing tasks by normalised URL (task name is the URL)
+    # Section gids that belong to THIS project — used both to pick the
+    # canonical duplicate and to detect when a task sits in the wrong section.
+    project_section_gids = {gid for gid in sections.values() if gid}
+
+    def task_project_sections(task: dict) -> set[str]:
+        return {
+            (m.get("section") or {}).get("gid")
+            for m in (task.get("memberships") or [])
+        } & project_section_gids
+
+    # 4. Index existing tasks by normalised URL (task name is the URL).
+    # Duplicates (several tasks for one URL) are reported, and the sync only
+    # ever writes to ONE canonical task per URL — preferring the task that
+    # actually sits in one of our platform sections. Extras are left
+    # untouched for a human to merge/close; we never delete.
     tasks = asana.list_tasks(project_gid)
-    by_url: dict[str, dict] = {}
+    url_groups: dict[str, list[dict]] = {}
     for t in tasks:
         key = normalize_url(t.get("name"))
         if key:
-            by_url.setdefault(key, t)
+            url_groups.setdefault(key, []).append(t)
+
+    by_url: dict[str, dict] = {}
+    board_dupes: list[tuple[str, int]] = []
+    for key, group in url_groups.items():
+        canonical = next((t for t in group if task_project_sections(t)), group[0])
+        by_url[key] = canonical
+        if len(group) > 1:
+            board_dupes.append((key, len(group)))
     print(f"  {len(tasks)} existing tasks ({len(by_url)} URL-matchable)")
+    if board_dupes:
+        extras = sum(n - 1 for _, n in board_dupes)
+        print(f"  ⚠ {len(board_dupes)} URL(s) have duplicate tasks on the board "
+              f"({extras} extra task(s)) — updating only the canonical one; "
+              f"extras left for manual merge:", file=sys.stderr)
+        for key, n in sorted(board_dupes)[:10]:
+            print(f"      {key}  ×{n}", file=sys.stderr)
+        if len(board_dupes) > 10:
+            print(f"      … and {len(board_dupes) - 10} more", file=sys.stderr)
 
     # 5. Reconcile
     # Field updates are queued and flushed through Asana's batch API
     # (10 actions per request) instead of one request per task — the
     # difference between ~20 minutes and ~2 for a full-portfolio update.
     updated = created = skipped_cap = unmatched_status = 0
+    moved = dup_source_rows = 0
     status_meta = field_map.get(config.STATUS_ACCESSIBILITY_FIELD)
     pending_updates: list[tuple[str, str, dict]] = []
+    pending_moves: list[tuple[str, str, str]] = []
+    seen_source_urls: set[str] = set()
 
     for site in sites:
+        # Source-side dedupe: if the inventory lists the same URL twice,
+        # reconcile it once — a second pass could otherwise create a
+        # duplicate task in the same run.
+        if site.norm_url:
+            if site.norm_url in seen_source_urls:
+                dup_source_rows += 1
+                continue
+            seen_source_urls.add(site.norm_url)
+
         existing = by_url.get(site.norm_url)
         section_name = section_for(site)
         section_gid = sections.get(section_name) if section_name else None
@@ -255,6 +298,16 @@ def main() -> None:
             if payload:
                 pending_updates.append((existing["gid"], site.name, payload))
                 print(f"  ~ {site.name}  [{', '.join(notes)}]")
+            # Re-section: if the platform tags now put this site in a
+            # different section than the task currently occupies, move it.
+            # A task with NO section in this project (floating/untriaged)
+            # also gets homed. Skipped when the target section was only
+            # just created in dry-run (gid unknown).
+            if section_gid:
+                current = task_project_sections(existing)
+                if section_gid not in current:
+                    pending_moves.append((existing["gid"], site.name, section_gid))
+                    print(f"  ↪ {site.name}  → section {section_name}")
         else:
             if not config.CREATE_MISSING:
                 continue
@@ -274,15 +327,24 @@ def main() -> None:
             print(f"  + {site.url}  → {section_name}")
             created += 1
 
-    # Flush all queued field updates through the batch API.
+    # Flush all queued writes through the batch API.
     if pending_updates:
         print(f"\nApplying {len(pending_updates)} field update(s) via batch API …")
         updated = asana.batch_update_tasks(pending_updates)
+    if pending_moves:
+        print(f"Applying {len(pending_moves)} section move(s) via batch API …")
+        moved = asana.batch_move_tasks(pending_moves)
 
     # 6. Summary
     print("\nSummary")
     print(f"  updated:        {updated}")
+    print(f"  moved section:  {moved}")
     print(f"  created:        {created}")
+    if dup_source_rows:
+        print(f"  duplicate source rows skipped: {dup_source_rows}")
+    if board_dupes:
+        print(f"  board duplicates (manual merge needed): "
+              f"{len(board_dupes)} URL(s)")
     if skipped_cap:
         print(f"  skipped (cap):  {skipped_cap}  (raise MAX_CREATES={config.MAX_CREATES})")
     if unmatched_status:
