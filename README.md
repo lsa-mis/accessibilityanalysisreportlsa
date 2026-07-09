@@ -138,7 +138,7 @@ If the token is ever exposed, rotate it in Siteimprove (Settings → API users),
 
 The `asana_sync/` package pushes the fresh Siteimprove data to the Asana project **External LSA Websites and Applications Inventory** — updating each site's `Added to Siteimprove` / `Siteimprove Issues Remediation (98%)` / `Siteimprove Target %` fields and creating tasks (in the right platform section) for sites not yet on the board.
 
-- **Chained automatically:** `.github/workflows/sync-asana.yml` runs via `workflow_run` whenever **Refresh Siteimprove data** finishes successfully. It reads `data/sites.json` + `data/site-tags.csv` directly from the checkout — no URLs, no Pages-deploy wait.
+- **Chained automatically:** `.github/workflows/sync-asana.yml` runs via `workflow_run` whenever **Refresh Siteimprove data** finishes successfully. It reads `data/sites.json` directly from the checkout — the single source of truth (the fetch already folds in CSV-only sites and tags), no URLs, no Pages-deploy wait.
 - **Credentials:** add an Asana Personal Access Token as the repo secret `ASANA_TOKEN` (a user/service account that can edit that project).
 - **Safety:** writes are gated by the `DRY_RUN` repo variable (default `true`). Set it to `false` to let scheduled/chained runs write to the board. Manual runs (Actions → Run workflow) use the *Dry run* checkbox.
 - **Tuning (optional repo variables):** `ASANA_PROJECT_GID`, `CREATE_MISSING` (create tasks for missing sites), `MAX_CREATES`, `CREATE_MISSING_FIELDS` (auto-create the `Siteimprove Target %` number field), `REMEDIATION_THRESHOLD`.

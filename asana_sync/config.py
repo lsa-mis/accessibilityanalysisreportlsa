@@ -47,28 +47,23 @@ def _env_float(name: str, default: float) -> float:
 # --------------------------------------------------------------------------
 # Siteimprove data source
 # --------------------------------------------------------------------------
-# This package lives inside the accessibility report repo, so it reads the
-# data files the refresh workflow just produced — directly from the local
-# checkout (data/sites.json, data/site-tags.csv). No network, no Pages-deploy
-# race, no Siteimprove credentials. The refresh runs, commits fresh data,
-# then triggers the Asana sync in the same repo, which reads these files.
+# This package lives inside the accessibility report repo, so it reads
+# data/sites.json straight from the local checkout — the single source of
+# truth the refresh workflow just produced. That file is already complete:
+# API-returned sites carry metrics, CSV-only inventory sites are appended
+# as stubs at fetch time, and every row's tags have the CSV merge + URL
+# inference applied. No network, no Pages-deploy race, no Siteimprove
+# credentials, no separate CSV read.
 #
-# Override SITEIMPROVE_DATA_URL / INVENTORY_URL to point elsewhere (any
-# http(s) URL or file://path) for testing.
+# Override SITEIMPROVE_DATA_URL to point elsewhere (any http(s) URL or
+# file://path) for testing.
 from pathlib import Path as _Path  # noqa: E402
 
 _REPO_ROOT = _Path(__file__).resolve().parent.parent
 _DEFAULT_SITES = (_REPO_ROOT / "data" / "sites.json").as_uri()
-_DEFAULT_TAGS = (_REPO_ROOT / "data" / "site-tags.csv").as_uri()
 
 SITEIMPROVE_DATA_URL = _env_str("SITEIMPROVE_DATA_URL", _DEFAULT_SITES)
 
-# The full site inventory (CSV export). This is the primary list of sites
-# the sync reconciles against — it includes sites Siteimprove hasn't scored
-# and carries the authoritative platform tags (Omeka, RSE, Google-Sites)
-# that drive section placement. sites.json above only enriches it with
-# metrics (target %, score) where a site was scored.
-INVENTORY_URL = _env_str("INVENTORY_URL", _DEFAULT_TAGS)
 # Tags whose sites are skipped entirely (non-production environments).
 EXCLUDED_TAGS = {"test sites", "development"}
 

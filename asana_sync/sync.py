@@ -21,7 +21,6 @@ import sys
 
 from . import config
 from .asana_client import AsanaClient
-from .inventory_source import load_inventory
 from .siteimprove_source import Site, load_sites, normalize_url
 
 
@@ -142,62 +141,21 @@ def main() -> None:
     print(f"Siteimprove → Asana sync  (DRY_RUN={config.DRY_RUN}, "
           f"CREATE_MISSING={config.CREATE_MISSING})")
 
-    # 1. Build the working site list: full CSV inventory (authoritative tags
-    #    + complete coverage) enriched with sites.json metrics where scored.
-    print(f"Loading inventory from {config.INVENTORY_URL} …")
-    inventory = load_inventory(config.INVENTORY_URL)
-    print(f"  {len(inventory)} inventory rows")
-
-    print(f"Loading Siteimprove metrics from {config.SITEIMPROVE_DATA_URL} …")
-    metrics = load_sites(config.SITEIMPROVE_DATA_URL)
-    by_id = {m.site_id: m for m in metrics if m.site_id}
-    by_url = {m.norm_url: m for m in metrics if m.norm_url}
-    print(f"  {len(metrics)} scored sites for enrichment")
+    # 1. Build the working site list from data/sites.json — the single
+    #    source of truth. The fetch pipeline already makes it complete:
+    #    API-returned sites carry metrics, CSV-only sites are appended as
+    #    stubs, and every row's tags have the CSV merge + URL inference
+    #    applied at fetch time. No separate inventory read needed here.
+    print(f"Loading sites from {config.SITEIMPROVE_DATA_URL} …")
+    all_sites = load_sites(config.SITEIMPROVE_DATA_URL)
 
     sites: list[Site] = []
     excluded = 0
-    for row in inventory:
-        plain = {(t.split(':', 1)[1] if ':' in t else t).strip().lower() for t in row.tags}
-        if plain & config.EXCLUDED_TAGS:
+    for s in all_sites:
+        if set(s.plain_tags) & config.EXCLUDED_TAGS:
             excluded += 1
             continue
-        m = by_id.get(row.site_id) or by_url.get(normalize_url(row.url))
-        sites.append(Site(
-            site_id=row.site_id,
-            name=row.name,
-            url=row.url,
-            target_percentage=m.target_percentage if m else None,
-            score=m.score if m else None,
-            pages=m.pages if m else None,
-            tags=row.tags,
-        ))
-    # Union with the API snapshot: sites that appear in sites.json but not
-    # in the inventory CSV (newly created sites that postdate the last CSV
-    # export). Without this, a new Siteimprove site never reaches the board
-    # until someone re-exports the CSV. These Site rows come straight from
-    # the snapshot, whose tags already carry the CSV-merge + URL-inference
-    # applied at fetch time.
-    covered_ids = {s.site_id for s in sites if s.site_id}
-    covered_urls = {s.norm_url for s in sites if s.norm_url}
-    api_only = 0
-    for m in metrics:
-        if (m.site_id and m.site_id in covered_ids) or \
-           (m.norm_url and m.norm_url in covered_urls):
-            continue
-        plain = {(t.split(":", 1)[1] if ":" in t else t).strip().lower() for t in m.tags}
-        if plain & config.EXCLUDED_TAGS:
-            excluded += 1
-            continue
-        sites.append(m)
-        if m.site_id:
-            covered_ids.add(m.site_id)
-        if m.norm_url:
-            covered_urls.add(m.norm_url)
-        api_only += 1
-    if api_only:
-        print(f"  + {api_only} site(s) from the API snapshot not in the "
-              f"inventory CSV (new since last export)")
-
+        sites.append(s)
     print(f"  {len(sites)} sites to reconcile "
           f"({excluded} excluded by tag, "
           f"{sum(1 for s in sites if s.target_percentage is not None)} scored)")
