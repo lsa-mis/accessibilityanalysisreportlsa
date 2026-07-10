@@ -28,12 +28,16 @@ from .siteimprove_source import Site, load_sites, normalize_url
 # Mapping helpers
 # --------------------------------------------------------------------------
 def section_for(site: Site) -> str | None:
-    """Return the configured section name for a site based on its tags."""
+    """Return the configured section name for a site based on its tags.
+    Sections are tried in config order (= precedence); a section matches on
+    an exact tag ("match") or a tag prefix ("prefix", e.g. 'wp-')."""
     tags = set(site.plain_tags)
     for section in config.SECTIONS:
-        for matcher in section["match"]:
-            if matcher.lower() in tags:
-                return section["name"]
+        if any(m.lower() in tags for m in section.get("match", [])):
+            return section["name"]
+        prefixes = section.get("prefix") or []
+        if prefixes and any(t.startswith(p.lower()) for p in prefixes for t in tags):
+            return section["name"]
     return config.FALLBACK_SECTION
 
 

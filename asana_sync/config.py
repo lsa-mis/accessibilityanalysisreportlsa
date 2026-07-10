@@ -64,8 +64,11 @@ _DEFAULT_SITES = (_REPO_ROOT / "data" / "sites.json").as_uri()
 
 SITEIMPROVE_DATA_URL = _env_str("SITEIMPROVE_DATA_URL", _DEFAULT_SITES)
 
-# Tags whose sites are skipped entirely (non-production environments).
-EXCLUDED_TAGS = {"test sites", "development"}
+# Tags whose sites are skipped entirely — never created/updated on the
+# board. 'Development' is NOT excluded here: it routes to its own
+# Development section per the section map above. (The dashboard still hides
+# Development from its portfolio stats; that's separate.)
+EXCLUDED_TAGS = {"test sites"}
 
 # --------------------------------------------------------------------------
 # Asana target
@@ -86,38 +89,35 @@ ASANA_WORKSPACE_GID = os.environ.get("ASANA_WORKSPACE_GID", "").strip() or None
 ASANA_TOKEN = os.environ.get("ASANA_TOKEN", "").strip()
 
 # --------------------------------------------------------------------------
-# Sections — created if missing, in this order. The matcher decides which
-# section a Siteimprove site belongs to based on its tags (case-insensitive,
-# 'tag:' prefix stripped before matching). First section whose ANY matcher
-# hits wins; order matters. Sites that match nothing land in FALLBACK_SECTION.
+# Sections — created if missing, in this order. Each section lists the tags
+# that route a site to it (case-insensitive, 'tag:' prefix stripped). A
+# section may also list "prefix" matchers (e.g. 'wp-' catches WP-Sites,
+# WP-Courses, WP-DigitalScholarship, and any future WP-*). The FIRST section
+# whose ANY matcher hits wins, so ORDER = precedence. Sites that match
+# nothing land in FALLBACK_SECTION. Tags not named here (LSA, department
+# labels, etc.) are ignored for routing.
 # --------------------------------------------------------------------------
 #
-# Order = matching precedence, most-specific platform first. This matters
-# because sites carry overlapping tags: every Omeka site is tagged
-# 'lsa, omeka, rse', and 'rse' (Research Software Engineering — the
-# maintaining team) is NOT a platform. So real platforms (Omeka, Google
-# Sites, AEM, WordPress) are checked before Rails, and 'rse' only routes a
-# site to Rails when no real platform tag matched. Result:
-#   omeka + rse              -> Omeka
-#   rse + wp-digitalscholar  -> WordPress
-#   rse alone                -> Rails
-# Section creation order on the board follows this list; reorder sections in
-# Asana afterward if you prefer a different visual order.
+# Precedence rationale — sites carry overlapping tags:
+#   omeka + rse                -> Omeka       (Omeka before RSE Sites)
+#   rse + wp-digitalscholarship-> RSE Sites   (RSE before WordPress: "if
+#                                              both, only RSE")
+#   rse alone                  -> RSE Sites
+#   wp-digitalscholarship only -> WordPress
+# So Omeka is checked before RSE Sites, and RSE Sites before WordPress.
 SECTIONS: list[dict] = [
-    {"name": "Omeka",        "match": ["omeka"]},
-    {"name": "Google Sites", "match": ["google sites", "google-sites", "gsites"]},
     {"name": "AEM",          "match": ["aem"]},
-    {"name": "WordPress",    "match": ["wp", "wp-sites", "wp-courses",
-                                       "wp-digitalscholarship", "wordpress"]},
-    {"name": "Rails",        "match": ["rails", "rse"]},
+    {"name": "Omeka",        "match": ["omeka"]},
+    {"name": "RSE Sites",    "match": ["rse"]},
+    {"name": "WordPress",    "match": ["wp", "wordpress"], "prefix": ["wp-"]},
+    {"name": "Rails",        "match": ["rails"]},
     {"name": "dotNet",       "match": ["dotnet", ".net", "asp.net"]},
+    {"name": "Development",  "match": ["development"]},
+    {"name": "Custom Sites", "match": ["afs", "external"]},
 ]
 # Sites whose tags match none of the above still need a home so they aren't
 # silently dropped. Set to None to skip creating uncategorised sites instead.
 FALLBACK_SECTION: str | None = "Uncategorized"
-
-# A WordPress site can also carry 'wp-courses'; we want the broad bucket.
-# Matching is "any tag in match list", so WordPress catches all wp-* tags.
 
 # --------------------------------------------------------------------------
 # Field writes — the Asana custom fields the sync is allowed to set, keyed

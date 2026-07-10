@@ -1231,19 +1231,22 @@
     // before Rails: every Omeka site also carries the RSE team label, and
     // RSE is what routes remaining sites to Rails.
     const PLATFORM_RULES = [
-      ["Omeka",        ["omeka"]],
-      ["Google Sites", ["google-sites", "google sites", "gsites"]],
-      ["AEM",          ["aem"]],
-      ["WordPress",    ["wp", "wp-sites", "wp-courses", "wp-digitalscholarship", "wordpress"]],
-      ["Rails",        ["rails", "rse"]],
-      ["dotNet",       ["dotnet", ".net", "asp.net"]],
-      ["External",     ["external"]],
+      ["AEM",          { exact: ["aem"] }],
+      ["Omeka",        { exact: ["omeka"] }],
+      ["RSE Sites",    { exact: ["rse"] }],
+      ["WordPress",    { exact: ["wp", "wordpress"], prefix: ["wp-"] }],
+      ["Rails",        { exact: ["rails"] }],
+      ["dotNet",       { exact: ["dotnet", ".net", "asp.net"] }],
+      ["Development",  { exact: ["development"] }],
+      ["Custom Sites", { exact: ["afs", "external"] }],
     ];
 
     function platformFor(tags) {
-      const plain = new Set((tags || []).map(t => prettyTag(t).trim().toLowerCase()));
-      for (const [name, keys] of PLATFORM_RULES) {
-        if (keys.some(k => plain.has(k))) return name;
+      const plain = (tags || []).map(t => prettyTag(t).trim().toLowerCase());
+      const set = new Set(plain);
+      for (const [name, rule] of PLATFORM_RULES) {
+        if ((rule.exact || []).some(k => set.has(k))) return name;
+        if ((rule.prefix || []).some(p => plain.some(t => t.startsWith(p)))) return name;
       }
       return "Uncategorized";
     }
