@@ -548,6 +548,60 @@
       font-size: 0.8rem;
       margin-bottom: 0.6rem;
     }
+    /* Screen-reader-only utility. */
+    .sr-only {
+      position: absolute; width: 1px; height: 1px;
+      padding: 0; margin: -1px; overflow: hidden;
+      clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+    /* Accessible chart alternative: every chart gets a visible
+       "View data table" toggle. Benefits screen-reader users (SVG charts
+       are otherwise a single opaque image), keyboard users, and anyone who
+       prefers exact numbers over visual estimation. */
+    .chart-table-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin-top: 0.6rem;
+      padding: 0.3rem 0.7rem;
+      border: 1px solid var(--rule);
+      background: #fff;
+      color: var(--um-blue);
+      font-size: 0.78rem;
+      font-weight: 500;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .chart-table-toggle:hover { background: var(--um-blue-50); }
+    .chart-table-toggle:focus-visible {
+      outline: 2px solid var(--um-blue);
+      outline-offset: 1px;
+    }
+    .chart-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.84rem;
+      margin-top: 0.6rem;
+    }
+    .chart-table caption {
+      text-align: left;
+      font-size: 0.76rem;
+      color: var(--ink-60);
+      padding: 0.25rem 0 0.4rem;
+    }
+    .chart-table th, .chart-table td {
+      border: 1px solid var(--rule-light);
+      padding: 0.35rem 0.6rem;
+      text-align: left;
+    }
+    .chart-table thead th {
+      background: var(--um-blue-50);
+      color: var(--um-blue);
+      font-weight: 600;
+    }
+    .chart-table tbody th { font-weight: 500; }
+    .chart-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+
     .viz-empty {
       padding: 2rem 0.5rem;
       text-align: center;
@@ -1483,7 +1537,52 @@
       return `M ${x0} ${y0} A ${rOuter} ${rOuter} 0 ${largeArc} 1 ${x1} ${y1} L ${x2} ${y2} A ${rInner} ${rInner} 0 ${largeArc} 0 ${x3} ${y3} Z`;
     }
 
-    function renderDonut(containerId, segments) {
+    // ============================================================
+    // Accessible chart alternatives.
+    // Each chart appends a "View data table" toggle + a real HTML table of
+    // its current (filter-aware) data. Open/closed state survives re-renders
+    // via openDataTables, and the toggle is wired through one delegated
+    // listener so regenerated innerHTML keeps working.
+    // ============================================================
+    const openDataTables = new Set();
+
+    function dataTableHtml(containerId, caption, headers, rows) {
+      const open = openDataTables.has(containerId);
+      const head = headers.map(h =>
+        `<th scope="col"${h.num ? ' class="num"' : ""}>${escapeHtml(h.label)}</th>`).join("");
+      const body = rows.map(r => `<tr>${r.map((cell, i) =>
+        i === 0
+          ? `<th scope="row">${escapeHtml(String(cell))}</th>`
+          : `<td class="num">${escapeHtml(String(cell))}</td>`).join("")}</tr>`).join("");
+      return `
+        <button type="button" class="chart-table-toggle"
+                data-table-for="${escapeHtml(containerId)}"
+                aria-expanded="${open}" aria-controls="${escapeHtml(containerId)}-table">
+          ${open ? "Hide" : "View"} data table
+        </button>
+        <div id="${escapeHtml(containerId)}-table" ${open ? "" : "hidden"}>
+          <table class="chart-table">
+            <caption>${escapeHtml(caption)}</caption>
+            <thead><tr>${head}</tr></thead>
+            <tbody>${body}</tbody>
+          </table>
+        </div>`;
+    }
+
+    document.addEventListener("click", (e) => {
+      const btn = e.target.closest(".chart-table-toggle");
+      if (!btn) return;
+      const id = btn.dataset.tableFor;
+      const wrap = document.getElementById(id + "-table");
+      if (!wrap) return;
+      const opening = wrap.hasAttribute("hidden");
+      if (opening) { wrap.removeAttribute("hidden"); openDataTables.add(id); }
+      else { wrap.setAttribute("hidden", ""); openDataTables.delete(id); }
+      btn.setAttribute("aria-expanded", String(opening));
+      btn.textContent = (opening ? "Hide" : "View") + " data table";
+    });
+
+    function renderDonut(containerId, segments, opts = {}) {
       const total = segments.reduce((s, x) => s + x.value, 0);
       const container = document.getElementById(containerId);
       if (total <= 0) {
@@ -1509,15 +1608,23 @@
           <span class="lvalue">${s.value.toLocaleString()} (${total > 0 ? (s.value/total*100).toFixed(1) : "0"}%)</span>
         </li>`).join("");
 
+      // The SVG is decorative for assistive tech: the legend (visible text)
+      // and the data table below carry the full data, so hiding the drawing
+      // avoids a useless "image" announcement with no values.
+      const caption = opts.caption || "Chart data";
       container.innerHTML = `
         <div class="donut-wrap">
-          <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="Donut chart">
+          <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true" focusable="false">
             ${slices}
             <text x="${cx}" y="${cy - 4}" text-anchor="middle" font-size="14" font-weight="600" fill="var(--um-blue)">${total.toLocaleString()}</text>
             <text x="${cx}" y="${cy + 12}" text-anchor="middle" font-size="10" fill="var(--ink-60)">total</text>
           </svg>
-          <ul class="legend" style="flex:1;min-width:140px;">${legend}</ul>
-        </div>`;
+          <ul class="legend" style="flex:1;min-width:140px;" aria-label="${escapeHtml(caption)}">${legend}</ul>
+        </div>
+        ${dataTableHtml(containerId, caption,
+          [{label: "Category"}, {label: "Count", num: true}, {label: "Share", num: true}],
+          segments.map(s => [s.label, s.value.toLocaleString(),
+                             (total > 0 ? (s.value / total * 100).toFixed(1) : "0") + "%"]))}`;
     }
 
     // -- SVG horizontal bars --
@@ -1574,11 +1681,20 @@
           </g>`;
       }).join("");
 
+      const caption = opts.caption || valueLabel;
+      const tableHeaders = opts.showTarget
+        ? [{label: "Site"}, {label: "Target % (Title II)", num: true}, {label: valueLabel, num: true}]
+        : [{label: "Site"}, {label: valueLabel, num: true}];
+      const tableRows = items.map(it => opts.showTarget
+        ? [it.label, it.target_pct == null ? "—" : it.target_pct.toFixed(2) + "%", it.value.toLocaleString()]
+        : [it.label, it.value.toLocaleString()]);
       container.innerHTML = `
         <svg class="bars" width="100%" height="${height}" viewBox="0 0 ${innerWidth} ${height}"
-             preserveAspectRatio="xMinYMin meet" role="img" aria-label="${escapeHtml(valueLabel)}">
+             preserveAspectRatio="xMinYMin meet" role="img"
+             aria-label="${escapeHtml(`Bar chart: ${caption}. A data table with the same values follows this chart.`)}">
           ${rows}
-        </svg>`;
+        </svg>
+        ${dataTableHtml(containerId, caption, tableHeaders, tableRows)}`;
     }
 
     function aggregateLevels(sites) {
@@ -1669,10 +1785,10 @@
     }
 
     function renderCharts(filteredSites) {
-      renderBars("chart-top-titleii", topByTitleII(filteredSites, "#00274C"), "Title II occurrences (A+AA+ARIA)", { showTarget: true });
-      renderDonut("chart-levels", aggregateLevels(filteredSites));
-      renderDonut("chart-status", aggregateStatus(filteredSites));
-      renderBars("chart-top-total", topBySelected(filteredSites, "#2a3441"), "Selected-level occurrences");
+      renderBars("chart-top-titleii", topByTitleII(filteredSites, "#00274C"), "Title II occurrences (A+AA+ARIA)", { showTarget: true, caption: "15 sites furthest from Title II target — target % and A+AA+ARIA occurrences" });
+      renderDonut("chart-levels", aggregateLevels(filteredSites), { caption: "Issue occurrences by WCAG level" });
+      renderDonut("chart-status", aggregateStatus(filteredSites), { caption: "Sites by data status" });
+      renderBars("chart-top-total", topBySelected(filteredSites, "#2a3441"), "Selected-level occurrences", { caption: "Top 15 sites by occurrences for the selected levels" });
 
       // Update chart titles to reflect the active level filter.
       const lensLabel = activeLevelsLabel();
@@ -1925,6 +2041,12 @@
         legend.innerHTML = `<span class="compliance-legend-item" style="opacity:0.65;">No sites in current filter</span>`;
         return;
       }
+      // Announce the actual distribution, not just "a chart exists".
+      bar.setAttribute("aria-label",
+        `Title II target progress across ${total.toLocaleString()} sites: ` +
+        COMPLIANCE_TIERS.filter(t => buckets[t.key] > 0)
+          .map(t => `${t.label}: ${buckets[t.key].toLocaleString()} sites`)
+          .join("; "));
       bar.innerHTML = COMPLIANCE_TIERS
         .filter(t => buckets[t.key] > 0)
         .map(t => `<div class="compliance-bar-segment"
