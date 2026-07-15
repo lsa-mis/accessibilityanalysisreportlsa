@@ -52,6 +52,9 @@ def derive_field_values(site: Site) -> dict[str, str]:
     if site.target_percentage is not None:
         met = site.target_percentage >= config.REMEDIATION_THRESHOLD
         out["remediation_met"] = "True" if met else "False"
+    # Provenance: which pipeline input this row came from.
+    out["source"] = (config.SOURCE_OPTION_API if site.source == "api"
+                     else config.SOURCE_OPTION_CSV)
     return out
 
 
@@ -202,6 +205,27 @@ def main() -> None:
             }
         else:
             print(f"  ⚠ number field not found, percentage not synced: {fname!r}. "
+                  f"Set CREATE_MISSING_FIELDS=true to auto-create it.", file=sys.stderr)
+
+    # Ensure creatable enum fields (e.g. Source) exist — same opt-in gate.
+    for fname, options in config.CREATABLE_ENUM_FIELDS.items():
+        if fname in field_map:
+            continue
+        if config.CREATE_MISSING_FIELDS and workspace_gid:
+            created = asana.create_enum_field(workspace_gid, project_gid, fname, options)
+            print(f"  + enum field {fname!r} ({', '.join(options)})")
+            if created:
+                field_map[fname] = {"gid": created["gid"], "type": "enum",
+                                    "enum_options": created["enum_options"]}
+            else:
+                # Dry-run placeholder so per-site writes preview correctly.
+                field_map[fname] = {
+                    "gid": "DRY_RUN_NEW_FIELD", "type": "enum",
+                    "enum_options": {o.lower(): f"DRY_RUN_OPT_{i}"
+                                     for i, o in enumerate(options)},
+                }
+        else:
+            print(f"  ⚠ enum field not found, not synced: {fname!r}. "
                   f"Set CREATE_MISSING_FIELDS=true to auto-create it.", file=sys.stderr)
 
     # 3. Ensure sections exist

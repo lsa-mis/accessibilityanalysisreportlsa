@@ -132,10 +132,24 @@ REMEDIATION_THRESHOLD = _env_float("REMEDIATION_THRESHOLD", 98.0)
 # Enum fields are written by option NAME (resolved to the option gid at
 # runtime). Booleans map to the literal option names "True"/"False" as seen
 # on the board.
+# Data-provenance field: records where each task's data came from.
+SOURCE_FIELD = _env_str("SOURCE_FIELD", "Source")
+SOURCE_OPTION_API = "Siteimprove API"
+SOURCE_OPTION_CSV = "Siteimprove CSV export"
+
 FIELD_WRITES: dict[str, str] = {
     # field name on the board : logical value key (see sync.derive_field_values)
     "Added to Siteimprove": "added_to_siteimprove",
     "Siteimprove Issues Remediation (98%)": "remediation_met",
+    SOURCE_FIELD: "source",
+}
+
+# Enum fields the sync may CREATE when CREATE_MISSING_FIELDS is on
+# (name -> ordered option names). Existing fields are never altered — if a
+# 'Source' field already exists on the board, its options are used as-is
+# and options we can't resolve are logged and skipped.
+CREATABLE_ENUM_FIELDS: dict[str, list[str]] = {
+    SOURCE_FIELD: [SOURCE_OPTION_API, SOURCE_OPTION_CSV],
 }
 
 # Numeric custom fields written as raw numbers (the board field must be of

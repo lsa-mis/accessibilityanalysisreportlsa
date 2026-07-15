@@ -27,6 +27,9 @@ class Site:
     score: float | None
     pages: int | None
     tags: list[str] = field(default_factory=list)
+    # Data provenance: "api" for rows the Siteimprove API returned,
+    # "inventory" for stub rows appended from the CSV export at fetch time.
+    source: str = "api"
 
     @property
     def norm_url(self) -> str:
@@ -85,6 +88,7 @@ def load_sites(url: str) -> list[Site]:
                 score=_num(r.get("score")),
                 pages=_int(r.get("pages")),
                 tags=list(r.get("tags") or []),
+                source="inventory" if r.get("source") == "inventory" else "api",
             )
         )
     return sites

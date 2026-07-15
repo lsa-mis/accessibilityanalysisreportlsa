@@ -220,6 +220,33 @@ class AsanaClient:
             }
         return out
 
+    def create_enum_field(self, workspace_gid: str, project_gid: str,
+                          name: str, options: list[str]) -> dict | None:
+        """Create an enum custom field with the given option names and attach
+        it to the project. Returns {'gid': ..., 'enum_options': {name_lower:
+        option_gid}} or None in dry-run."""
+        created = self._write(
+            "POST", "/custom_fields",
+            {"workspace": workspace_gid, "name": name,
+             "resource_subtype": "enum",
+             "enum_options": [{"name": o} for o in options]},
+            f"create enum field {name!r} with options {options}",
+        )
+        if not created:
+            return None
+        gid = created.get("gid")
+        if gid:
+            self._write(
+                "POST", f"/projects/{project_gid}/addCustomFieldSetting",
+                {"custom_field": gid},
+                f"attach field {name!r} to project",
+            )
+        enum_options = {
+            (o.get("name") or "").strip().lower(): o.get("gid")
+            for o in (created.get("enum_options") or [])
+        }
+        return {"gid": gid, "enum_options": enum_options}
+
     def create_number_field(self, workspace_gid: str, project_gid: str,
                             name: str, precision: int) -> str | None:
         """Create a number custom field in the workspace and attach it to the
