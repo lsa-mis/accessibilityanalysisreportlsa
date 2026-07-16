@@ -323,13 +323,15 @@ def main() -> None:
             if task_data:
                 pending_updates.append((existing["gid"], site.name, task_data))
                 print(f"  ~ {site.name}  [{', '.join(notes)}]")
-            # Re-section: if the platform tags now put this site in a
-            # different section than the task currently occupies, move it.
-            # A task with NO section in this project (floating/untriaged)
-            # also gets homed. Skipped when the target section was only
-            # just created in dry-run (gid unknown), and NEVER moved out
-            # of a protected section (human-curated, e.g. Rails).
-            if section_gid:
+            # Re-section — provenance-scoped. Tasks backed by a live
+            # Siteimprove API row are pipeline-owned: their section follows
+            # Siteimprove tag changes automatically. CSV-stub rows
+            # (source='inventory', i.e. data from a manual export the API
+            # doesn't corroborate) never drive moves — their placement is
+            # left to humans. Also skipped when the target section was only
+            # just created in dry-run (gid unknown), and NEVER moved out of
+            # a protected section (human-curated, e.g. Rails).
+            if section_gid and site.source == "api":
                 current = task_project_sections(existing)
                 if current & protected_gids:
                     pass  # leave human-curated placement alone
