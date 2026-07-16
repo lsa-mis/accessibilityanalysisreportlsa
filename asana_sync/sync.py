@@ -17,11 +17,29 @@ intended change is logged. Run:  python -m src.sync   (from repo root)
 
 from __future__ import annotations
 
+import re
 import sys
+from urllib.parse import urlparse
 
 from . import config
 from .asana_client import AsanaClient
 from .siteimprove_source import Site, load_sites, normalize_url
+
+# Junk-task detection — mirrors scripts/fetch_siteimprove.is_junk_url so the
+# board cleanup agrees with what the data pipeline filters out.
+_JUNK_QUERY = re.compile(r"execution=e\d+s\d+|ServiceLogin|test_login|[?&]token=",
+                         re.IGNORECASE)
+_JUNK_HOSTS = {"weblogin.umich.edu", "accounts.google.com", "shibboleth.umich.edu"}
+
+
+def is_junk_name(name: str | None) -> bool:
+    if not name:
+        return False
+    parsed = urlparse(name if "://" in name else "https://" + name)
+    host = (parsed.hostname or "").lower()
+    if host in _JUNK_HOSTS:
+        return True
+    return bool(_JUNK_QUERY.search(name))
 
 
 # --------------------------------------------------------------------------
@@ -292,6 +310,7 @@ def main() -> None:
     pending_updates: list[tuple[str, str, dict]] = []
     pending_moves: list[tuple[str, str, str]] = []
     seen_source_urls: set[str] = set()
+    matched_urls: set[str] = set()
 
     for site in sites:
         # Source-side dedupe: if the inventory lists the same URL twice,
@@ -308,6 +327,8 @@ def main() -> None:
         section_gid = sections.get(section_name) if section_name else None
 
         if existing:
+            if site.norm_url:
+                matched_urls.add(site.norm_url)
             if not config.UPDATE_EXISTING:
                 continue
             payload, notes = build_field_payload(site, field_map, existing)
@@ -358,6 +379,27 @@ def main() -> None:
             print(f"  + {site.url}  → {section_name}")
             created += 1
 
+    # Board hygiene pass over tasks NO site row matched:
+    #  - junk-named tasks (login-gateway URLs from before the data filter)
+    #    are marked completed so they drop off the active board — visible,
+    #    reversible, never deleted.
+    #  - everything else unmatched is reported so 'why is this still in
+    #    Uncategorized?' is answerable from the run log.
+    junk_completed = 0
+    unmatched_report: list[str] = []
+    for t in tasks:
+        key = normalize_url(t.get("name"))
+        if key and key in matched_urls:
+            continue
+        tname = t.get("name") or t.get("gid")
+        if is_junk_name(t.get("name")):
+            if config.JUNK_TASK_CLEANUP and not t.get("completed"):
+                pending_updates.append((t["gid"], tname, {"completed": True}))
+                junk_completed += 1
+                print(f"  ✔ completing junk task: {tname}")
+        else:
+            unmatched_report.append(tname)
+
     # Flush all queued writes through the batch API.
     if pending_updates:
         print(f"\nApplying {len(pending_updates)} field update(s) via batch API …")
@@ -369,6 +411,15 @@ def main() -> None:
     # 6. Summary
     print("\nSummary")
     print(f"  updated:        {updated}")
+    if junk_completed:
+        print(f"  junk tasks completed: {junk_completed}")
+    if unmatched_report:
+        print(f"  unmatched tasks on board (no site row; left untouched): "
+              f"{len(unmatched_report)}")
+        for n in unmatched_report[:15]:
+            print(f"      {n}")
+        if len(unmatched_report) > 15:
+            print(f"      … and {len(unmatched_report) - 15} more")
     print(f"  moved section:  {moved}")
     print(f"  created:        {created}")
     if dup_source_rows:

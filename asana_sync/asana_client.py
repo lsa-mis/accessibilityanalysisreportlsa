@@ -290,7 +290,7 @@ class AsanaClient:
     def list_tasks(self, project_gid: str) -> list[dict]:
         return self._paginate(
             f"/projects/{project_gid}/tasks",
-            {"opt_fields": "name,resource_subtype,"
+            {"opt_fields": "name,resource_subtype,completed,"
                            "custom_fields.name,custom_fields.display_value,"
                            "custom_fields.enum_value.name,custom_fields.number_value,"
                            "memberships.section.name,memberships.section.gid"},

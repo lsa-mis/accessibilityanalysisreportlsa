@@ -118,6 +118,13 @@ SECTIONS: list[dict] = [
     {"name": "Custom Sites", "match": ["custom sites", "custom-sites"]},
 ]
 
+# Junk-task cleanup: earlier runs created tasks for login-gateway URLs
+# (weblogin.umich.edu SSO redirects etc.) that the pipeline now filters out.
+# Those tasks match no site row, so they'd linger in Uncategorized forever.
+# When enabled, the sync marks them COMPLETED (never deletes — completion is
+# visible and reversible) so they drop off the active board.
+JUNK_TASK_CLEANUP = _env_bool("JUNK_TASK_CLEANUP", True)
+
 # All site tasks the sync manages are Asana MILESTONES: new tasks are
 # created with resource_subtype=milestone, and existing URL-matched tasks
 # that are still plain tasks get converted (diffed — already-milestones are
