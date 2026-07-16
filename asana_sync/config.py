@@ -140,6 +140,13 @@ SECTIONS: list[dict] = [
 # visible and reversible) so they drop off the active board.
 JUNK_TASK_CLEANUP = _env_bool("JUNK_TASK_CLEANUP", True)
 
+# Stale API-sourced tasks: an existing task whose own 'Source' field reads
+# 'Siteimprove API' but that matches no current site means the site left
+# Siteimprove (dropped from both the API and the CSV). Marked completed
+# (reversible, never deleted). CSV-sourced and human-created tasks (no
+# Source) are never touched — the decision reads the task's own provenance.
+STALE_API_TASK_CLEANUP = _env_bool("STALE_API_TASK_CLEANUP", True)
+
 # All site tasks the sync manages are Asana MILESTONES: new tasks are
 # created with resource_subtype=milestone, and existing URL-matched tasks
 # that are still plain tasks get converted (diffed — already-milestones are

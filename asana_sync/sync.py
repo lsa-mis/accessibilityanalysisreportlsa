@@ -446,22 +446,35 @@ def main() -> None:
 
     # Board hygiene pass over tasks NO site row matched:
     #  - junk-named tasks (login-gateway URLs from before the data filter)
-    #    are marked completed so they drop off the active board — visible,
-    #    reversible, never deleted.
-    #  - everything else unmatched is reported so 'why is this still in
-    #    Uncategorized?' is answerable from the run log.
+    #    are marked completed so they drop off the active board.
+    #  - stale API-sourced tasks: a task whose own 'Source' field reads
+    #    'Siteimprove API' but that matches no current site means the site
+    #    left Siteimprove entirely (gone from both the API and the CSV) —
+    #    complete it too. Reading the task's recorded provenance means
+    #    CSV-sourced tasks and human-created tasks (no Source) are never
+    #    touched. Everything else unmatched is reported, not modified.
+    #  All completions are reversible; the sync never deletes.
     junk_completed = 0
+    stale_api_completed = 0
     unmatched_report: list[str] = []
     for t in tasks:
         key = normalize_url(t.get("name"))
         if key and key in matched_urls:
             continue
         tname = t.get("name") or t.get("gid")
+        if t.get("completed"):
+            continue  # already off the active board
         if is_junk_name(t.get("name")):
-            if config.JUNK_TASK_CLEANUP and not t.get("completed"):
+            if config.JUNK_TASK_CLEANUP:
                 pending_updates.append((t["gid"], tname, {"completed": True}))
                 junk_completed += 1
                 print(f"  ✔ completing junk task: {tname}")
+        elif (config.STALE_API_TASK_CLEANUP
+              and current_enum_name(t, config.SOURCE_FIELD) == config.SOURCE_OPTION_API):
+            pending_updates.append((t["gid"], tname, {"completed": True}))
+            stale_api_completed += 1
+            print(f"  ✔ completing stale API-sourced task (site gone from "
+                  f"Siteimprove): {tname}")
         else:
             unmatched_report.append(tname)
 
@@ -478,6 +491,8 @@ def main() -> None:
     print(f"  updated:        {updated}")
     if junk_completed:
         print(f"  junk tasks completed: {junk_completed}")
+    if stale_api_completed:
+        print(f"  stale API-sourced tasks completed: {stale_api_completed}")
     if unmatched_report:
         print(f"  unmatched tasks on board (no site row; left untouched): "
               f"{len(unmatched_report)}")
