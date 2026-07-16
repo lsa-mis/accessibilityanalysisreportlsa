@@ -110,9 +110,25 @@ def load_site_tag_csv(path: Path = SITE_TAG_CSV_PATH) -> tuple[
     by_id: dict[int, list[str]] = {}
     by_url: dict[str, list[str]] = {}
     by_name: dict[str, list[str]] = {}
+    row_count = 0
     with path.open(newline="", encoding=encoding) as handle:
         reader = csv.DictReader(handle, delimiter=delimiter)
+        # Guard against the WRONG Siteimprove export. The UI also offers a
+        # tag-summary report (columns: Tag name / Sites / Users / Pages —
+        # one row per TAG); feeding that in here would silently produce
+        # zero lookups and wipe every tag on the next fetch. Fail loudly
+        # instead so the mistake is caught at run time.
+        headers = { _norm_header(h) for h in (reader.fieldnames or []) }
+        if not headers & {"site_id", "id", "site_url", "url", "site_name", "name"}:
+            sys.exit(
+                f"{path} does not look like the per-site inventory export "
+                f"(headers found: {sorted(headers)}). Expected columns like "
+                f"'Site ID' / 'Site URL' / 'Site name' / 'Tags'. In "
+                f"Siteimprove use Settings → Sites → (site list) → Export — "
+                f"not the tag-summary report."
+            )
         for raw in reader:
+            row_count += 1
             row = {_norm_header(k): (v or "") for k, v in raw.items()}
             tags_field = row.get("tags") or row.get("labels") or ""
             tags = [t.strip() for t in TAG_SPLIT_RE.split(tags_field) if t.strip()]
