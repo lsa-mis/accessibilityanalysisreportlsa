@@ -302,16 +302,25 @@ def main() -> None:
             print(f"  ⚠ text field not found, tags not mirrored: {fname!r}. "
                   f"Set CREATE_MISSING_FIELDS=true to auto-create it.", file=sys.stderr)
 
-    # 3. Ensure sections exist
+    # 3. Ensure sections exist — but only create ones that a site in THIS
+    #    run actually routes to. No point creating an empty section
+    #    (e.g. dotNet, when nothing in Siteimprove is tagged dotNet). Any
+    #    such section can still be added by hand in Asana; the sync just
+    #    won't manufacture it. Existing empty sections are left alone (the
+    #    sync never deletes).
     sections = asana.section_map(project_gid)
-    wanted = [s["name"] for s in config.SECTIONS]
-    if config.FALLBACK_SECTION:
-        wanted.append(config.FALLBACK_SECTION)
-    for name in wanted:
-        if name not in sections:
-            gid = asana.create_section(project_gid, name)
-            sections[name] = gid  # None in dry-run; create_task tolerates it
-            print(f"  + section {name!r}")
+    needed = {section_for(s) for s in sites}
+    needed.discard(None)
+    for name in [s["name"] for s in config.SECTIONS] + \
+            ([config.FALLBACK_SECTION] if config.FALLBACK_SECTION else []):
+        if name in sections:
+            continue
+        if name not in needed:
+            print(f"  · skipping empty section {name!r} (no sites routed to it)")
+            continue
+        gid = asana.create_section(project_gid, name)
+        sections[name] = gid  # None in dry-run; create_task tolerates it
+        print(f"  + section {name!r}")
 
     # Section gids that belong to THIS project — used both to pick the
     # canonical duplicate and to detect when a task sits in the wrong section.
