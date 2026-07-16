@@ -74,11 +74,12 @@ TAG_OVERLAY_FROM_CSV = _env_bool("TAG_OVERLAY_FROM_CSV", True)
 _DEFAULT_TAGS_CSV = (_REPO_ROOT / "data" / "site-tags.csv").as_uri()
 SITE_TAGS_CSV_URL = _env_str("SITE_TAGS_CSV_URL", _DEFAULT_TAGS_CSV)
 
-# Tags whose sites are skipped entirely — never created/updated on the
-# board. 'Development' is NOT excluded here: it routes to its own
-# Development section per the section map above. (The dashboard still hides
-# Development from its portfolio stats; that's separate.)
-EXCLUDED_TAGS = {"test sites"}
+# Tags whose sites are skipped entirely — never created/updated/moved on
+# the board. 'Rails' is excluded per request: the Rails section is the
+# team's hand-curated custom-app tasks, so the sync leaves anything tagged
+# Rails alone. 'Development' is NOT excluded (it routes to its Development
+# section). (The dashboard has its own separate exclusions.)
+EXCLUDED_TAGS = {"test sites", "rails"}
 
 # --------------------------------------------------------------------------
 # Asana target
@@ -119,6 +120,7 @@ SECTIONS: list[dict] = [
     {"name": "AEM",          "match": ["aem"]},
     {"name": "Omeka",        "match": ["omeka"]},
     {"name": "RSE Sites",    "match": ["rse"]},
+    {"name": "Google Sites", "match": ["google-sites", "google sites", "gsites"]},
     {"name": "WordPress",    "match": ["wp", "wordpress"], "prefix": ["wp-"]},
     {"name": "dotNet",       "match": ["dotnet", ".net", "asp.net"]},
     {"name": "Development",  "match": ["development"]},
