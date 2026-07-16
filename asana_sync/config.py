@@ -117,9 +117,12 @@ ASANA_TOKEN = os.environ.get("ASANA_TOKEN", "").strip()
 #   wp-digitalscholarship only -> WordPress
 # So Omeka is checked before RSE Sites, and RSE Sites before WordPress.
 SECTIONS: list[dict] = [
+    # RSE wins over everything: any site tagged RSE goes to Internal
+    # regardless of its other tags (so an Omeka+RSE site lands in Internal,
+    # not Omeka). Checked first for that reason.
+    {"name": "Internal",     "match": ["rse"]},
     {"name": "AEM",          "match": ["aem"]},
     {"name": "Omeka",        "match": ["omeka"]},
-    {"name": "RSE Sites",    "match": ["rse"]},
     {"name": "Google Sites", "match": ["google-sites", "google sites", "gsites"]},
     {"name": "WordPress",    "match": ["wp", "wordpress"], "prefix": ["wp-"]},
     {"name": "dotNet",       "match": ["dotnet", ".net", "asp.net"]},
