@@ -24,6 +24,7 @@ from urllib.parse import urlparse
 from . import config
 from .asana_client import AsanaClient
 from .siteimprove_source import Site, load_sites, normalize_url
+from .tag_overlay import overlay_tags
 
 # Junk-task detection — mirrors scripts/fetch_siteimprove.is_junk_url so the
 # board cleanup agrees with what the data pipeline filters out.
@@ -209,6 +210,12 @@ def main() -> None:
     #    applied at fetch time. No separate inventory read needed here.
     print(f"Loading sites from {config.SITEIMPROVE_DATA_URL} …")
     all_sites = load_sites(config.SITEIMPROVE_DATA_URL)
+
+    # Overlay fresh tags from the committed CSV so a CSV push takes effect by
+    # running the sync alone — sites.json's tags may lag the last fetch.
+    if config.TAG_OVERLAY_FROM_CSV:
+        changed = overlay_tags(all_sites, config.SITE_TAGS_CSV_URL)
+        print(f"  tag overlay from CSV: {changed} site(s) updated to current tags")
 
     sites: list[Site] = []
     excluded = 0

@@ -64,6 +64,16 @@ _DEFAULT_SITES = (_REPO_ROOT / "data" / "sites.json").as_uri()
 
 SITEIMPROVE_DATA_URL = _env_str("SITEIMPROVE_DATA_URL", _DEFAULT_SITES)
 
+# Tag overlay: at run time the sync re-reads the committed CSV export and
+# overlays its tags onto the sites loaded from sites.json — so a fresh CSV
+# push is reflected by running the sync alone, without waiting for the
+# ~15-min fetch to regenerate sites.json. sites.json stays the source for
+# metrics; the CSV is the authoritative source for tags. Set
+# TAG_OVERLAY_FROM_CSV=false to disable and use sites.json's tags as-is.
+TAG_OVERLAY_FROM_CSV = _env_bool("TAG_OVERLAY_FROM_CSV", True)
+_DEFAULT_TAGS_CSV = (_REPO_ROOT / "data" / "site-tags.csv").as_uri()
+SITE_TAGS_CSV_URL = _env_str("SITE_TAGS_CSV_URL", _DEFAULT_TAGS_CSV)
+
 # Tags whose sites are skipped entirely — never created/updated on the
 # board. 'Development' is NOT excluded here: it routes to its own
 # Development section per the section map above. (The dashboard still hides

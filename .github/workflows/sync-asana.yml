@@ -62,6 +62,9 @@ jobs:
           CREATE_MISSING_FIELDS: ${{ vars.CREATE_MISSING_FIELDS || 'false' }}
           # Site tasks are Asana milestones; set the var to 'false' to revert.
           MILESTONE_TASKS: ${{ vars.MILESTONE_TASKS || 'true' }}
+          # Overlay current CSV tags at run time so a CSV push takes effect
+          # from the sync alone (no full fetch needed). 'false' to disable.
+          TAG_OVERLAY_FROM_CSV: ${{ vars.TAG_OVERLAY_FROM_CSV || 'true' }}
           TARGET_PCT_FIELD: ${{ vars.TARGET_PCT_FIELD }}
           NUMBER_FIELD_PRECISION: ${{ vars.NUMBER_FIELD_PRECISION || '1' }}
           # Optional overrides (repo variables):
