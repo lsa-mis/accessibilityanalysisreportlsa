@@ -21,7 +21,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fetch_siteimprove import (  # noqa: E402
     append_inventory_only_sites,
-    derive_fallback_tags,
     is_junk_url,
     load_inventory_rows,
     load_site_tag_csv,
@@ -58,23 +57,18 @@ def main() -> None:
     snapshot["sites"] = sites
 
     matched = 0
-    inferred = 0
     untagged = 0
     for site in sites:
+        # Tags are EXACTLY Siteimprove's admin labels — never inferred.
+        # Untagged sites stay untagged until tagged in Siteimprove and the
+        # CSV is re-exported.
         labels = lookup_csv_tags(site, by_id, by_url, by_name)
+        site["tags"] = [f"tag:{label}" for label in labels]
+        site.pop("tags_inferred", None)  # scrub the retired inference flag
         if labels:
-            site["tags"] = [f"tag:{label}" for label in labels]
-            site["tags_inferred"] = False
             matched += 1
         else:
-            # Gap-filler: URL-based platform guess when the CSV has nothing.
-            fallback = derive_fallback_tags(site.get("site_name"), site.get("url"))
-            site["tags"] = [f"tag:{label}" for label in fallback]
-            site["tags_inferred"] = bool(fallback)
-            if fallback:
-                inferred += 1
-            else:
-                untagged += 1
+            untagged += 1
 
     # New sites in the CSV that aren't in the snapshot yet get stub rows,
     # so a CSV push surfaces them on the dashboard immediately (~30s)
@@ -84,7 +78,7 @@ def main() -> None:
 
     SITES_PATH.write_text(json.dumps(snapshot, indent=2) + "\n", encoding="utf-8")
     print(
-        f"Tags: {matched} from CSV, {inferred} inferred from URL, "
+        f"Tags: {matched} from CSV (authoritative only), "
         f"{untagged} still untagged; {added} inventory-only site(s) added, "
         f"{junk_removed} junk row(s) removed "
         f"(of {len(sites)} total sites).",
