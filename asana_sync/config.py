@@ -147,6 +147,20 @@ JUNK_TASK_CLEANUP = _env_bool("JUNK_TASK_CLEANUP", True)
 # Source) are never touched — the decision reads the task's own provenance.
 STALE_API_TASK_CLEANUP = _env_bool("STALE_API_TASK_CLEANUP", True)
 
+# Fields BLANKED on every task, every run (set to null). Requested to keep
+# them empty. WARNING — destructive: clears current values. These are
+# Jira-integration + Theme fields; a locked integration field may reject
+# the clear (logged per item by the batch runner) or be re-populated by the
+# Jira integration on its next sync. Empty this list to stop clearing.
+CLEAR_FIELDS: list[str] = [
+    "Jira assignee",
+    "Jira priority",
+    "Jira sprint",
+    "Jira status",
+    "Jira story point estimate",
+    "Theme",
+]
+
 # All site tasks the sync manages are Asana MILESTONES: new tasks are
 # created with resource_subtype=milestone, and existing URL-matched tasks
 # that are still plain tasks get converted (diffed — already-milestones are

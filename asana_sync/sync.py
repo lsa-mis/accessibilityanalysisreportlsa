@@ -106,6 +106,16 @@ def current_text_value(task: dict, field_name: str) -> str | None:
     return None
 
 
+def current_display_value(task: dict, field_name: str) -> str | None:
+    """Generic 'does this field have a value?' read across any field type —
+    display_value is set for enum/number/text/people/date alike."""
+    target = field_name.strip()
+    for cf in task.get("custom_fields") or []:
+        if (cf.get("name") or "").strip() == target:
+            return cf.get("display_value")
+    return None
+
+
 def enum_option_gid(field_meta: dict, option_name: str) -> str | None:
     return field_meta.get("enum_options", {}).get(option_name.strip().lower())
 
@@ -195,6 +205,18 @@ def build_field_payload(site: Site, field_map: dict[str, dict],
                 continue  # already matches (including both empty)
         payload[meta["gid"]] = want
         notes.append(f"{field_name}={want!r}")
+
+    # Cleared fields — blanked to null on every existing task that still has
+    # a value (new tasks are born empty, nothing to clear). Uses
+    # display_value as a type-agnostic 'has a value?' check.
+    if existing_task is not None:
+        for field_name in config.CLEAR_FIELDS:
+            meta = field_map.get(field_name)
+            if not meta:
+                continue
+            if current_display_value(existing_task, field_name):
+                payload[meta["gid"]] = None
+                notes.append(f"clear {field_name}")
 
     return payload, notes
 
