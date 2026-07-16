@@ -59,8 +59,7 @@ jobs:
           # 35k-line JSON conflict can't be auto-resolved (this bit us —
           # rebase died on CONFLICT and failed the run). Instead: save the
           # fresh API data, hard-reset onto latest main (picking up any code
-          # changes), restore the fresh data, re-apply tag/inventory
-          # semantics with the CURRENT scripts, and commit clean.
+          # changes), restore the fresh data, and commit clean.
           for attempt in 1 2 3 4 5; do
             if git push; then
               echo "Push succeeded on attempt $attempt."
@@ -74,9 +73,9 @@ jobs:
             git reset --hard origin/main
             cp /tmp/fresh-sites.json data/sites.json
             cp /tmp/fresh-rules.json data/rules.json
-            # Latest main may carry newer merge logic / CSV than this run's
-            # original checkout — re-apply tags + inventory stubs with it.
-            python scripts/merge_site_tags.py
+            # The snapshot was already generated with this run's CSV; if
+            # the CSV changed on main mid-run, the next scheduled fetch
+            # picks it up.
             if git diff --quiet -- data/sites.json data/rules.json; then
               echo "Latest main already has equivalent data. Nothing to push."
               echo "did_push=false" >> "$GITHUB_OUTPUT"
