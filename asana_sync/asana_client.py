@@ -143,13 +143,15 @@ class AsanaClient:
         return applied
 
     def batch_update_tasks(self, updates: list[tuple[str, str, dict]]) -> int:
-        """Apply [(task_gid, label, custom_fields), ...] via /batch."""
+        """Apply [(task_gid, label, task_data), ...] via /batch. task_data is
+        the raw PUT /tasks body ({"custom_fields": {...}} and/or
+        {"resource_subtype": "milestone"} etc.)."""
         labeled = [
             (label, {"relative_path": f"/tasks/{gid}", "method": "put",
-                     "data": {"custom_fields": fields}})
-            for gid, label, fields in updates
+                     "data": data})
+            for gid, label, data in updates
         ]
-        return self._batch(labeled, "field update(s)")
+        return self._batch(labeled, "task update(s)")
 
     def batch_move_tasks(self, moves: list[tuple[str, str, str]]) -> int:
         """Move tasks between sections: [(task_gid, label, section_gid), ...].
@@ -288,21 +290,26 @@ class AsanaClient:
     def list_tasks(self, project_gid: str) -> list[dict]:
         return self._paginate(
             f"/projects/{project_gid}/tasks",
-            {"opt_fields": "name,custom_fields.name,custom_fields.display_value,"
+            {"opt_fields": "name,resource_subtype,"
+                           "custom_fields.name,custom_fields.display_value,"
                            "custom_fields.enum_value.name,custom_fields.number_value,"
                            "memberships.section.name,memberships.section.gid"},
         )
 
     def create_task(self, project_gid: str, name: str,
                     custom_fields: dict[str, Any], section_gid: str | None,
-                    section_name: str | None) -> str | None:
+                    section_name: str | None,
+                    resource_subtype: str | None = None) -> str | None:
         body: dict[str, Any] = {"name": name, "projects": [project_gid]}
+        if resource_subtype:
+            body["resource_subtype"] = resource_subtype
         if custom_fields:
             body["custom_fields"] = custom_fields
         if section_gid:
             body["memberships"] = [{"project": project_gid, "section": section_gid}]
         data = self._write("POST", "/tasks", body,
-                           f"create task {name!r} in section {section_name or '(none)'}")
+                           f"create {resource_subtype or 'task'} {name!r} "
+                           f"in section {section_name or '(none)'}")
         return (data or {}).get("gid") if data else None
 
     def update_task_fields(self, task_gid: str, name: str,

@@ -118,6 +118,12 @@ SECTIONS: list[dict] = [
     {"name": "Custom Sites", "match": ["custom sites", "custom-sites"]},
 ]
 
+# All site tasks the sync manages are Asana MILESTONES: new tasks are
+# created with resource_subtype=milestone, and existing URL-matched tasks
+# that are still plain tasks get converted (diffed — already-milestones are
+# never rewritten). Set MILESTONE_TASKS=false to revert to plain tasks.
+MILESTONE_TASKS = _env_bool("MILESTONE_TASKS", True)
+
 # Sections the sync must never manage. 'Rails' holds the team's manually
 # curated custom-app tasks (JIRA sprints, story points); a Siteimprove
 # 'Rails' tag is deliberately NOT routed, and tasks currently sitting in a

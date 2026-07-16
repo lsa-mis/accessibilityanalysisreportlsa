@@ -311,8 +311,17 @@ def main() -> None:
             if not config.UPDATE_EXISTING:
                 continue
             payload, notes = build_field_payload(site, field_map, existing)
+            task_data: dict = {}
             if payload:
-                pending_updates.append((existing["gid"], site.name, payload))
+                task_data["custom_fields"] = payload
+            # Milestone conversion: matched site tasks that are still plain
+            # tasks become milestones (diffed — milestones are left alone).
+            if (config.MILESTONE_TASKS
+                    and existing.get("resource_subtype") not in (None, "milestone")):
+                task_data["resource_subtype"] = "milestone"
+                notes.append("→ milestone")
+            if task_data:
+                pending_updates.append((existing["gid"], site.name, task_data))
                 print(f"  ~ {site.name}  [{', '.join(notes)}]")
             # Re-section: if the platform tags now put this site in a
             # different section than the task currently occupies, move it.
@@ -342,7 +351,8 @@ def main() -> None:
                 else:
                     unmatched_status += 1
             asana.create_task(project_gid, site.url, payload,
-                              section_gid, section_name)
+                              section_gid, section_name,
+                              resource_subtype="milestone" if config.MILESTONE_TASKS else None)
             print(f"  + {site.url}  → {section_name}")
             created += 1
 
