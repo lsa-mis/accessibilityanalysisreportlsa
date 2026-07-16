@@ -175,6 +175,18 @@ CREATABLE_ENUM_FIELDS: dict[str, list[str]] = {
     SOURCE_FIELD: [SOURCE_OPTION_API, SOURCE_OPTION_CSV],
 }
 
+# Tag mirror: each task gets Siteimprove's tag list verbatim in a text
+# custom field (e.g. "AEM, LSA, Research"), kept in sync on every run —
+# including clearing it if the site is untagged in Siteimprove. Text field
+# chosen over native Asana tags deliberately: it batches like every other
+# field write; native tags would need per-task-per-tag API calls and create
+# workspace-global tag entities.
+TAGS_FIELD = _env_str("TAGS_FIELD", "Siteimprove Tags")
+TEXT_FIELD_WRITES: dict[str, str] = {
+    TAGS_FIELD: "tags_text",
+}
+CREATABLE_TEXT_FIELDS: list[str] = [TAGS_FIELD]
+
 # Numeric custom fields written as raw numbers (the board field must be of
 # type 'number'). Keyed by board field name -> logical value key. The target
 # percentage (e.g. 97.59) is the natural one. If the field doesn't exist on

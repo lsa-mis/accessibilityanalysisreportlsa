@@ -85,6 +85,26 @@ def derive_number_values(site: Site) -> dict[str, float]:
     return out
 
 
+def derive_text_values(site: Site) -> dict[str, str]:
+    """Logical value-key -> text value. The tag mirror: Siteimprove's tags,
+    'tag:' prefix stripped, original case preserved, sorted, comma-joined
+    (e.g. 'AEM, Humanities, LSA, Research'). Empty string when untagged so
+    the field is cleared to match Siteimprove exactly."""
+    labels = sorted(
+        (t.split(":", 1)[1] if ":" in t else t).strip()
+        for t in site.tags
+    )
+    return {"tags_text": ", ".join(labels)}
+
+
+def current_text_value(task: dict, field_name: str) -> str | None:
+    target = field_name.strip()
+    for cf in task.get("custom_fields") or []:
+        if (cf.get("name") or "").strip() == target:
+            return cf.get("text_value")
+    return None
+
+
 def enum_option_gid(field_meta: dict, option_name: str) -> str | None:
     return field_meta.get("enum_options", {}).get(option_name.strip().lower())
 
@@ -158,6 +178,22 @@ def build_field_payload(site: Site, field_map: dict[str, dict],
                 continue
         payload[meta["gid"]] = want
         notes.append(f"{field_name}={want}")
+
+    # Text fields (Siteimprove Tags mirror).
+    texts = derive_text_values(site)
+    for field_name, value_key in config.TEXT_FIELD_WRITES.items():
+        meta = field_map.get(field_name)
+        if not meta:
+            continue
+        want = texts.get(value_key)
+        if want is None:
+            continue
+        if existing_task is not None:
+            have = current_text_value(existing_task, field_name) or ""
+            if have == want:
+                continue  # already matches (including both empty)
+        payload[meta["gid"]] = want
+        notes.append(f"{field_name}={want!r}")
 
     return payload, notes
 
@@ -244,6 +280,19 @@ def main() -> None:
                 }
         else:
             print(f"  ⚠ enum field not found, not synced: {fname!r}. "
+                  f"Set CREATE_MISSING_FIELDS=true to auto-create it.", file=sys.stderr)
+
+    # Ensure creatable text fields (e.g. Siteimprove Tags) exist.
+    for fname in config.CREATABLE_TEXT_FIELDS:
+        if fname in field_map:
+            continue
+        if config.CREATE_MISSING_FIELDS and workspace_gid:
+            gid = asana.create_text_field(workspace_gid, project_gid, fname)
+            print(f"  + text field {fname!r}")
+            field_map[fname] = {"gid": gid or "DRY_RUN_NEW_FIELD",
+                                "type": "text", "enum_options": {}}
+        else:
+            print(f"  ⚠ text field not found, tags not mirrored: {fname!r}. "
                   f"Set CREATE_MISSING_FIELDS=true to auto-create it.", file=sys.stderr)
 
     # 3. Ensure sections exist

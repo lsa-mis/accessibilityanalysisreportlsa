@@ -249,6 +249,27 @@ class AsanaClient:
         }
         return {"gid": gid, "enum_options": enum_options}
 
+    def create_text_field(self, workspace_gid: str, project_gid: str,
+                          name: str) -> str | None:
+        """Create a text custom field and attach it to the project.
+        Returns the new field gid (None in dry-run)."""
+        created = self._write(
+            "POST", "/custom_fields",
+            {"workspace": workspace_gid, "name": name,
+             "resource_subtype": "text"},
+            f"create text field {name!r}",
+        )
+        if not created:
+            return None
+        gid = created.get("gid")
+        if gid:
+            self._write(
+                "POST", f"/projects/{project_gid}/addCustomFieldSetting",
+                {"custom_field": gid},
+                f"attach field {name!r} to project",
+            )
+        return gid
+
     def create_number_field(self, workspace_gid: str, project_gid: str,
                             name: str, precision: int) -> str | None:
         """Create a number custom field in the workspace and attach it to the
@@ -293,6 +314,7 @@ class AsanaClient:
             {"opt_fields": "name,resource_subtype,completed,"
                            "custom_fields.name,custom_fields.display_value,"
                            "custom_fields.enum_value.name,custom_fields.number_value,"
+                           "custom_fields.text_value,"
                            "memberships.section.name,memberships.section.gid"},
         )
 
