@@ -112,7 +112,10 @@ SECTIONS: list[dict] = [
     {"name": "WordPress",    "match": ["wp", "wordpress"], "prefix": ["wp-"]},
     {"name": "dotNet",       "match": ["dotnet", ".net", "asp.net"]},
     {"name": "Development",  "match": ["development"]},
-    {"name": "Custom Sites", "match": ["afs", "external"]},
+    # Strictly tag-driven: ONLY an explicit 'Custom Sites' tag set in
+    # Siteimprove routes here. Inferred tags (e.g. the URL-derived
+    # 'External') deliberately do NOT — no guess-based categorization.
+    {"name": "Custom Sites", "match": ["custom sites", "custom-sites"]},
 ]
 
 # Sections the sync must never manage. 'Rails' holds the team's manually

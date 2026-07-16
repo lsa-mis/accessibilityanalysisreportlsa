@@ -1292,7 +1292,9 @@
       ["Rails",        { exact: ["rails"] }],
       ["dotNet",       { exact: ["dotnet", ".net", "asp.net"] }],
       ["Development",  { exact: ["development"] }],
-      ["Custom Sites", { exact: ["afs", "external"] }],
+      // Strictly tag-driven — only an explicit Siteimprove 'Custom Sites'
+      // tag routes here; inferred tags like 'External' do not.
+      ["Custom Sites", { exact: ["custom sites", "custom-sites"] }],
     ];
 
     function platformFor(tags) {
