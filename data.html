@@ -1285,7 +1285,7 @@
     // before Rails: every Omeka site also carries the RSE team label, and
     // RSE is what routes remaining sites to Rails.
     const PLATFORM_RULES = [
-      ["Internal",     { exact: ["rse"] }],
+      ["Internal",     { exact: ["rse", "internal"] }],
       ["AEM",          { exact: ["aem"] }],
       ["Omeka",        { exact: ["omeka"] }],
       ["Google Sites", { exact: ["google-sites", "google sites", "gsites"] }],
