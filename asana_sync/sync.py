@@ -242,6 +242,9 @@ def main() -> None:
     # Section gids that belong to THIS project — used both to pick the
     # canonical duplicate and to detect when a task sits in the wrong section.
     project_section_gids = {gid for gid in sections.values() if gid}
+    # Sections the sync never moves tasks out of (human-curated, e.g. Rails).
+    protected_gids = {sections[n] for n in config.PROTECTED_SECTIONS
+                      if sections.get(n)}
 
     def task_project_sections(task: dict) -> set[str]:
         return {
@@ -315,10 +318,13 @@ def main() -> None:
             # different section than the task currently occupies, move it.
             # A task with NO section in this project (floating/untriaged)
             # also gets homed. Skipped when the target section was only
-            # just created in dry-run (gid unknown).
+            # just created in dry-run (gid unknown), and NEVER moved out
+            # of a protected section (human-curated, e.g. Rails).
             if section_gid:
                 current = task_project_sections(existing)
-                if section_gid not in current:
+                if current & protected_gids:
+                    pass  # leave human-curated placement alone
+                elif section_gid not in current:
                     pending_moves.append((existing["gid"], site.name, section_gid))
                     print(f"  ↪ {site.name}  → section {section_name}")
         else:

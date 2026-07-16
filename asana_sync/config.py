@@ -110,11 +110,18 @@ SECTIONS: list[dict] = [
     {"name": "Omeka",        "match": ["omeka"]},
     {"name": "RSE Sites",    "match": ["rse"]},
     {"name": "WordPress",    "match": ["wp", "wordpress"], "prefix": ["wp-"]},
-    {"name": "Rails",        "match": ["rails"]},
     {"name": "dotNet",       "match": ["dotnet", ".net", "asp.net"]},
     {"name": "Development",  "match": ["development"]},
     {"name": "Custom Sites", "match": ["afs", "external"]},
 ]
+
+# Sections the sync must never manage. 'Rails' holds the team's manually
+# curated custom-app tasks (JIRA sprints, story points); a Siteimprove
+# 'Rails' tag is deliberately NOT routed, and tasks currently sitting in a
+# protected section are never re-sectioned out of it — even when their
+# Siteimprove tags would place them elsewhere. Field updates (target %,
+# Source, …) still apply to URL-matched tasks wherever they live.
+PROTECTED_SECTIONS = {"Rails"}
 # Sites whose tags match none of the above still need a home so they aren't
 # silently dropped. Set to None to skip creating uncategorised sites instead.
 FALLBACK_SECTION: str | None = "Uncategorized"
