@@ -22,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fetch_siteimprove import (  # noqa: E402
     append_inventory_only_sites,
     derive_fallback_tags,
+    is_junk_url,
     load_inventory_rows,
     load_site_tag_csv,
     lookup_csv_tags,
@@ -49,6 +50,13 @@ def main() -> None:
         return
 
     sites = snapshot.get("sites") or []
+    # Cleanup pass: drop junk rows (login gateways / auth redirects) that
+    # earlier snapshots accumulated before the fetch learned to skip them.
+    before = len(sites)
+    sites = [s for s in sites if not is_junk_url(s.get("url"))]
+    junk_removed = before - len(sites)
+    snapshot["sites"] = sites
+
     matched = 0
     inferred = 0
     untagged = 0
@@ -77,7 +85,8 @@ def main() -> None:
     SITES_PATH.write_text(json.dumps(snapshot, indent=2) + "\n", encoding="utf-8")
     print(
         f"Tags: {matched} from CSV, {inferred} inferred from URL, "
-        f"{untagged} still untagged; {added} inventory-only site(s) added "
+        f"{untagged} still untagged; {added} inventory-only site(s) added, "
+        f"{junk_removed} junk row(s) removed "
         f"(of {len(sites)} total sites).",
         file=sys.stderr,
     )

@@ -153,6 +153,28 @@ def _norm_site_url(url: str | None) -> str:
     return u.rstrip("/")
 
 
+# Junk-row detection. The Siteimprove inventory export (and occasionally the
+# API) contains rows whose "URL" is a login gateway or auth redirect rather
+# than a real site — e.g. ~28 weblogin.umich.edu SSO?execution=… rows, a
+# test_login?token=… URL, and an accounts.google.com ServiceLogin wrapper.
+# These are artifacts of auth-walled sites, not web properties; without this
+# filter they pollute the dashboard and get created as Asana tasks under
+# Uncategorized. Kept deliberately narrow: named login hosts + unmistakable
+# auth-flow query markers only.
+JUNK_URL_QUERY = re.compile(r"execution=e\d+s\d+|ServiceLogin|test_login|[?&]token=", re.IGNORECASE)
+JUNK_HOSTS = {"weblogin.umich.edu", "accounts.google.com", "shibboleth.umich.edu"}
+
+
+def is_junk_url(url: str | None) -> bool:
+    if not url:
+        return False
+    parsed = urlparse(url if "://" in url else "https://" + url)
+    host = (parsed.hostname or "").lower()
+    if host in JUNK_HOSTS:
+        return True
+    return bool(JUNK_URL_QUERY.search(url))
+
+
 def load_inventory_rows(path: Path = SITE_TAG_CSV_PATH) -> list[dict[str, Any]]:
     """Parse the Siteimprove CSV export into full rows (id, name, url, tags).
     Unlike load_site_tag_csv (tag lookups only), this keeps rows WITHOUT
@@ -197,6 +219,8 @@ def append_inventory_only_sites(
     known_urls = {_norm_site_url(r.get("url")) for r in site_rows if r.get("url")}
     added = 0
     for inv in inventory_rows:
+        if is_junk_url(inv["url"]):
+            continue  # login gateways / auth redirects, not sites
         norm = _norm_site_url(inv["url"])
         if (inv["site_id"] in known_ids) or (norm and norm in known_urls):
             continue
@@ -698,7 +722,12 @@ def main() -> None:
     print("Loading admin tags from CSV (if present)...", file=sys.stderr)
     csv_by_id, csv_by_url, csv_by_name = load_site_tag_csv()
 
-    runnable_sites = [s for s in sites if s.get("id") is not None]
+    junk_api_rows = sum(1 for s in sites if is_junk_url(s.get("url")))
+    if junk_api_rows:
+        print(f"  - {junk_api_rows} junk row(s) from API skipped (login/auth URLs)",
+              file=sys.stderr)
+    runnable_sites = [s for s in sites
+                      if s.get("id") is not None and not is_junk_url(s.get("url"))]
 
     def fetch_one(site: dict[str, Any]) -> tuple[
         dict[str, Any], dict[str, Any], list[dict[str, Any]],
