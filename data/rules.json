@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-25T12:13:19+00:00",
+  "generated_at": "2026-07-26T12:17:26+00:00",
   "rules": [
     {
       "rule_id": 57,
@@ -2662,17 +2662,6 @@
         "max_pages": 2
       },
       {
-        "rule_id": 8,
-        "title": "Form field missing a label ",
-        "description": "Every form element should have a descriptive text label.",
-        "conformance": "a",
-        "level": "A",
-        "difficulty": 3,
-        "sites_affected": 3,
-        "total_occurrences": 4,
-        "max_pages": 2
-      },
-      {
         "rule_id": 79,
         "title": "Improper use of preformatted text element",
         "description": "The preformatted text element `<pre>` tells the browser to leave text formatting as it is, preventing the user from adjusting letter spacing. It should only be used for content that is either code or a `<figure>` such as ASCII art. \n\nWithout exception, the content of this element is meant to be visually presented to a sighted user.",
@@ -2684,15 +2673,15 @@
         "max_pages": 1
       },
       {
-        "rule_id": 59,
-        "title": "Page missing headings",
-        "description": "This page does not appear to have any heading tags (`h1` through to `h6`), or any other elements with the `role` of heading.",
-        "conformance": "si",
-        "level": "BP",
-        "difficulty": 1,
+        "rule_id": 8,
+        "title": "Form field missing a label ",
+        "description": "Every form element should have a descriptive text label.",
+        "conformance": "a",
+        "level": "A",
+        "difficulty": 3,
         "sites_affected": 3,
-        "total_occurrences": 3,
-        "max_pages": 1
+        "total_occurrences": 4,
+        "max_pages": 2
       },
       {
         "rule_id": 20,
@@ -2712,6 +2701,17 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 2,
+        "sites_affected": 3,
+        "total_occurrences": 3,
+        "max_pages": 1
+      },
+      {
+        "rule_id": 59,
+        "title": "Page missing headings",
+        "description": "This page does not appear to have any heading tags (`h1` through to `h6`), or any other elements with the `role` of heading.",
+        "conformance": "si",
+        "level": "BP",
+        "difficulty": 1,
         "sites_affected": 3,
         "total_occurrences": 3,
         "max_pages": 1
@@ -4232,6 +4232,17 @@
         "max_pages": 1
       },
       {
+        "rule_id": 28,
+        "title": "Image button missing a text alternative",
+        "description": "Every image button needs a text alternative (\"alt text\") describing its purpose on the page.",
+        "conformance": "a",
+        "level": "A",
+        "difficulty": 3,
+        "sites_affected": 1,
+        "total_occurrences": 1,
+        "max_pages": 1
+      },
+      {
         "rule_id": 77,
         "title": "Table cell missing context",
         "description": "Data tables include header and data cells arranged in a grid.\n\nEach data cell `<td>` should be assigned to at least one column or row header cell `<th>`. When this is done, a screen reader can announce each data cell in context.",
@@ -4249,17 +4260,6 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 4,
-        "sites_affected": 1,
-        "total_occurrences": 1,
-        "max_pages": 1
-      },
-      {
-        "rule_id": 28,
-        "title": "Image button missing a text alternative",
-        "description": "Every image button needs a text alternative (\"alt text\") describing its purpose on the page.",
-        "conformance": "a",
-        "level": "A",
-        "difficulty": 3,
         "sites_affected": 1,
         "total_occurrences": 1,
         "max_pages": 1
