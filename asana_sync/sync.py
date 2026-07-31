@@ -331,6 +331,18 @@ def main() -> None:
     #    won't manufacture it. Existing empty sections are left alone (the
     #    sync never deletes).
     sections = asana.section_map(project_gid)
+
+    # One-time board migration: preserve the existing Internal section and
+    # all of its task memberships by renaming it in place. Once renamed, the
+    # ordinary section routing below sends RSE/Internal-tagged sites to RSE.
+    # If RSE already exists, do not merge or delete either section; that
+    # requires a human decision about the existing task sets.
+    if "Internal" in sections and "RSE" not in sections:
+        internal_gid = sections.pop("Internal")
+        asana.rename_section(internal_gid, "Internal", "RSE")
+        sections["RSE"] = internal_gid
+        print("  ~ renamed section 'Internal' to 'RSE'")
+
     needed = {section_for(s) for s in sites}
     needed.discard(None)
     for name in [s["name"] for s in config.SECTIONS] + \

@@ -110,17 +110,17 @@ ASANA_TOKEN = os.environ.get("ASANA_TOKEN", "").strip()
 # --------------------------------------------------------------------------
 #
 # Precedence rationale — sites carry overlapping tags:
-#   omeka + rse                -> Omeka       (Omeka before RSE Sites)
-#   rse + wp-digitalscholarship-> RSE Sites   (RSE before WordPress: "if
-#                                              both, only RSE")
-#   rse alone                  -> RSE Sites
+#   omeka + rse                -> RSE         (RSE is deliberately first)
+#   rse + wp-digitalscholarship-> RSE         (RSE before WordPress)
+#   rse alone                  -> RSE
 #   wp-digitalscholarship only -> WordPress
-# So Omeka is checked before RSE Sites, and RSE Sites before WordPress.
+# So RSE is checked before every other section.
 SECTIONS: list[dict] = [
-    # RSE (or a literal 'Internal' tag) wins over everything: such a site
-    # goes to Internal regardless of its other tags (so an Omeka+RSE site
-    # lands in Internal, not Omeka). Checked first for that reason.
-    {"name": "Internal",     "match": ["rse", "internal"]},
+    # RSE (or a legacy literal 'Internal' tag) wins over everything: such a
+    # site goes to RSE regardless of its other tags. Checked first for that
+    # reason. Keep the legacy tag matcher so existing Siteimprove labels do
+    # not need to be changed before the board rename takes effect.
+    {"name": "RSE",          "match": ["rse", "internal"]},
     {"name": "AEM",          "match": ["aem"]},
     {"name": "Omeka",        "match": ["omeka"]},
     {"name": "Google Sites", "match": ["google-sites", "google sites", "gsites"]},

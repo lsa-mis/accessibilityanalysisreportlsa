@@ -307,6 +307,11 @@ class AsanaClient:
                            {"name": name}, f"create section {name!r}")
         return (data or {}).get("gid") if data else None
 
+    def rename_section(self, section_gid: str, old_name: str, new_name: str) -> None:
+        """Rename a project section while preserving its task memberships."""
+        self._write("PUT", f"/sections/{section_gid}", {"name": new_name},
+                    f"rename section {old_name!r} to {new_name!r}")
+
     # ---- tasks -----------------------------------------------------------
     def list_tasks(self, project_gid: str) -> list[dict]:
         return self._paginate(

@@ -1276,16 +1276,15 @@
 
     // Platform buckets derived from Siteimprove's admin labels — the same
     // mapping the Asana board uses for its sections. Siteimprove's label
-    // vocabulary doesn't always match platform names (Rails sites carry the
-    // "RSE" label), so this gives users the platform-level filter they
+    // vocabulary doesn't always match section names (the legacy "Internal"
+    // label routes to RSE), so this gives users the platform-level filter they
     // expect regardless of label naming. First rule whose ANY key matches
     // one of the site's tags wins; order matters.
     // Order mirrors asana_sync/config.py SECTIONS exactly so a site lands in
-    // the same bucket on the dashboard and the Asana board. Omeka must come
-    // before Rails: every Omeka site also carries the RSE team label, and
-    // RSE is what routes remaining sites to Rails.
+    // the same bucket on the dashboard and the Asana board. RSE comes first,
+    // so an RSE-tagged Omeka site is consistently classified as RSE.
     const PLATFORM_RULES = [
-      ["Internal",     { exact: ["rse", "internal"] }],
+      ["RSE",          { exact: ["rse", "internal"] }],
       ["AEM",          { exact: ["aem"] }],
       ["Omeka",        { exact: ["omeka"] }],
       ["Google Sites", { exact: ["google-sites", "google sites", "gsites"] }],
