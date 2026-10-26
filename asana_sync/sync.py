@@ -10,8 +10,9 @@ For the one project named in config.ASANA_PROJECT_NAME:
      Siteimprove Issues Remediation (98%)) when they differ.
   4. Create a task in the right section for any Siteimprove site that has
      no matching task (when CREATE_MISSING is on).
-  5. Set Status (Accessibility): private for sites the API can't score,
-     archived for sync-created tasks whose site left Siteimprove.
+  5. Set Accessibility Project Status: Archived for sync-created tasks whose
+     site left Siteimprove, Private for sites the API can't score,
+     Siteimprove Scan inProgress while Siteimprove has no site target.
 
 Honours DRY_RUN (default true) — in dry-run nothing is written and every
 intended change is logged. Run:  python -m src.sync   (from repo root)
@@ -107,24 +108,27 @@ def derive_text_values(site: Site) -> dict[str, str]:
     return {"tags_text": ", ".join(labels)}
 
 
-def desired_status(site: Site, current: str | None) -> str | None:
-    """Status (Accessibility) the sync wants for a site still in the data,
-    or None to leave the field alone.
+def desired_project_status(site: Site, current: str | None) -> str | None:
+    """Accessibility Project Status the sync wants for a site still in the
+    data: an option name to set, "" to clear the sync's own value, or None
+    to leave the field alone.
 
-    private — the API returns the site but with no accessibility score.
-    active  — the site has a score again after being private or archived.
-    Only a blank status or one of the sync's own values is ever replaced."""
+    Private                     — the API returns the site with no score.
+    Siteimprove Scan inProgress — Siteimprove has no site target yet.
+    Only a blank value or one the sync owns is ever replaced, and Archived
+    is never undone automatically."""
     have = (current or "").strip().lower()
-    if have not in config.SYNC_OVERWRITABLE_STATUSES:
+    if have and have not in config.SYNC_OWNED_PROJECT_STATUSES:
         return None  # a person chose this status — leave it
+    if have == config.PROJECT_STATUS_ARCHIVED.lower():
+        return None
     if site.source == "api" and site.score is None:
-        want = config.STATUS_PRIVATE
-    elif have in (config.STATUS_PRIVATE.lower(), config.STATUS_ARCHIVED.lower()):
-        want = config.NEW_TASK_STATUS_ACCESSIBILITY
+        want = config.PROJECT_STATUS_PRIVATE
+    elif site.target_estimated:
+        want = config.PROJECT_STATUS_SCAN_PENDING
     else:
-        return None  # blank or active, nothing to change
-    return want if want and want.lower() != have else None
-
+        want = ""
+    return None if want.lower() == have else want
 
 def current_text_value(task: dict, field_name: str) -> str | None:
     target = field_name.strip()
@@ -442,6 +446,10 @@ def main() -> None:
     updated = created = skipped_cap = unmatched_status = 0
     moved = dup_source_rows = 0
     status_meta = field_map.get(config.STATUS_ACCESSIBILITY_FIELD)
+    project_status_meta = field_map.get(config.PROJECT_STATUS_FIELD)
+    if not project_status_meta:
+        print(f"  ⚠ field not found, archived/private not synced: "
+              f"{config.PROJECT_STATUS_FIELD!r}", file=sys.stderr)
     missing_status_options: set[str] = set()
     pending_updates: list[tuple[str, str, dict]] = []
     pending_moves: list[tuple[str, str, str]] = []
@@ -468,16 +476,20 @@ def main() -> None:
             if not config.UPDATE_EXISTING:
                 continue
             payload, notes = build_field_payload(site, field_map, existing)
-            # Status (Accessibility): private / back to active. Never on
-            # tasks in a protected (human-curated) section.
-            if status_meta and not (task_project_sections(existing) & protected_gids):
-                want = desired_status(
-                    site, current_enum_name(existing, config.STATUS_ACCESSIBILITY_FIELD))
-                if want:
-                    opt = enum_option_gid(status_meta, want)
+            # Accessibility Project Status: Private / Scan inProgress, or
+            # clear them once they no longer apply. Never on tasks in a
+            # protected (human-curated) section.
+            if project_status_meta and not (task_project_sections(existing) & protected_gids):
+                want = desired_project_status(
+                    site, current_enum_name(existing, config.PROJECT_STATUS_FIELD))
+                if want == "":
+                    payload[project_status_meta["gid"]] = None
+                    notes.append(f"clear {config.PROJECT_STATUS_FIELD}")
+                elif want:
+                    opt = enum_option_gid(project_status_meta, want)
                     if opt:
-                        payload[status_meta["gid"]] = opt
-                        notes.append(f"{config.STATUS_ACCESSIBILITY_FIELD.strip()}={want}")
+                        payload[project_status_meta["gid"]] = opt
+                        notes.append(f"{config.PROJECT_STATUS_FIELD}={want}")
                     else:
                         missing_status_options.add(want)
             task_data: dict = {}
@@ -514,17 +526,21 @@ def main() -> None:
                 skipped_cap += 1
                 continue
             payload, _ = build_field_payload(site, field_map, None)
-            # Status (Accessibility) on new tasks: private when the API has
-            # no score for the site, otherwise the configured default.
-            new_status = (config.STATUS_PRIVATE
-                          if site.source == "api" and site.score is None
-                          else config.NEW_TASK_STATUS_ACCESSIBILITY)
-            if status_meta and new_status:
-                opt = enum_option_gid(status_meta, new_status)
+            # Status (Accessibility) on new tasks only.
+            if status_meta and config.NEW_TASK_STATUS_ACCESSIBILITY:
+                opt = enum_option_gid(status_meta, config.NEW_TASK_STATUS_ACCESSIBILITY)
                 if opt:
                     payload[status_meta["gid"]] = opt
                 else:
                     unmatched_status += 1
+            # Accessibility Project Status: Private / Scan inProgress.
+            want = desired_project_status(site, None)
+            if project_status_meta and want:
+                opt = enum_option_gid(project_status_meta, want)
+                if opt:
+                    payload[project_status_meta["gid"]] = opt
+                else:
+                    missing_status_options.add(want)
             asana.create_task(project_gid, site.url, payload,
                               section_gid, section_name,
                               resource_subtype="milestone" if config.MILESTONE_TASKS else None)
@@ -537,8 +553,8 @@ def main() -> None:
     #  - stale sync-created tasks: a task whose own 'Source' field reads
     #    'Siteimprove API' or 'Siteimprove CSV export' but that matches no
     #    current site means the site left Siteimprove entirely (gone from
-    #    both the API and the CSV). Its Status (Accessibility) is set to
-    #    archived; the task stays open so it remains visible. Reading the
+    #    both the API and the CSV). Its Accessibility Project Status is
+    #    set to Archived; the task stays open so it remains visible. Reading the
     #    task's recorded provenance means human-created tasks (no Source)
     #    are never touched, and neither is anything in a protected section
     #    or with a status a person chose. Everything else unmatched is
@@ -563,20 +579,22 @@ def main() -> None:
         elif (config.STALE_TASK_ARCHIVE
               and current_enum_name(t, config.SOURCE_FIELD) in sync_sources
               and not (task_project_sections(t) & protected_gids)):
-            have = (current_enum_name(t, config.STATUS_ACCESSIBILITY_FIELD) or "").strip().lower()
-            if have == config.STATUS_ARCHIVED.lower():
+            have = (current_enum_name(t, config.PROJECT_STATUS_FIELD) or "").strip().lower()
+            if have == config.PROJECT_STATUS_ARCHIVED.lower():
                 continue  # already archived
-            if have not in config.SYNC_OVERWRITABLE_STATUSES:
+            if have and have not in config.SYNC_OWNED_PROJECT_STATUSES:
                 unmatched_report.append(f"{tname}  (gone from Siteimprove; status "
                                         f"{have!r} left as set)")
                 continue
-            opt = enum_option_gid(status_meta, config.STATUS_ARCHIVED) if status_meta else None
+            opt = (enum_option_gid(project_status_meta, config.PROJECT_STATUS_ARCHIVED)
+                   if project_status_meta else None)
             if not opt:
-                missing_status_options.add(config.STATUS_ARCHIVED)
+                if project_status_meta:
+                    missing_status_options.add(config.PROJECT_STATUS_ARCHIVED)
                 unmatched_report.append(tname)
                 continue
             pending_updates.append((t["gid"], tname,
-                                    {"custom_fields": {status_meta["gid"]: opt}}))
+                                    {"custom_fields": {project_status_meta["gid"]: opt}}))
             stale_archived += 1
             print(f"  ▣ archiving task (site gone from Siteimprove): {tname}")
         else:
@@ -598,7 +616,7 @@ def main() -> None:
     if stale_archived:
         print(f"  tasks archived (site gone from Siteimprove): {stale_archived}")
     if missing_status_options:
-        print(f"  ⚠ {config.STATUS_ACCESSIBILITY_FIELD.strip()!r} has no option(s) "
+        print(f"  ⚠ {config.PROJECT_STATUS_FIELD!r} has no option(s) "
               f"{', '.join(sorted(map(repr, missing_status_options)))} — add them on "
               f"the board; those status changes were skipped.", file=sys.stderr)
     if unmatched_report:
