@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-25T11:20:33+00:00",
+  "generated_at": "2026-10-26T17:04:58+00:00",
   "rules": [
     {
       "rule_id": 57,
@@ -8,8 +8,8 @@
       "conformance": "aria",
       "level": "ARIA",
       "difficulty": 4,
-      "sites_affected": 727,
-      "total_occurrences": 10880911,
+      "sites_affected": 731,
+      "total_occurrences": 10864397,
       "max_pages": 23031
     },
     {
@@ -20,8 +20,8 @@
       "level": "AAA",
       "difficulty": 2,
       "sites_affected": 1522,
-      "total_occurrences": 6113794,
-      "max_pages": 29993
+      "total_occurrences": 6138389,
+      "max_pages": 30000
     },
     {
       "rule_id": 66,
@@ -30,8 +30,8 @@
       "conformance": "aaa",
       "level": "AAA",
       "difficulty": 2,
-      "sites_affected": 1368,
-      "total_occurrences": 3998866,
+      "sites_affected": 1369,
+      "total_occurrences": 4072778,
       "max_pages": 26147
     },
     {
@@ -41,8 +41,8 @@
       "conformance": "aa",
       "level": "AA",
       "difficulty": 4,
-      "sites_affected": 415,
-      "total_occurrences": 584420,
+      "sites_affected": 417,
+      "total_occurrences": 582615,
       "max_pages": 8742
     },
     {
@@ -52,8 +52,8 @@
       "conformance": "aaa",
       "level": "AAA",
       "difficulty": 2,
-      "sites_affected": 805,
-      "total_occurrences": 551964,
+      "sites_affected": 808,
+      "total_occurrences": 553757,
       "max_pages": 23039
     },
     {
@@ -63,8 +63,8 @@
       "conformance": "aa",
       "level": "AA",
       "difficulty": 2,
-      "sites_affected": 691,
-      "total_occurrences": 538263,
+      "sites_affected": 692,
+      "total_occurrences": 533408,
       "max_pages": 23032
     },
     {
@@ -74,8 +74,8 @@
       "conformance": "aaa",
       "level": "AAA",
       "difficulty": 3,
-      "sites_affected": 791,
-      "total_occurrences": 209415,
+      "sites_affected": 790,
+      "total_occurrences": 210405,
       "max_pages": 6712
     },
     {
@@ -86,7 +86,7 @@
       "level": "A",
       "difficulty": 3,
       "sites_affected": 67,
-      "total_occurrences": 186804,
+      "total_occurrences": 186795,
       "max_pages": 22735
     },
     {
@@ -96,8 +96,8 @@
       "conformance": "a",
       "level": "A",
       "difficulty": 3,
-      "sites_affected": 353,
-      "total_occurrences": 124932,
+      "sites_affected": 352,
+      "total_occurrences": 124948,
       "max_pages": 6813
     },
     {
@@ -107,8 +107,8 @@
       "conformance": "a",
       "level": "A",
       "difficulty": 3,
-      "sites_affected": 974,
-      "total_occurrences": 120336,
+      "sites_affected": 972,
+      "total_occurrences": 116247,
       "max_pages": 4130
     },
     {
@@ -118,8 +118,8 @@
       "conformance": "si",
       "level": "BP",
       "difficulty": 2,
-      "sites_affected": 1071,
-      "total_occurrences": 111501,
+      "sites_affected": 1068,
+      "total_occurrences": 111023,
       "max_pages": 11621
     },
     {
@@ -130,7 +130,7 @@
       "level": "AAA",
       "difficulty": 3,
       "sites_affected": 153,
-      "total_occurrences": 104763,
+      "total_occurrences": 105384,
       "max_pages": 1123
     },
     {
@@ -140,20 +140,9 @@
       "conformance": "a",
       "level": "A",
       "difficulty": 2,
-      "sites_affected": 758,
-      "total_occurrences": 65515,
+      "sites_affected": 756,
+      "total_occurrences": 65698,
       "max_pages": 2730
-    },
-    {
-      "rule_id": 2,
-      "title": "Image missing a text alternative",
-      "description": "All non-decorative images must have a text alternative (also known as \"alt text\"). ",
-      "conformance": "a",
-      "level": "A",
-      "difficulty": 1,
-      "sites_affected": 381,
-      "total_occurrences": 49660,
-      "max_pages": 3121
     },
     {
       "rule_id": 18,
@@ -163,8 +152,19 @@
       "level": "ARIA",
       "difficulty": 4,
       "sites_affected": 283,
-      "total_occurrences": 47626,
-      "max_pages": 6182
+      "total_occurrences": 56801,
+      "max_pages": 15347
+    },
+    {
+      "rule_id": 2,
+      "title": "Image missing a text alternative",
+      "description": "All non-decorative images must have a text alternative (also known as \"alt text\"). ",
+      "conformance": "a",
+      "level": "A",
+      "difficulty": 1,
+      "sites_affected": 384,
+      "total_occurrences": 49813,
+      "max_pages": 3121
     },
     {
       "rule_id": 85,
@@ -173,8 +173,8 @@
       "conformance": "si",
       "level": "BP",
       "difficulty": 2,
-      "sites_affected": 312,
-      "total_occurrences": 23255,
+      "sites_affected": 313,
+      "total_occurrences": 23178,
       "max_pages": 5507
     },
     {
@@ -185,7 +185,7 @@
       "level": "A",
       "difficulty": 3,
       "sites_affected": 15,
-      "total_occurrences": 19795,
+      "total_occurrences": 19813,
       "max_pages": 819
     },
     {
@@ -206,8 +206,8 @@
       "conformance": "si",
       "level": "BP",
       "difficulty": 2,
-      "sites_affected": 648,
-      "total_occurrences": 16254,
+      "sites_affected": 650,
+      "total_occurrences": 16197,
       "max_pages": 1978
     },
     {
@@ -217,8 +217,8 @@
       "conformance": "si",
       "level": "BP",
       "difficulty": 2,
-      "sites_affected": 467,
-      "total_occurrences": 9381,
+      "sites_affected": 466,
+      "total_occurrences": 9280,
       "max_pages": 2730
     },
     {
@@ -244,25 +244,14 @@
       "max_pages": 916
     },
     {
-      "rule_id": 12,
-      "title": "Button missing a text alternative",
-      "description": "Buttons should always have a text label. The label can be inserted into the HTML \u2014 it does **not** need to be visible to pass this check.",
-      "conformance": "a",
-      "level": "A",
-      "difficulty": 3,
-      "sites_affected": 15,
-      "total_occurrences": 6192,
-      "max_pages": 3290
-    },
-    {
       "rule_id": 64,
       "title": "Empty headings",
       "description": "This page contains one or more \"empty\" headings (heading tags with no text content).",
       "conformance": "a",
       "level": "A",
       "difficulty": 2,
-      "sites_affected": 418,
-      "total_occurrences": 5957,
+      "sites_affected": 414,
+      "total_occurrences": 5923,
       "max_pages": 1107
     },
     {
@@ -273,7 +262,7 @@
       "level": "BP",
       "difficulty": 2,
       "sites_affected": 6,
-      "total_occurrences": 5511,
+      "total_occurrences": 5509,
       "max_pages": 670
     },
     {
@@ -284,8 +273,19 @@
       "level": "A",
       "difficulty": 3,
       "sites_affected": 112,
-      "total_occurrences": 3581,
+      "total_occurrences": 3511,
       "max_pages": 1061
+    },
+    {
+      "rule_id": 86,
+      "title": "Presentational element is exposed to assistive technologies",
+      "description": "An element has been marked as decorative, but it remains exposed to assistive technologies.\n\nThis may be because:\n- the element has an ARIA attribute (these contain \"instructions\" for assistive technologies), or\n- the element is focusable (meaning it can still be reached by keyboard)\n\n ",
+      "conformance": "si",
+      "level": "BP",
+      "difficulty": 1,
+      "sites_affected": 54,
+      "total_occurrences": 3180,
+      "max_pages": 52
     },
     {
       "rule_id": 42,
@@ -295,19 +295,8 @@
       "level": "A",
       "difficulty": 3,
       "sites_affected": 135,
-      "total_occurrences": 3156,
+      "total_occurrences": 3158,
       "max_pages": 1246
-    },
-    {
-      "rule_id": 86,
-      "title": "Presentational element is exposed to assistive technologies",
-      "description": "An element has been marked as decorative, but it remains exposed to assistive technologies.\n\nThis may be because:\n- the element has an ARIA attribute (these contain \"instructions\" for assistive technologies), or\n- the element is focusable (meaning it can still be reached by keyboard)\n\n ",
-      "conformance": "si",
-      "level": "BP",
-      "difficulty": 1,
-      "sites_affected": 53,
-      "total_occurrences": 3148,
-      "max_pages": 52
     },
     {
       "rule_id": 67,
@@ -316,9 +305,20 @@
       "conformance": "a",
       "level": "A",
       "difficulty": 1,
-      "sites_affected": 48,
-      "total_occurrences": 3096,
+      "sites_affected": 49,
+      "total_occurrences": 3135,
       "max_pages": 52
+    },
+    {
+      "rule_id": 12,
+      "title": "Button missing a text alternative",
+      "description": "Buttons should always have a text label. The label can be inserted into the HTML \u2014 it does **not** need to be visible to pass this check.",
+      "conformance": "a",
+      "level": "A",
+      "difficulty": 3,
+      "sites_affected": 13,
+      "total_occurrences": 2898,
+      "max_pages": 1625
     },
     {
       "rule_id": 13,
@@ -327,8 +327,8 @@
       "conformance": "a",
       "level": "A",
       "difficulty": 2,
-      "sites_affected": 183,
-      "total_occurrences": 2828,
+      "sites_affected": 181,
+      "total_occurrences": 2792,
       "max_pages": 848
     },
     {
@@ -338,8 +338,8 @@
       "conformance": "aaa",
       "level": "AAA",
       "difficulty": 2,
-      "sites_affected": 67,
-      "total_occurrences": 2700,
+      "sites_affected": 68,
+      "total_occurrences": 2718,
       "max_pages": 46
     },
     {
@@ -371,20 +371,9 @@
       "conformance": "si",
       "level": "BP",
       "difficulty": 3,
-      "sites_affected": 40,
-      "total_occurrences": 757,
-      "max_pages": 114
-    },
-    {
-      "rule_id": 59,
-      "title": "Page missing headings",
-      "description": "This page does not appear to have any heading tags (`h1` through to `h6`), or any other elements with the `role` of heading.",
-      "conformance": "si",
-      "level": "BP",
-      "difficulty": 1,
-      "sites_affected": 118,
-      "total_occurrences": 564,
-      "max_pages": 104
+      "sites_affected": 39,
+      "total_occurrences": 744,
+      "max_pages": 121
     },
     {
       "rule_id": 20,
@@ -396,6 +385,17 @@
       "sites_affected": 5,
       "total_occurrences": 561,
       "max_pages": 70
+    },
+    {
+      "rule_id": 59,
+      "title": "Page missing headings",
+      "description": "This page does not appear to have any heading tags (`h1` through to `h6`), or any other elements with the `role` of heading.",
+      "conformance": "si",
+      "level": "BP",
+      "difficulty": 1,
+      "sites_affected": 118,
+      "total_occurrences": 558,
+      "max_pages": 104
     },
     {
       "rule_id": 7,
@@ -416,7 +416,7 @@
       "level": "BP",
       "difficulty": 2,
       "sites_affected": 58,
-      "total_occurrences": 394,
+      "total_occurrences": 393,
       "max_pages": 140
     },
     {
@@ -519,6 +519,17 @@
       "max_pages": 12
     },
     {
+      "rule_id": 16,
+      "title": "Required ARIA attribute is missing",
+      "description": "This element has a `role` that should be accompanied by specific ARIA attributes.",
+      "conformance": "a",
+      "level": "A",
+      "difficulty": 3,
+      "sites_affected": 4,
+      "total_occurrences": 5,
+      "max_pages": 2
+    },
+    {
       "rule_id": 63,
       "title": "Object missing a text alternative",
       "description": "An embedded `<object>` is missing a text alternative. ",
@@ -541,31 +552,20 @@
       "max_pages": 1
     },
     {
-      "rule_id": 16,
-      "title": "Required ARIA attribute is missing",
-      "description": "This element has a `role` that should be accompanied by specific ARIA attributes.",
+      "rule_id": 45,
+      "title": "Table headers aren't referenced correctly",
+      "description": "The `headers` attribute for each data cell should reference a header cell in the same table. It may have been mistyped.",
       "conformance": "a",
       "level": "A",
-      "difficulty": 3,
-      "sites_affected": 4,
-      "total_occurrences": 4,
+      "difficulty": 2,
+      "sites_affected": 3,
+      "total_occurrences": 3,
       "max_pages": 1
     },
     {
       "rule_id": 116,
       "title": "Summary element missing an accessible name",
       "description": "`summary` elements must include clear and descriptive text that explains the content of the collapsible `details` section.",
-      "conformance": "a",
-      "level": "A",
-      "difficulty": 2,
-      "sites_affected": 4,
-      "total_occurrences": 4,
-      "max_pages": 1
-    },
-    {
-      "rule_id": 45,
-      "title": "Table headers aren't referenced correctly",
-      "description": "The `headers` attribute for each data cell should reference a header cell in the same table. It may have been mistyped.",
       "conformance": "a",
       "level": "A",
       "difficulty": 2,
@@ -649,8 +649,8 @@
         "conformance": "aria",
         "level": "ARIA",
         "difficulty": 4,
-        "sites_affected": 725,
-        "total_occurrences": 10359798,
+        "sites_affected": 729,
+        "total_occurrences": 10343284,
         "max_pages": 23031
       },
       {
@@ -661,8 +661,8 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 1518,
-        "total_occurrences": 6034009,
-        "max_pages": 29993
+        "total_occurrences": 6058604,
+        "max_pages": 30000
       },
       {
         "rule_id": 66,
@@ -671,8 +671,8 @@
         "conformance": "aaa",
         "level": "AAA",
         "difficulty": 2,
-        "sites_affected": 1365,
-        "total_occurrences": 3913864,
+        "sites_affected": 1366,
+        "total_occurrences": 3987776,
         "max_pages": 26147
       },
       {
@@ -682,8 +682,8 @@
         "conformance": "aa",
         "level": "AA",
         "difficulty": 4,
-        "sites_affected": 413,
-        "total_occurrences": 584409,
+        "sites_affected": 415,
+        "total_occurrences": 582604,
         "max_pages": 8742
       },
       {
@@ -693,8 +693,8 @@
         "conformance": "aaa",
         "level": "AAA",
         "difficulty": 2,
-        "sites_affected": 802,
-        "total_occurrences": 551940,
+        "sites_affected": 805,
+        "total_occurrences": 553733,
         "max_pages": 23039
       },
       {
@@ -704,8 +704,8 @@
         "conformance": "aa",
         "level": "AA",
         "difficulty": 2,
-        "sites_affected": 688,
-        "total_occurrences": 533821,
+        "sites_affected": 689,
+        "total_occurrences": 528966,
         "max_pages": 23032
       },
       {
@@ -715,8 +715,8 @@
         "conformance": "aaa",
         "level": "AAA",
         "difficulty": 3,
-        "sites_affected": 789,
-        "total_occurrences": 209399,
+        "sites_affected": 788,
+        "total_occurrences": 210389,
         "max_pages": 6712
       },
       {
@@ -727,7 +727,7 @@
         "level": "A",
         "difficulty": 3,
         "sites_affected": 65,
-        "total_occurrences": 166426,
+        "total_occurrences": 166417,
         "max_pages": 22735
       },
       {
@@ -737,8 +737,8 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 3,
-        "sites_affected": 350,
-        "total_occurrences": 124797,
+        "sites_affected": 349,
+        "total_occurrences": 124813,
         "max_pages": 6813
       },
       {
@@ -748,8 +748,8 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 3,
-        "sites_affected": 972,
-        "total_occurrences": 120331,
+        "sites_affected": 970,
+        "total_occurrences": 116242,
         "max_pages": 4130
       },
       {
@@ -759,8 +759,8 @@
         "conformance": "si",
         "level": "BP",
         "difficulty": 2,
-        "sites_affected": 1069,
-        "total_occurrences": 111496,
+        "sites_affected": 1066,
+        "total_occurrences": 111018,
         "max_pages": 11621
       },
       {
@@ -771,7 +771,7 @@
         "level": "AAA",
         "difficulty": 3,
         "sites_affected": 152,
-        "total_occurrences": 104749,
+        "total_occurrences": 105370,
         "max_pages": 1123
       },
       {
@@ -781,20 +781,9 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 2,
-        "sites_affected": 758,
-        "total_occurrences": 65515,
+        "sites_affected": 756,
+        "total_occurrences": 65698,
         "max_pages": 2730
-      },
-      {
-        "rule_id": 2,
-        "title": "Image missing a text alternative",
-        "description": "All non-decorative images must have a text alternative (also known as \"alt text\"). ",
-        "conformance": "a",
-        "level": "A",
-        "difficulty": 1,
-        "sites_affected": 380,
-        "total_occurrences": 49658,
-        "max_pages": 3121
       },
       {
         "rule_id": 18,
@@ -804,8 +793,19 @@
         "level": "ARIA",
         "difficulty": 4,
         "sites_affected": 283,
-        "total_occurrences": 47626,
-        "max_pages": 6182
+        "total_occurrences": 56801,
+        "max_pages": 15347
+      },
+      {
+        "rule_id": 2,
+        "title": "Image missing a text alternative",
+        "description": "All non-decorative images must have a text alternative (also known as \"alt text\"). ",
+        "conformance": "a",
+        "level": "A",
+        "difficulty": 1,
+        "sites_affected": 383,
+        "total_occurrences": 49811,
+        "max_pages": 3121
       },
       {
         "rule_id": 85,
@@ -814,8 +814,8 @@
         "conformance": "si",
         "level": "BP",
         "difficulty": 2,
-        "sites_affected": 312,
-        "total_occurrences": 23255,
+        "sites_affected": 313,
+        "total_occurrences": 23178,
         "max_pages": 5507
       },
       {
@@ -836,8 +836,8 @@
         "conformance": "si",
         "level": "BP",
         "difficulty": 2,
-        "sites_affected": 648,
-        "total_occurrences": 16254,
+        "sites_affected": 650,
+        "total_occurrences": 16197,
         "max_pages": 1978
       },
       {
@@ -847,8 +847,8 @@
         "conformance": "si",
         "level": "BP",
         "difficulty": 2,
-        "sites_affected": 466,
-        "total_occurrences": 9377,
+        "sites_affected": 465,
+        "total_occurrences": 9276,
         "max_pages": 2730
       },
       {
@@ -874,25 +874,14 @@
         "max_pages": 916
       },
       {
-        "rule_id": 12,
-        "title": "Button missing a text alternative",
-        "description": "Buttons should always have a text label. The label can be inserted into the HTML \u2014 it does **not** need to be visible to pass this check.",
-        "conformance": "a",
-        "level": "A",
-        "difficulty": 3,
-        "sites_affected": 14,
-        "total_occurrences": 6190,
-        "max_pages": 3290
-      },
-      {
         "rule_id": 64,
         "title": "Empty headings",
         "description": "This page contains one or more \"empty\" headings (heading tags with no text content).",
         "conformance": "a",
         "level": "A",
         "difficulty": 2,
-        "sites_affected": 416,
-        "total_occurrences": 5955,
+        "sites_affected": 412,
+        "total_occurrences": 5921,
         "max_pages": 1107
       },
       {
@@ -903,8 +892,19 @@
         "level": "A",
         "difficulty": 3,
         "sites_affected": 112,
-        "total_occurrences": 3581,
+        "total_occurrences": 3511,
         "max_pages": 1061
+      },
+      {
+        "rule_id": 86,
+        "title": "Presentational element is exposed to assistive technologies",
+        "description": "An element has been marked as decorative, but it remains exposed to assistive technologies.\n\nThis may be because:\n- the element has an ARIA attribute (these contain \"instructions\" for assistive technologies), or\n- the element is focusable (meaning it can still be reached by keyboard)\n\n ",
+        "conformance": "si",
+        "level": "BP",
+        "difficulty": 1,
+        "sites_affected": 54,
+        "total_occurrences": 3180,
+        "max_pages": 52
       },
       {
         "rule_id": 42,
@@ -914,19 +914,8 @@
         "level": "A",
         "difficulty": 3,
         "sites_affected": 135,
-        "total_occurrences": 3156,
+        "total_occurrences": 3158,
         "max_pages": 1246
-      },
-      {
-        "rule_id": 86,
-        "title": "Presentational element is exposed to assistive technologies",
-        "description": "An element has been marked as decorative, but it remains exposed to assistive technologies.\n\nThis may be because:\n- the element has an ARIA attribute (these contain \"instructions\" for assistive technologies), or\n- the element is focusable (meaning it can still be reached by keyboard)\n\n ",
-        "conformance": "si",
-        "level": "BP",
-        "difficulty": 1,
-        "sites_affected": 53,
-        "total_occurrences": 3148,
-        "max_pages": 52
       },
       {
         "rule_id": 67,
@@ -935,9 +924,20 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 1,
-        "sites_affected": 48,
-        "total_occurrences": 3096,
+        "sites_affected": 49,
+        "total_occurrences": 3135,
         "max_pages": 52
+      },
+      {
+        "rule_id": 12,
+        "title": "Button missing a text alternative",
+        "description": "Buttons should always have a text label. The label can be inserted into the HTML \u2014 it does **not** need to be visible to pass this check.",
+        "conformance": "a",
+        "level": "A",
+        "difficulty": 3,
+        "sites_affected": 12,
+        "total_occurrences": 2896,
+        "max_pages": 1625
       },
       {
         "rule_id": 13,
@@ -946,8 +946,8 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 2,
-        "sites_affected": 182,
-        "total_occurrences": 2827,
+        "sites_affected": 180,
+        "total_occurrences": 2791,
         "max_pages": 848
       },
       {
@@ -957,8 +957,8 @@
         "conformance": "aaa",
         "level": "AAA",
         "difficulty": 2,
-        "sites_affected": 67,
-        "total_occurrences": 2700,
+        "sites_affected": 68,
+        "total_occurrences": 2718,
         "max_pages": 46
       },
       {
@@ -969,7 +969,7 @@
         "level": "A",
         "difficulty": 3,
         "sites_affected": 14,
-        "total_occurrences": 1142,
+        "total_occurrences": 1160,
         "max_pages": 5
       },
       {
@@ -1001,20 +1001,9 @@
         "conformance": "si",
         "level": "BP",
         "difficulty": 3,
-        "sites_affected": 39,
-        "total_occurrences": 756,
-        "max_pages": 114
-      },
-      {
-        "rule_id": 59,
-        "title": "Page missing headings",
-        "description": "This page does not appear to have any heading tags (`h1` through to `h6`), or any other elements with the `role` of heading.",
-        "conformance": "si",
-        "level": "BP",
-        "difficulty": 1,
-        "sites_affected": 118,
-        "total_occurrences": 564,
-        "max_pages": 104
+        "sites_affected": 38,
+        "total_occurrences": 743,
+        "max_pages": 121
       },
       {
         "rule_id": 20,
@@ -1026,6 +1015,17 @@
         "sites_affected": 5,
         "total_occurrences": 561,
         "max_pages": 70
+      },
+      {
+        "rule_id": 59,
+        "title": "Page missing headings",
+        "description": "This page does not appear to have any heading tags (`h1` through to `h6`), or any other elements with the `role` of heading.",
+        "conformance": "si",
+        "level": "BP",
+        "difficulty": 1,
+        "sites_affected": 118,
+        "total_occurrences": 558,
+        "max_pages": 104
       },
       {
         "rule_id": 7,
@@ -1046,7 +1046,7 @@
         "level": "BP",
         "difficulty": 2,
         "sites_affected": 58,
-        "total_occurrences": 394,
+        "total_occurrences": 393,
         "max_pages": 140
       },
       {
@@ -1123,7 +1123,7 @@
         "level": "BP",
         "difficulty": 2,
         "sites_affected": 5,
-        "total_occurrences": 29,
+        "total_occurrences": 27,
         "max_pages": 2
       },
       {
@@ -1160,6 +1160,17 @@
         "max_pages": 1
       },
       {
+        "rule_id": 16,
+        "title": "Required ARIA attribute is missing",
+        "description": "This element has a `role` that should be accompanied by specific ARIA attributes.",
+        "conformance": "a",
+        "level": "A",
+        "difficulty": 3,
+        "sites_affected": 4,
+        "total_occurrences": 5,
+        "max_pages": 2
+      },
+      {
         "rule_id": 63,
         "title": "Object missing a text alternative",
         "description": "An embedded `<object>` is missing a text alternative. ",
@@ -1169,28 +1180,6 @@
         "sites_affected": 3,
         "total_occurrences": 4,
         "max_pages": 2
-      },
-      {
-        "rule_id": 16,
-        "title": "Required ARIA attribute is missing",
-        "description": "This element has a `role` that should be accompanied by specific ARIA attributes.",
-        "conformance": "a",
-        "level": "A",
-        "difficulty": 3,
-        "sites_affected": 4,
-        "total_occurrences": 4,
-        "max_pages": 1
-      },
-      {
-        "rule_id": 116,
-        "title": "Summary element missing an accessible name",
-        "description": "`summary` elements must include clear and descriptive text that explains the content of the collapsible `details` section.",
-        "conformance": "a",
-        "level": "A",
-        "difficulty": 2,
-        "sites_affected": 4,
-        "total_occurrences": 4,
-        "max_pages": 1
       },
       {
         "rule_id": 45,
@@ -1210,6 +1199,17 @@
         "conformance": "aria",
         "level": "ARIA",
         "difficulty": 3,
+        "sites_affected": 3,
+        "total_occurrences": 3,
+        "max_pages": 1
+      },
+      {
+        "rule_id": 116,
+        "title": "Summary element missing an accessible name",
+        "description": "`summary` elements must include clear and descriptive text that explains the content of the collapsible `details` section.",
+        "conformance": "a",
+        "level": "A",
+        "difficulty": 2,
         "sites_affected": 3,
         "total_occurrences": 3,
         "max_pages": 1
@@ -1267,9 +1267,9 @@
         "conformance": "aaa",
         "level": "AAA",
         "difficulty": 2,
-        "sites_affected": 1190,
-        "total_occurrences": 1597747,
-        "max_pages": 2777
+        "sites_affected": 1191,
+        "total_occurrences": 1607530,
+        "max_pages": 2775
       },
       {
         "rule_id": 111,
@@ -1279,8 +1279,8 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 1340,
-        "total_occurrences": 1521587,
-        "max_pages": 2777
+        "total_occurrences": 1528928,
+        "max_pages": 2775
       },
       {
         "rule_id": 57,
@@ -1289,9 +1289,9 @@
         "conformance": "aria",
         "level": "ARIA",
         "difficulty": 4,
-        "sites_affected": 572,
-        "total_occurrences": 456198,
-        "max_pages": 2777
+        "sites_affected": 576,
+        "total_occurrences": 456216,
+        "max_pages": 2775
       },
       {
         "rule_id": 69,
@@ -1301,7 +1301,7 @@
         "level": "AA",
         "difficulty": 2,
         "sites_affected": 548,
-        "total_occurrences": 236888,
+        "total_occurrences": 236802,
         "max_pages": 2747
       },
       {
@@ -1311,9 +1311,9 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 3,
-        "sites_affected": 812,
-        "total_occurrences": 60938,
-        "max_pages": 2777
+        "sites_affected": 811,
+        "total_occurrences": 61854,
+        "max_pages": 2775
       },
       {
         "rule_id": 113,
@@ -1322,9 +1322,9 @@
         "conformance": "aa",
         "level": "AA",
         "difficulty": 4,
-        "sites_affected": 262,
-        "total_occurrences": 59102,
-        "max_pages": 2442
+        "sites_affected": 263,
+        "total_occurrences": 58500,
+        "max_pages": 2484
       },
       {
         "rule_id": 73,
@@ -1333,8 +1333,8 @@
         "conformance": "aaa",
         "level": "AAA",
         "difficulty": 2,
-        "sites_affected": 639,
-        "total_occurrences": 51027,
+        "sites_affected": 642,
+        "total_occurrences": 52867,
         "max_pages": 1272
       },
       {
@@ -1344,9 +1344,9 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 2,
-        "sites_affected": 663,
-        "total_occurrences": 48970,
-        "max_pages": 2442
+        "sites_affected": 661,
+        "total_occurrences": 49518,
+        "max_pages": 2484
       },
       {
         "rule_id": 74,
@@ -1355,9 +1355,9 @@
         "conformance": "aaa",
         "level": "AAA",
         "difficulty": 3,
-        "sites_affected": 643,
-        "total_occurrences": 46513,
-        "max_pages": 1904
+        "sites_affected": 642,
+        "total_occurrences": 47435,
+        "max_pages": 1901
       },
       {
         "rule_id": 53,
@@ -1366,8 +1366,8 @@
         "conformance": "si",
         "level": "BP",
         "difficulty": 2,
-        "sites_affected": 899,
-        "total_occurrences": 41239,
+        "sites_affected": 896,
+        "total_occurrences": 41289,
         "max_pages": 2747
       },
       {
@@ -1378,8 +1378,8 @@
         "level": "ARIA",
         "difficulty": 4,
         "sites_affected": 269,
-        "total_occurrences": 41162,
-        "max_pages": 2776
+        "total_occurrences": 41172,
+        "max_pages": 2774
       },
       {
         "rule_id": 8,
@@ -1389,8 +1389,8 @@
         "level": "A",
         "difficulty": 3,
         "sites_affected": 40,
-        "total_occurrences": 27423,
-        "max_pages": 1096
+        "total_occurrences": 27419,
+        "max_pages": 1095
       },
       {
         "rule_id": 2,
@@ -1399,9 +1399,9 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 1,
-        "sites_affected": 230,
-        "total_occurrences": 18328,
-        "max_pages": 2777
+        "sites_affected": 233,
+        "total_occurrences": 18484,
+        "max_pages": 2775
       },
       {
         "rule_id": 72,
@@ -1410,7 +1410,7 @@
         "conformance": "si",
         "level": "BP",
         "difficulty": 2,
-        "sites_affected": 260,
+        "sites_affected": 261,
         "total_occurrences": 14629,
         "max_pages": 946
       },
@@ -1421,8 +1421,8 @@
         "conformance": "si",
         "level": "BP",
         "difficulty": 2,
-        "sites_affected": 519,
-        "total_occurrences": 7804,
+        "sites_affected": 521,
+        "total_occurrences": 7757,
         "max_pages": 1978
       },
       {
@@ -1432,8 +1432,8 @@
         "conformance": "si",
         "level": "BP",
         "difficulty": 2,
-        "sites_affected": 442,
-        "total_occurrences": 5734,
+        "sites_affected": 443,
+        "total_occurrences": 5658,
         "max_pages": 843
       },
       {
@@ -1444,7 +1444,7 @@
         "level": "A",
         "difficulty": 3,
         "sites_affected": 200,
-        "total_occurrences": 5385,
+        "total_occurrences": 5412,
         "max_pages": 947
       },
       {
@@ -1454,8 +1454,8 @@
         "conformance": "si",
         "level": "BP",
         "difficulty": 2,
-        "sites_affected": 198,
-        "total_occurrences": 4322,
+        "sites_affected": 199,
+        "total_occurrences": 4245,
         "max_pages": 590
       },
       {
@@ -1465,8 +1465,8 @@
         "conformance": "si",
         "level": "BP",
         "difficulty": 1,
-        "sites_affected": 47,
-        "total_occurrences": 3090,
+        "sites_affected": 48,
+        "total_occurrences": 3129,
         "max_pages": 52
       },
       {
@@ -1476,8 +1476,8 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 1,
-        "sites_affected": 46,
-        "total_occurrences": 3089,
+        "sites_affected": 47,
+        "total_occurrences": 3128,
         "max_pages": 52
       },
       {
@@ -1487,9 +1487,20 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 2,
-        "sites_affected": 310,
-        "total_occurrences": 1909,
+        "sites_affected": 307,
+        "total_occurrences": 1897,
         "max_pages": 162
+      },
+      {
+        "rule_id": 80,
+        "title": "Line height is fixed",
+        "description": "The `line-height` has been fixed using an absolute length unit, such as `px`, `pt` or `cm`.",
+        "conformance": "aaa",
+        "level": "AAA",
+        "difficulty": 3,
+        "sites_affected": 20,
+        "total_occurrences": 1536,
+        "max_pages": 213
       },
       {
         "rule_id": 84,
@@ -1503,26 +1514,15 @@
         "max_pages": 247
       },
       {
-        "rule_id": 80,
-        "title": "Line height is fixed",
-        "description": "The `line-height` has been fixed using an absolute length unit, such as `px`, `pt` or `cm`.",
-        "conformance": "aaa",
-        "level": "AAA",
-        "difficulty": 3,
-        "sites_affected": 20,
-        "total_occurrences": 898,
-        "max_pages": 35
-      },
-      {
         "rule_id": 79,
         "title": "Improper use of preformatted text element",
         "description": "The preformatted text element `<pre>` tells the browser to leave text formatting as it is, preventing the user from adjusting letter spacing. It should only be used for content that is either code or a `<figure>` such as ASCII art. \n\nWithout exception, the content of this element is meant to be visually presented to a sighted user.",
         "conformance": "si",
         "level": "BP",
         "difficulty": 3,
-        "sites_affected": 38,
-        "total_occurrences": 713,
-        "max_pages": 114
+        "sites_affected": 37,
+        "total_occurrences": 700,
+        "max_pages": 121
       },
       {
         "rule_id": 14,
@@ -1532,7 +1532,7 @@
         "level": "A",
         "difficulty": 3,
         "sites_affected": 19,
-        "total_occurrences": 711,
+        "total_occurrences": 641,
         "max_pages": 21
       },
       {
@@ -1542,9 +1542,20 @@
         "conformance": "si",
         "level": "BP",
         "difficulty": 1,
-        "sites_affected": 99,
-        "total_occurrences": 293,
+        "sites_affected": 100,
+        "total_occurrences": 295,
         "max_pages": 64
+      },
+      {
+        "rule_id": 71,
+        "title": "Uneven spacing in text",
+        "description": "Text should not be \"justified\" (aligned to both margins). Instead, it should be aligned to the left, right or center. ",
+        "conformance": "aaa",
+        "level": "AAA",
+        "difficulty": 2,
+        "sites_affected": 22,
+        "total_occurrences": 270,
+        "max_pages": 6
       },
       {
         "rule_id": 12,
@@ -1564,20 +1575,9 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 2,
-        "sites_affected": 71,
-        "total_occurrences": 253,
-        "max_pages": 26
-      },
-      {
-        "rule_id": 71,
-        "title": "Uneven spacing in text",
-        "description": "Text should not be \"justified\" (aligned to both margins). Instead, it should be aligned to the left, right or center. ",
-        "conformance": "aaa",
-        "level": "AAA",
-        "difficulty": 2,
-        "sites_affected": 21,
-        "total_occurrences": 252,
-        "max_pages": 6
+        "sites_affected": 69,
+        "total_occurrences": 255,
+        "max_pages": 27
       },
       {
         "rule_id": 17,
@@ -1609,7 +1609,7 @@
         "level": "BP",
         "difficulty": 2,
         "sites_affected": 16,
-        "total_occurrences": 60,
+        "total_occurrences": 59,
         "max_pages": 11
       },
       {
@@ -1635,6 +1635,17 @@
         "max_pages": 7
       },
       {
+        "rule_id": 77,
+        "title": "Table cell missing context",
+        "description": "Data tables include header and data cells arranged in a grid.\n\nEach data cell `<td>` should be assigned to at least one column or row header cell `<th>`. When this is done, a screen reader can announce each data cell in context.",
+        "conformance": "a",
+        "level": "A",
+        "difficulty": 3,
+        "sites_affected": 5,
+        "total_occurrences": 47,
+        "max_pages": 3
+      },
+      {
         "rule_id": 40,
         "title": "Page region missing an accessible name",
         "description": "Any page section with the role of `region` should also have an accessible name to identify it. ",
@@ -1644,17 +1655,6 @@
         "sites_affected": 3,
         "total_occurrences": 34,
         "max_pages": 26
-      },
-      {
-        "rule_id": 77,
-        "title": "Table cell missing context",
-        "description": "Data tables include header and data cells arranged in a grid.\n\nEach data cell `<td>` should be assigned to at least one column or row header cell `<th>`. When this is done, a screen reader can announce each data cell in context.",
-        "conformance": "a",
-        "level": "A",
-        "difficulty": 3,
-        "sites_affected": 5,
-        "total_occurrences": 29,
-        "max_pages": 1
       },
       {
         "rule_id": 1,
@@ -1723,15 +1723,15 @@
         "max_pages": 2
       },
       {
-        "rule_id": 116,
-        "title": "Summary element missing an accessible name",
-        "description": "`summary` elements must include clear and descriptive text that explains the content of the collapsible `details` section.",
+        "rule_id": 16,
+        "title": "Required ARIA attribute is missing",
+        "description": "This element has a `role` that should be accompanied by specific ARIA attributes.",
         "conformance": "a",
         "level": "A",
-        "difficulty": 2,
-        "sites_affected": 4,
+        "difficulty": 3,
+        "sites_affected": 3,
         "total_occurrences": 4,
-        "max_pages": 1
+        "max_pages": 2
       },
       {
         "rule_id": 19,
@@ -1745,12 +1745,12 @@
         "max_pages": 1
       },
       {
-        "rule_id": 16,
-        "title": "Required ARIA attribute is missing",
-        "description": "This element has a `role` that should be accompanied by specific ARIA attributes.",
+        "rule_id": 116,
+        "title": "Summary element missing an accessible name",
+        "description": "`summary` elements must include clear and descriptive text that explains the content of the collapsible `details` section.",
         "conformance": "a",
         "level": "A",
-        "difficulty": 3,
+        "difficulty": 2,
         "sites_affected": 3,
         "total_occurrences": 3,
         "max_pages": 1
@@ -1819,9 +1819,9 @@
         "conformance": "aaa",
         "level": "AAA",
         "difficulty": 2,
-        "sites_affected": 969,
-        "total_occurrences": 580756,
-        "max_pages": 2445
+        "sites_affected": 970,
+        "total_occurrences": 590973,
+        "max_pages": 2487
       },
       {
         "rule_id": 111,
@@ -1831,8 +1831,8 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 1097,
-        "total_occurrences": 461801,
-        "max_pages": 2445
+        "total_occurrences": 469559,
+        "max_pages": 2487
       },
       {
         "rule_id": 69,
@@ -1842,8 +1842,8 @@
         "level": "AA",
         "difficulty": 2,
         "sites_affected": 442,
-        "total_occurrences": 84763,
-        "max_pages": 2442
+        "total_occurrences": 85093,
+        "max_pages": 2484
       },
       {
         "rule_id": 113,
@@ -1852,9 +1852,9 @@
         "conformance": "aa",
         "level": "AA",
         "difficulty": 4,
-        "sites_affected": 206,
-        "total_occurrences": 47396,
-        "max_pages": 2442
+        "sites_affected": 207,
+        "total_occurrences": 46856,
+        "max_pages": 2484
       },
       {
         "rule_id": 73,
@@ -1863,8 +1863,8 @@
         "conformance": "aaa",
         "level": "AAA",
         "difficulty": 2,
-        "sites_affected": 498,
-        "total_occurrences": 33750,
+        "sites_affected": 502,
+        "total_occurrences": 35517,
         "max_pages": 1272
       },
       {
@@ -1874,9 +1874,9 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 2,
-        "sites_affected": 518,
-        "total_occurrences": 29026,
-        "max_pages": 2442
+        "sites_affected": 516,
+        "total_occurrences": 29567,
+        "max_pages": 2484
       },
       {
         "rule_id": 11,
@@ -1885,9 +1885,9 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 3,
-        "sites_affected": 642,
-        "total_occurrences": 27151,
-        "max_pages": 2442
+        "sites_affected": 641,
+        "total_occurrences": 28022,
+        "max_pages": 2484
       },
       {
         "rule_id": 74,
@@ -1897,7 +1897,7 @@
         "level": "AAA",
         "difficulty": 3,
         "sites_affected": 509,
-        "total_occurrences": 23222,
+        "total_occurrences": 23894,
         "max_pages": 1271
       },
       {
@@ -1907,9 +1907,9 @@
         "conformance": "aria",
         "level": "ARIA",
         "difficulty": 4,
-        "sites_affected": 445,
-        "total_occurrences": 19747,
-        "max_pages": 2442
+        "sites_affected": 449,
+        "total_occurrences": 19753,
+        "max_pages": 2484
       },
       {
         "rule_id": 18,
@@ -1919,7 +1919,7 @@
         "level": "ARIA",
         "difficulty": 4,
         "sites_affected": 193,
-        "total_occurrences": 16921,
+        "total_occurrences": 16935,
         "max_pages": 1978
       },
       {
@@ -1929,8 +1929,8 @@
         "conformance": "si",
         "level": "BP",
         "difficulty": 2,
-        "sites_affected": 726,
-        "total_occurrences": 10315,
+        "sites_affected": 723,
+        "total_occurrences": 10408,
         "max_pages": 1272
       },
       {
@@ -1940,8 +1940,8 @@
         "conformance": "si",
         "level": "BP",
         "difficulty": 2,
-        "sites_affected": 428,
-        "total_occurrences": 4668,
+        "sites_affected": 430,
+        "total_occurrences": 4621,
         "max_pages": 1978
       },
       {
@@ -1951,8 +1951,8 @@
         "conformance": "si",
         "level": "BP",
         "difficulty": 2,
-        "sites_affected": 193,
-        "total_occurrences": 4317,
+        "sites_affected": 194,
+        "total_occurrences": 4290,
         "max_pages": 946
       },
       {
@@ -1962,8 +1962,8 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 1,
-        "sites_affected": 131,
-        "total_occurrences": 3456,
+        "sites_affected": 134,
+        "total_occurrences": 3614,
         "max_pages": 150
       },
       {
@@ -1974,19 +1974,8 @@
         "level": "BP",
         "difficulty": 2,
         "sites_affected": 349,
-        "total_occurrences": 2273,
+        "total_occurrences": 2201,
         "max_pages": 843
-      },
-      {
-        "rule_id": 85,
-        "title": "Overuse of italics",
-        "description": "The `font-style` property has been used to display an entire paragraph in italics.",
-        "conformance": "si",
-        "level": "BP",
-        "difficulty": 2,
-        "sites_affected": 134,
-        "total_occurrences": 1894,
-        "max_pages": 161
       },
       {
         "rule_id": 68,
@@ -1995,9 +1984,20 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 3,
-        "sites_affected": 140,
-        "total_occurrences": 1843,
+        "sites_affected": 139,
+        "total_occurrences": 1865,
         "max_pages": 947
+      },
+      {
+        "rule_id": 85,
+        "title": "Overuse of italics",
+        "description": "The `font-style` property has been used to display an entire paragraph in italics.",
+        "conformance": "si",
+        "level": "BP",
+        "difficulty": 2,
+        "sites_affected": 135,
+        "total_occurrences": 1836,
+        "max_pages": 136
       },
       {
         "rule_id": 67,
@@ -2007,7 +2007,7 @@
         "level": "A",
         "difficulty": 1,
         "sites_affected": 32,
-        "total_occurrences": 1514,
+        "total_occurrences": 1552,
         "max_pages": 15
       },
       {
@@ -2018,7 +2018,7 @@
         "level": "BP",
         "difficulty": 1,
         "sites_affected": 32,
-        "total_occurrences": 1514,
+        "total_occurrences": 1552,
         "max_pages": 15
       },
       {
@@ -2028,8 +2028,8 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 2,
-        "sites_affected": 240,
-        "total_occurrences": 1423,
+        "sites_affected": 238,
+        "total_occurrences": 1416,
         "max_pages": 162
       },
       {
@@ -2039,9 +2039,9 @@
         "conformance": "aaa",
         "level": "AAA",
         "difficulty": 3,
-        "sites_affected": 14,
-        "total_occurrences": 685,
-        "max_pages": 26
+        "sites_affected": 15,
+        "total_occurrences": 1324,
+        "max_pages": 213
       },
       {
         "rule_id": 8,
@@ -2051,7 +2051,7 @@
         "level": "A",
         "difficulty": 3,
         "sites_affected": 15,
-        "total_occurrences": 677,
+        "total_occurrences": 678,
         "max_pages": 75
       },
       {
@@ -2061,9 +2061,9 @@
         "conformance": "si",
         "level": "BP",
         "difficulty": 3,
-        "sites_affected": 23,
-        "total_occurrences": 531,
-        "max_pages": 114
+        "sites_affected": 22,
+        "total_occurrences": 518,
+        "max_pages": 121
       },
       {
         "rule_id": 14,
@@ -2073,7 +2073,7 @@
         "level": "A",
         "difficulty": 3,
         "sites_affected": 13,
-        "total_occurrences": 429,
+        "total_occurrences": 359,
         "max_pages": 18
       },
       {
@@ -2083,8 +2083,8 @@
         "conformance": "aaa",
         "level": "AAA",
         "difficulty": 2,
-        "sites_affected": 16,
-        "total_occurrences": 189,
+        "sites_affected": 17,
+        "total_occurrences": 207,
         "max_pages": 6
       },
       {
@@ -2094,9 +2094,9 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 2,
-        "sites_affected": 51,
-        "total_occurrences": 173,
-        "max_pages": 26
+        "sites_affected": 50,
+        "total_occurrences": 176,
+        "max_pages": 27
       },
       {
         "rule_id": 59,
@@ -2105,9 +2105,9 @@
         "conformance": "si",
         "level": "BP",
         "difficulty": 1,
-        "sites_affected": 83,
-        "total_occurrences": 157,
-        "max_pages": 11
+        "sites_affected": 84,
+        "total_occurrences": 159,
+        "max_pages": 10
       },
       {
         "rule_id": 12,
@@ -2132,15 +2132,15 @@
         "max_pages": 7
       },
       {
-        "rule_id": 70,
-        "title": "HTML element is deprecated or obsolete",
-        "description": "HTML elements are updated over time and older versions are deprecated before becoming obsolete. If a deprecated or obsolete element is used, it may create usability issues.\n\n- <a href=\"https://www.w3.org/TR/2014/REC-html5-20141028/obsolete.html\" target=\"_blank\">Learn more about deprecated elements</a> ",
-        "conformance": "si",
-        "level": "BP",
-        "difficulty": 2,
-        "sites_affected": 13,
-        "total_occurrences": 45,
-        "max_pages": 11
+        "rule_id": 77,
+        "title": "Table cell missing context",
+        "description": "Data tables include header and data cells arranged in a grid.\n\nEach data cell `<td>` should be assigned to at least one column or row header cell `<th>`. When this is done, a screen reader can announce each data cell in context.",
+        "conformance": "a",
+        "level": "A",
+        "difficulty": 3,
+        "sites_affected": 5,
+        "total_occurrences": 47,
+        "max_pages": 3
       },
       {
         "rule_id": 43,
@@ -2154,15 +2154,15 @@
         "max_pages": 12
       },
       {
-        "rule_id": 77,
-        "title": "Table cell missing context",
-        "description": "Data tables include header and data cells arranged in a grid.\n\nEach data cell `<td>` should be assigned to at least one column or row header cell `<th>`. When this is done, a screen reader can announce each data cell in context.",
-        "conformance": "a",
-        "level": "A",
-        "difficulty": 3,
-        "sites_affected": 5,
-        "total_occurrences": 29,
-        "max_pages": 1
+        "rule_id": 70,
+        "title": "HTML element is deprecated or obsolete",
+        "description": "HTML elements are updated over time and older versions are deprecated before becoming obsolete. If a deprecated or obsolete element is used, it may create usability issues.\n\n- <a href=\"https://www.w3.org/TR/2014/REC-html5-20141028/obsolete.html\" target=\"_blank\">Learn more about deprecated elements</a> ",
+        "conformance": "si",
+        "level": "BP",
+        "difficulty": 2,
+        "sites_affected": 13,
+        "total_occurrences": 44,
+        "max_pages": 11
       },
       {
         "rule_id": 87,
@@ -2226,29 +2226,7 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 2,
-        "sites_affected": 4,
-        "total_occurrences": 4,
-        "max_pages": 1
-      },
-      {
-        "rule_id": 17,
-        "title": "Hidden element has focusable content",
-        "description": "A page element with the attribute `aria-hidden=\"true\"` contains focusable elements (elements that can receive focus from a keyboard).",
-        "conformance": "a",
-        "level": "A",
-        "difficulty": 4,
-        "sites_affected": 2,
-        "total_occurrences": 3,
-        "max_pages": 1
-      },
-      {
-        "rule_id": 7,
-        "title": "Content language not recognized ",
-        "description": "A `lang` attribute can be found in an element in the page `body`, but the language subtag seems to have been mistyped.  ",
-        "conformance": "aa",
-        "level": "AA",
-        "difficulty": 3,
-        "sites_affected": 1,
+        "sites_affected": 3,
         "total_occurrences": 3,
         "max_pages": 1
       },
@@ -2260,7 +2238,29 @@
         "level": "A",
         "difficulty": 3,
         "sites_affected": 2,
-        "total_occurrences": 2,
+        "total_occurrences": 3,
+        "max_pages": 2
+      },
+      {
+        "rule_id": 17,
+        "title": "Hidden element has focusable content",
+        "description": "A page element with the attribute `aria-hidden=\"true\"` contains focusable elements (elements that can receive focus from a keyboard).",
+        "conformance": "a",
+        "level": "A",
+        "difficulty": 4,
+        "sites_affected": 2,
+        "total_occurrences": 3,
+        "max_pages": 2
+      },
+      {
+        "rule_id": 7,
+        "title": "Content language not recognized ",
+        "description": "A `lang` attribute can be found in an element in the page `body`, but the language subtag seems to have been mistyped.  ",
+        "conformance": "aa",
+        "level": "AA",
+        "difficulty": 3,
+        "sites_affected": 1,
+        "total_occurrences": 3,
         "max_pages": 1
       },
       {
@@ -2350,7 +2350,7 @@
         "level": "ARIA",
         "difficulty": 4,
         "sites_affected": 138,
-        "total_occurrences": 7423945,
+        "total_occurrences": 7407413,
         "max_pages": 3595
       },
       {
@@ -2361,7 +2361,7 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 138,
-        "total_occurrences": 2754410,
+        "total_occurrences": 2747999,
         "max_pages": 3595
       },
       {
@@ -2372,7 +2372,7 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 138,
-        "total_occurrences": 996576,
+        "total_occurrences": 997116,
         "max_pages": 3595
       },
       {
@@ -2383,7 +2383,7 @@
         "level": "AA",
         "difficulty": 4,
         "sites_affected": 137,
-        "total_occurrences": 452879,
+        "total_occurrences": 451748,
         "max_pages": 3595
       },
       {
@@ -2394,7 +2394,7 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 138,
-        "total_occurrences": 330443,
+        "total_occurrences": 330467,
         "max_pages": 3595
       },
       {
@@ -2405,7 +2405,7 @@
         "level": "AAA",
         "difficulty": 3,
         "sites_affected": 130,
-        "total_occurrences": 108634,
+        "total_occurrences": 108702,
         "max_pages": 2246
       },
       {
@@ -2415,9 +2415,9 @@
         "conformance": "aa",
         "level": "AA",
         "difficulty": 2,
-        "sites_affected": 114,
-        "total_occurrences": 78985,
-        "max_pages": 1166
+        "sites_affected": 115,
+        "total_occurrences": 77917,
+        "max_pages": 1163
       },
       {
         "rule_id": 80,
@@ -2427,7 +2427,7 @@
         "level": "AAA",
         "difficulty": 3,
         "sites_affected": 124,
-        "total_occurrences": 76045,
+        "total_occurrences": 76028,
         "max_pages": 1123
       },
       {
@@ -2438,7 +2438,7 @@
         "level": "A",
         "difficulty": 1,
         "sites_affected": 133,
-        "total_occurrences": 23913,
+        "total_occurrences": 23910,
         "max_pages": 746
       },
       {
@@ -2449,8 +2449,8 @@
         "level": "BP",
         "difficulty": 2,
         "sites_affected": 138,
-        "total_occurrences": 22635,
-        "max_pages": 1215
+        "total_occurrences": 22620,
+        "max_pages": 1204
       },
       {
         "rule_id": 11,
@@ -2460,7 +2460,7 @@
         "level": "A",
         "difficulty": 3,
         "sites_affected": 136,
-        "total_occurrences": 22148,
+        "total_occurrences": 22199,
         "max_pages": 1543
       },
       {
@@ -2481,8 +2481,8 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 3,
-        "sites_affected": 132,
-        "total_occurrences": 12406,
+        "sites_affected": 131,
+        "total_occurrences": 12400,
         "max_pages": 933
       },
       {
@@ -2493,7 +2493,7 @@
         "level": "A",
         "difficulty": 2,
         "sites_affected": 79,
-        "total_occurrences": 3460,
+        "total_occurrences": 3463,
         "max_pages": 79
       },
       {
@@ -2504,7 +2504,7 @@
         "level": "BP",
         "difficulty": 2,
         "sites_affected": 108,
-        "total_occurrences": 2351,
+        "total_occurrences": 2341,
         "max_pages": 315
       },
       {
@@ -2525,8 +2525,8 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 2,
-        "sites_affected": 95,
-        "total_occurrences": 1446,
+        "sites_affected": 94,
+        "total_occurrences": 1424,
         "max_pages": 176
       },
       {
@@ -2537,7 +2537,7 @@
         "level": "A",
         "difficulty": 3,
         "sites_affected": 128,
-        "total_occurrences": 1392,
+        "total_occurrences": 1394,
         "max_pages": 38
       },
       {
@@ -2570,7 +2570,7 @@
         "level": "A",
         "difficulty": 2,
         "sites_affected": 95,
-        "total_occurrences": 580,
+        "total_occurrences": 542,
         "max_pages": 37
       },
       {
@@ -2602,7 +2602,7 @@
         "conformance": "si",
         "level": "BP",
         "difficulty": 2,
-        "sites_affected": 48,
+        "sites_affected": 47,
         "total_occurrences": 230,
         "max_pages": 19
       },
@@ -2792,7 +2792,7 @@
         "level": "ARIA",
         "difficulty": 4,
         "sites_affected": 29,
-        "total_occurrences": 1733835,
+        "total_occurrences": 1720580,
         "max_pages": 1839
       },
       {
@@ -2803,7 +2803,7 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 29,
-        "total_occurrences": 648515,
+        "total_occurrences": 644779,
         "max_pages": 1839
       },
       {
@@ -2814,7 +2814,7 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 29,
-        "total_occurrences": 264650,
+        "total_occurrences": 265847,
         "max_pages": 1839
       },
       {
@@ -2825,7 +2825,7 @@
         "level": "AA",
         "difficulty": 4,
         "sites_affected": 29,
-        "total_occurrences": 124870,
+        "total_occurrences": 124039,
         "max_pages": 1839
       },
       {
@@ -2836,7 +2836,7 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 29,
-        "total_occurrences": 77979,
+        "total_occurrences": 77732,
         "max_pages": 1839
       },
       {
@@ -2847,7 +2847,7 @@
         "level": "AAA",
         "difficulty": 3,
         "sites_affected": 29,
-        "total_occurrences": 27339,
+        "total_occurrences": 27382,
         "max_pages": 480
       },
       {
@@ -2858,7 +2858,7 @@
         "level": "AAA",
         "difficulty": 3,
         "sites_affected": 29,
-        "total_occurrences": 17584,
+        "total_occurrences": 17610,
         "max_pages": 145
       },
       {
@@ -2869,19 +2869,8 @@
         "level": "A",
         "difficulty": 3,
         "sites_affected": 29,
-        "total_occurrences": 6831,
+        "total_occurrences": 6889,
         "max_pages": 887
-      },
-      {
-        "rule_id": 69,
-        "title": "Color contrast does not meet minimum requirement",
-        "description": "There is insufficient color contrast between the text and background on this page to meet the minimum contrast requirement.",
-        "conformance": "aa",
-        "level": "AA",
-        "difficulty": 2,
-        "sites_affected": 28,
-        "total_occurrences": 5372,
-        "max_pages": 172
       },
       {
         "rule_id": 2,
@@ -2893,6 +2882,17 @@
         "sites_affected": 29,
         "total_occurrences": 5297,
         "max_pages": 331
+      },
+      {
+        "rule_id": 69,
+        "title": "Color contrast does not meet minimum requirement",
+        "description": "There is insufficient color contrast between the text and background on this page to meet the minimum contrast requirement.",
+        "conformance": "aa",
+        "level": "AA",
+        "difficulty": 2,
+        "sites_affected": 28,
+        "total_occurrences": 5108,
+        "max_pages": 172
       },
       {
         "rule_id": 68,
@@ -2924,7 +2924,7 @@
         "level": "BP",
         "difficulty": 2,
         "sites_affected": 29,
-        "total_occurrences": 3464,
+        "total_occurrences": 3465,
         "max_pages": 337
       },
       {
@@ -2935,7 +2935,7 @@
         "level": "A",
         "difficulty": 2,
         "sites_affected": 27,
-        "total_occurrences": 1405,
+        "total_occurrences": 1407,
         "max_pages": 58
       },
       {
@@ -2968,8 +2968,8 @@
         "level": "BP",
         "difficulty": 2,
         "sites_affected": 23,
-        "total_occurrences": 253,
-        "max_pages": 18
+        "total_occurrences": 251,
+        "max_pages": 15
       },
       {
         "rule_id": 42,
@@ -2990,19 +2990,8 @@
         "level": "A",
         "difficulty": 2,
         "sites_affected": 23,
-        "total_occurrences": 157,
-        "max_pages": 11
-      },
-      {
-        "rule_id": 13,
-        "title": "Inline frame missing a text alternative",
-        "description": "Every inline frame (`iframe`) should have a text alternative that summarizes its content or purpose.",
-        "conformance": "a",
-        "level": "A",
-        "difficulty": 2,
-        "sites_affected": 21,
-        "total_occurrences": 151,
-        "max_pages": 21
+        "total_occurrences": 154,
+        "max_pages": 8
       },
       {
         "rule_id": 77,
@@ -3014,6 +3003,17 @@
         "sites_affected": 1,
         "total_occurrences": 132,
         "max_pages": 3
+      },
+      {
+        "rule_id": 13,
+        "title": "Inline frame missing a text alternative",
+        "description": "Every inline frame (`iframe`) should have a text alternative that summarizes its content or purpose.",
+        "conformance": "a",
+        "level": "A",
+        "difficulty": 2,
+        "sites_affected": 21,
+        "total_occurrences": 111,
+        "max_pages": 21
       },
       {
         "rule_id": 70,
@@ -3102,7 +3102,7 @@
         "level": "ARIA",
         "difficulty": 4,
         "sites_affected": 57,
-        "total_occurrences": 4833816,
+        "total_occurrences": 4817808,
         "max_pages": 3595
       },
       {
@@ -3113,7 +3113,7 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 57,
-        "total_occurrences": 1853810,
+        "total_occurrences": 1848307,
         "max_pages": 3595
       },
       {
@@ -3124,7 +3124,7 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 57,
-        "total_occurrences": 579651,
+        "total_occurrences": 580125,
         "max_pages": 3595
       },
       {
@@ -3135,7 +3135,7 @@
         "level": "AA",
         "difficulty": 4,
         "sites_affected": 57,
-        "total_occurrences": 312284,
+        "total_occurrences": 311164,
         "max_pages": 3595
       },
       {
@@ -3146,7 +3146,7 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 57,
-        "total_occurrences": 194405,
+        "total_occurrences": 194245,
         "max_pages": 3595
       },
       {
@@ -3157,7 +3157,7 @@
         "level": "AAA",
         "difficulty": 3,
         "sites_affected": 57,
-        "total_occurrences": 76274,
+        "total_occurrences": 76345,
         "max_pages": 1096
       },
       {
@@ -3168,7 +3168,7 @@
         "level": "AAA",
         "difficulty": 3,
         "sites_affected": 57,
-        "total_occurrences": 53978,
+        "total_occurrences": 53964,
         "max_pages": 364
       },
       {
@@ -3179,8 +3179,8 @@
         "level": "AA",
         "difficulty": 2,
         "sites_affected": 53,
-        "total_occurrences": 20649,
-        "max_pages": 379
+        "total_occurrences": 20024,
+        "max_pages": 172
       },
       {
         "rule_id": 11,
@@ -3190,7 +3190,7 @@
         "level": "A",
         "difficulty": 3,
         "sites_affected": 57,
-        "total_occurrences": 15927,
+        "total_occurrences": 15976,
         "max_pages": 1543
       },
       {
@@ -3201,7 +3201,7 @@
         "level": "A",
         "difficulty": 1,
         "sites_affected": 56,
-        "total_occurrences": 11530,
+        "total_occurrences": 11527,
         "max_pages": 746
       },
       {
@@ -3212,8 +3212,8 @@
         "level": "BP",
         "difficulty": 2,
         "sites_affected": 57,
-        "total_occurrences": 11295,
-        "max_pages": 1215
+        "total_occurrences": 11285,
+        "max_pages": 1204
       },
       {
         "rule_id": 85,
@@ -3234,7 +3234,7 @@
         "level": "A",
         "difficulty": 3,
         "sites_affected": 56,
-        "total_occurrences": 8633,
+        "total_occurrences": 8632,
         "max_pages": 933
       },
       {
@@ -3245,7 +3245,7 @@
         "level": "A",
         "difficulty": 2,
         "sites_affected": 51,
-        "total_occurrences": 2459,
+        "total_occurrences": 2462,
         "max_pages": 58
       },
       {
@@ -3278,7 +3278,7 @@
         "level": "A",
         "difficulty": 3,
         "sites_affected": 56,
-        "total_occurrences": 739,
+        "total_occurrences": 741,
         "max_pages": 38
       },
       {
@@ -3289,7 +3289,7 @@
         "level": "BP",
         "difficulty": 2,
         "sites_affected": 49,
-        "total_occurrences": 687,
+        "total_occurrences": 677,
         "max_pages": 43
       },
       {
@@ -3311,7 +3311,7 @@
         "level": "A",
         "difficulty": 2,
         "sites_affected": 45,
-        "total_occurrences": 407,
+        "total_occurrences": 392,
         "max_pages": 42
       },
       {
@@ -3322,7 +3322,7 @@
         "level": "A",
         "difficulty": 2,
         "sites_affected": 45,
-        "total_occurrences": 251,
+        "total_occurrences": 212,
         "max_pages": 21
       },
       {
@@ -4452,7 +4452,7 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 16,
-        "total_occurrences": 787149,
+        "total_occurrences": 850738,
         "max_pages": 26147
       },
       {
@@ -4463,8 +4463,8 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 17,
-        "total_occurrences": 679239,
-        "max_pages": 29993
+        "total_occurrences": 702919,
+        "max_pages": 30000
       },
       {
         "rule_id": 8,
@@ -4474,7 +4474,7 @@
         "level": "A",
         "difficulty": 3,
         "sites_affected": 11,
-        "total_occurrences": 137657,
+        "total_occurrences": 137652,
         "max_pages": 22735
       },
       {
@@ -4485,7 +4485,7 @@
         "level": "AA",
         "difficulty": 2,
         "sites_affected": 11,
-        "total_occurrences": 120878,
+        "total_occurrences": 117177,
         "max_pages": 20977
       },
       {
@@ -4496,7 +4496,7 @@
         "level": "A",
         "difficulty": 3,
         "sites_affected": 9,
-        "total_occurrences": 96512,
+        "total_occurrences": 96507,
         "max_pages": 6813
       },
       {
@@ -4506,9 +4506,20 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 3,
-        "sites_affected": 12,
-        "total_occurrences": 26365,
-        "max_pages": 3340
+        "sites_affected": 11,
+        "total_occurrences": 21309,
+        "max_pages": 2649
+      },
+      {
+        "rule_id": 18,
+        "title": "ARIA attribute unsupported or prohibited",
+        "description": "An ARIA attribute has been specified that is either not supported or is prohibited, on this type of element.",
+        "conformance": "aria",
+        "level": "ARIA",
+        "difficulty": 4,
+        "sites_affected": 5,
+        "total_occurrences": 15471,
+        "max_pages": 15347
       },
       {
         "rule_id": 62,
@@ -4518,7 +4529,7 @@
         "level": "A",
         "difficulty": 2,
         "sites_affected": 7,
-        "total_occurrences": 11737,
+        "total_occurrences": 11369,
         "max_pages": 2730
       },
       {
@@ -4529,8 +4540,8 @@
         "level": "BP",
         "difficulty": 2,
         "sites_affected": 15,
-        "total_occurrences": 10725,
-        "max_pages": 2301
+        "total_occurrences": 10212,
+        "max_pages": 2951
       },
       {
         "rule_id": 73,
@@ -4540,7 +4551,7 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 6,
-        "total_occurrences": 10146,
+        "total_occurrences": 10075,
         "max_pages": 5414
       },
       {
@@ -4553,28 +4564,6 @@
         "sites_affected": 4,
         "total_occurrences": 6454,
         "max_pages": 4534
-      },
-      {
-        "rule_id": 18,
-        "title": "ARIA attribute unsupported or prohibited",
-        "description": "An ARIA attribute has been specified that is either not supported or is prohibited, on this type of element.",
-        "conformance": "aria",
-        "level": "ARIA",
-        "difficulty": 4,
-        "sites_affected": 5,
-        "total_occurrences": 6306,
-        "max_pages": 6182
-      },
-      {
-        "rule_id": 12,
-        "title": "Button missing a text alternative",
-        "description": "Buttons should always have a text label. The label can be inserted into the HTML \u2014 it does **not** need to be visible to pass this check.",
-        "conformance": "a",
-        "level": "A",
-        "difficulty": 3,
-        "sites_affected": 4,
-        "total_occurrences": 5807,
-        "max_pages": 3290
       },
       {
         "rule_id": 60,
@@ -4605,8 +4594,8 @@
         "conformance": "si",
         "level": "BP",
         "difficulty": 2,
-        "sites_affected": 6,
-        "total_occurrences": 3558,
+        "sites_affected": 4,
+        "total_occurrences": 3533,
         "max_pages": 2730
       },
       {
@@ -4619,6 +4608,17 @@
         "sites_affected": 1,
         "total_occurrences": 2730,
         "max_pages": 2730
+      },
+      {
+        "rule_id": 12,
+        "title": "Button missing a text alternative",
+        "description": "Buttons should always have a text label. The label can be inserted into the HTML \u2014 it does **not** need to be visible to pass this check.",
+        "conformance": "a",
+        "level": "A",
+        "difficulty": 3,
+        "sites_affected": 2,
+        "total_occurrences": 2513,
+        "max_pages": 1625
       },
       {
         "rule_id": 78,
@@ -4676,17 +4676,6 @@
         "max_pages": 45
       },
       {
-        "rule_id": 113,
-        "title": "Interactive element does not meet minimum size nor spacing",
-        "description": "Interactive elements, like buttons or links, should be large enough or be positioned, so they can easily be clicked or tapped by users.\n\nElements should be at least 24 by 24 pixels, or if smaller, be positioned with enough spacing to not intersect with other interactive elements.",
-        "conformance": "aa",
-        "level": "AA",
-        "difficulty": 4,
-        "sites_affected": 4,
-        "total_occurrences": 326,
-        "max_pages": 77
-      },
-      {
         "rule_id": 2,
         "title": "Image missing a text alternative",
         "description": "All non-decorative images must have a text alternative (also known as \"alt text\"). ",
@@ -4696,6 +4685,17 @@
         "sites_affected": 6,
         "total_occurrences": 308,
         "max_pages": 165
+      },
+      {
+        "rule_id": 113,
+        "title": "Interactive element does not meet minimum size nor spacing",
+        "description": "Interactive elements, like buttons or links, should be large enough or be positioned, so they can easily be clicked or tapped by users.\n\nElements should be at least 24 by 24 pixels, or if smaller, be positioned with enough spacing to not intersect with other interactive elements.",
+        "conformance": "aa",
+        "level": "AA",
+        "difficulty": 4,
+        "sites_affected": 5,
+        "total_occurrences": 254,
+        "max_pages": 77
       },
       {
         "rule_id": 80,
@@ -4753,17 +4753,6 @@
         "max_pages": 11
       },
       {
-        "rule_id": 59,
-        "title": "Page missing headings",
-        "description": "This page does not appear to have any heading tags (`h1` through to `h6`), or any other elements with the `role` of heading.",
-        "conformance": "si",
-        "level": "BP",
-        "difficulty": 1,
-        "sites_affected": 5,
-        "total_occurrences": 35,
-        "max_pages": 14
-      },
-      {
         "rule_id": 70,
         "title": "HTML element is deprecated or obsolete",
         "description": "HTML elements are updated over time and older versions are deprecated before becoming obsolete. If a deprecated or obsolete element is used, it may create usability issues.\n\n- <a href=\"https://www.w3.org/TR/2014/REC-html5-20141028/obsolete.html\" target=\"_blank\">Learn more about deprecated elements</a> ",
@@ -4773,6 +4762,17 @@
         "sites_affected": 7,
         "total_occurrences": 35,
         "max_pages": 27
+      },
+      {
+        "rule_id": 59,
+        "title": "Page missing headings",
+        "description": "This page does not appear to have any heading tags (`h1` through to `h6`), or any other elements with the `role` of heading.",
+        "conformance": "si",
+        "level": "BP",
+        "difficulty": 1,
+        "sites_affected": 4,
+        "total_occurrences": 27,
+        "max_pages": 14
       },
       {
         "rule_id": 1,
@@ -4872,7 +4872,7 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 23,
-        "total_occurrences": 792194,
+        "total_occurrences": 855783,
         "max_pages": 26147
       },
       {
@@ -4883,8 +4883,8 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 26,
-        "total_occurrences": 707854,
-        "max_pages": 29993
+        "total_occurrences": 731519,
+        "max_pages": 30000
       },
       {
         "rule_id": 8,
@@ -4894,7 +4894,7 @@
         "level": "A",
         "difficulty": 3,
         "sites_affected": 17,
-        "total_occurrences": 138483,
+        "total_occurrences": 138478,
         "max_pages": 22735
       },
       {
@@ -4905,7 +4905,7 @@
         "level": "AA",
         "difficulty": 2,
         "sites_affected": 15,
-        "total_occurrences": 121692,
+        "total_occurrences": 117991,
         "max_pages": 20977
       },
       {
@@ -4916,7 +4916,7 @@
         "level": "A",
         "difficulty": 3,
         "sites_affected": 14,
-        "total_occurrences": 96616,
+        "total_occurrences": 96611,
         "max_pages": 6813
       },
       {
@@ -4926,20 +4926,20 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 3,
-        "sites_affected": 18,
-        "total_occurrences": 28013,
-        "max_pages": 3340
+        "sites_affected": 17,
+        "total_occurrences": 22957,
+        "max_pages": 2649
       },
       {
-        "rule_id": 53,
-        "title": "Headings are not structured",
-        "description": "One or more heading levels have been skipped. \n\n",
-        "conformance": "si",
-        "level": "BP",
-        "difficulty": 2,
-        "sites_affected": 21,
-        "total_occurrences": 13226,
-        "max_pages": 2301
+        "rule_id": 18,
+        "title": "ARIA attribute unsupported or prohibited",
+        "description": "An ARIA attribute has been specified that is either not supported or is prohibited, on this type of element.",
+        "conformance": "aria",
+        "level": "ARIA",
+        "difficulty": 4,
+        "sites_affected": 6,
+        "total_occurrences": 15474,
+        "max_pages": 15347
       },
       {
         "rule_id": 73,
@@ -4949,8 +4949,19 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 13,
-        "total_occurrences": 13123,
+        "total_occurrences": 13052,
         "max_pages": 5414
+      },
+      {
+        "rule_id": 53,
+        "title": "Headings are not structured",
+        "description": "One or more heading levels have been skipped. \n\n",
+        "conformance": "si",
+        "level": "BP",
+        "difficulty": 2,
+        "sites_affected": 21,
+        "total_occurrences": 12713,
+        "max_pages": 2951
       },
       {
         "rule_id": 62,
@@ -4960,7 +4971,7 @@
         "level": "A",
         "difficulty": 2,
         "sites_affected": 8,
-        "total_occurrences": 12331,
+        "total_occurrences": 11963,
         "max_pages": 2730
       },
       {
@@ -4984,28 +4995,6 @@
         "sites_affected": 7,
         "total_occurrences": 6479,
         "max_pages": 4534
-      },
-      {
-        "rule_id": 18,
-        "title": "ARIA attribute unsupported or prohibited",
-        "description": "An ARIA attribute has been specified that is either not supported or is prohibited, on this type of element.",
-        "conformance": "aria",
-        "level": "ARIA",
-        "difficulty": 4,
-        "sites_affected": 6,
-        "total_occurrences": 6309,
-        "max_pages": 6182
-      },
-      {
-        "rule_id": 12,
-        "title": "Button missing a text alternative",
-        "description": "Buttons should always have a text label. The label can be inserted into the HTML \u2014 it does **not** need to be visible to pass this check.",
-        "conformance": "a",
-        "level": "A",
-        "difficulty": 3,
-        "sites_affected": 4,
-        "total_occurrences": 5807,
-        "max_pages": 3290
       },
       {
         "rule_id": 60,
@@ -5036,8 +5025,8 @@
         "conformance": "si",
         "level": "BP",
         "difficulty": 2,
-        "sites_affected": 11,
-        "total_occurrences": 3571,
+        "sites_affected": 9,
+        "total_occurrences": 3546,
         "max_pages": 2730
       },
       {
@@ -5050,6 +5039,17 @@
         "sites_affected": 1,
         "total_occurrences": 2730,
         "max_pages": 2730
+      },
+      {
+        "rule_id": 12,
+        "title": "Button missing a text alternative",
+        "description": "Buttons should always have a text label. The label can be inserted into the HTML \u2014 it does **not** need to be visible to pass this check.",
+        "conformance": "a",
+        "level": "A",
+        "difficulty": 3,
+        "sites_affected": 2,
+        "total_occurrences": 2513,
+        "max_pages": 1625
       },
       {
         "rule_id": 78,
@@ -5107,17 +5107,6 @@
         "max_pages": 45
       },
       {
-        "rule_id": 113,
-        "title": "Interactive element does not meet minimum size nor spacing",
-        "description": "Interactive elements, like buttons or links, should be large enough or be positioned, so they can easily be clicked or tapped by users.\n\nElements should be at least 24 by 24 pixels, or if smaller, be positioned with enough spacing to not intersect with other interactive elements.",
-        "conformance": "aa",
-        "level": "AA",
-        "difficulty": 4,
-        "sites_affected": 8,
-        "total_occurrences": 368,
-        "max_pages": 77
-      },
-      {
         "rule_id": 2,
         "title": "Image missing a text alternative",
         "description": "All non-decorative images must have a text alternative (also known as \"alt text\"). ",
@@ -5127,6 +5116,17 @@
         "sites_affected": 8,
         "total_occurrences": 319,
         "max_pages": 165
+      },
+      {
+        "rule_id": 113,
+        "title": "Interactive element does not meet minimum size nor spacing",
+        "description": "Interactive elements, like buttons or links, should be large enough or be positioned, so they can easily be clicked or tapped by users.\n\nElements should be at least 24 by 24 pixels, or if smaller, be positioned with enough spacing to not intersect with other interactive elements.",
+        "conformance": "aa",
+        "level": "AA",
+        "difficulty": 4,
+        "sites_affected": 9,
+        "total_occurrences": 296,
+        "max_pages": 77
       },
       {
         "rule_id": 80,
@@ -5168,8 +5168,8 @@
         "conformance": "si",
         "level": "BP",
         "difficulty": 1,
-        "sites_affected": 8,
-        "total_occurrences": 79,
+        "sites_affected": 7,
+        "total_occurrences": 71,
         "max_pages": 20
       },
       {
@@ -5305,294 +5305,6 @@
         "max_pages": 1
       }
     ],
-    "tag:Social Sciences": [
-      {
-        "rule_id": 57,
-        "title": "Text not included in an ARIA landmark",
-        "description": "All perceivable text content should be included in an <a href=\"https://www.w3.org/WAI/ARIA/apg/practices/landmark-regions/\" target=\"_blank\">ARIA landmark</a>.   \n\nPerceivable text content refers to text that can be perceived by users of assistive technology \u2014 some of which may be invisible to sighted users.",
-        "conformance": "aria",
-        "level": "ARIA",
-        "difficulty": 4,
-        "sites_affected": 13,
-        "total_occurrences": 1628649,
-        "max_pages": 3595
-      },
-      {
-        "rule_id": 111,
-        "title": "Interactive element does not meet enhanced size",
-        "description": "Interactive elements, like buttons or links, should be at least 44 by 44 pixels, so they can easily be clicked or tapped by all users.",
-        "conformance": "aaa",
-        "level": "AAA",
-        "difficulty": 2,
-        "sites_affected": 13,
-        "total_occurrences": 598216,
-        "max_pages": 3595
-      },
-      {
-        "rule_id": 66,
-        "title": "Color contrast does not meet enhanced requirement",
-        "description": "There is insufficient color contrast between the text and background on this page to meet the enhanced contrast requirement.",
-        "conformance": "aaa",
-        "level": "AAA",
-        "difficulty": 2,
-        "sites_affected": 13,
-        "total_occurrences": 207259,
-        "max_pages": 3595
-      },
-      {
-        "rule_id": 113,
-        "title": "Interactive element does not meet minimum size nor spacing",
-        "description": "Interactive elements, like buttons or links, should be large enough or be positioned, so they can easily be clicked or tapped by users.\n\nElements should be at least 24 by 24 pixels, or if smaller, be positioned with enough spacing to not intersect with other interactive elements.",
-        "conformance": "aa",
-        "level": "AA",
-        "difficulty": 4,
-        "sites_affected": 13,
-        "total_occurrences": 99737,
-        "max_pages": 3595
-      },
-      {
-        "rule_id": 73,
-        "title": "Line height is below minimum value",
-        "description": "The `line-height` for paragraphs should be at least 1.5 times the font size. ",
-        "conformance": "aaa",
-        "level": "AAA",
-        "difficulty": 2,
-        "sites_affected": 13,
-        "total_occurrences": 59205,
-        "max_pages": 3595
-      },
-      {
-        "rule_id": 74,
-        "title": "Font size is fixed",
-        "description": "The `font-size` has been fixed using an <a href=\"https://www.w3.org/TR/css-values-3/#absolute-lengths\" target=\"_blank\">absolute length unit</a>, such as `px`, `pt` or `cm`.",
-        "conformance": "aaa",
-        "level": "AAA",
-        "difficulty": 3,
-        "sites_affected": 13,
-        "total_occurrences": 28651,
-        "max_pages": 1096
-      },
-      {
-        "rule_id": 80,
-        "title": "Line height is fixed",
-        "description": "The `line-height` has been fixed using an absolute length unit, such as `px`, `pt` or `cm`.",
-        "conformance": "aaa",
-        "level": "AAA",
-        "difficulty": 3,
-        "sites_affected": 13,
-        "total_occurrences": 21732,
-        "max_pages": 364
-      },
-      {
-        "rule_id": 69,
-        "title": "Color contrast does not meet minimum requirement",
-        "description": "There is insufficient color contrast between the text and background on this page to meet the minimum contrast requirement.",
-        "conformance": "aa",
-        "level": "AA",
-        "difficulty": 2,
-        "sites_affected": 13,
-        "total_occurrences": 6034,
-        "max_pages": 379
-      },
-      {
-        "rule_id": 53,
-        "title": "Headings are not structured",
-        "description": "One or more heading levels have been skipped. \n\n",
-        "conformance": "si",
-        "level": "BP",
-        "difficulty": 2,
-        "sites_affected": 13,
-        "total_occurrences": 5258,
-        "max_pages": 1215
-      },
-      {
-        "rule_id": 11,
-        "title": "Link missing a text alternative",
-        "description": "Links should always have a text alternative. The link text can be inserted into the HTML \u2014 it does **not** need to be visible to pass this check.",
-        "conformance": "a",
-        "level": "A",
-        "difficulty": 3,
-        "sites_affected": 13,
-        "total_occurrences": 4496,
-        "max_pages": 824
-      },
-      {
-        "rule_id": 2,
-        "title": "Image missing a text alternative",
-        "description": "All non-decorative images must have a text alternative (also known as \"alt text\"). ",
-        "conformance": "a",
-        "level": "A",
-        "difficulty": 1,
-        "sites_affected": 12,
-        "total_occurrences": 4103,
-        "max_pages": 746
-      },
-      {
-        "rule_id": 85,
-        "title": "Overuse of italics",
-        "description": "The `font-style` property has been used to display an entire paragraph in italics.",
-        "conformance": "si",
-        "level": "BP",
-        "difficulty": 2,
-        "sites_affected": 13,
-        "total_occurrences": 2987,
-        "max_pages": 711
-      },
-      {
-        "rule_id": 68,
-        "title": "Container element is empty",
-        "description": "Some roles are designed to contain other roles. This element has this type of role, but it doesn't contain any <a href=\"https://www.w3.org/TR/wai-aria-1.1/#mustContain\" target=\"_blank\">required-owned elements</a>.\n",
-        "conformance": "a",
-        "level": "A",
-        "difficulty": 3,
-        "sites_affected": 13,
-        "total_occurrences": 1439,
-        "max_pages": 455
-      },
-      {
-        "rule_id": 62,
-        "title": "Links are not clearly identifiable",
-        "description": "Color alone is not enough to distinguish a link from the surrounding text.",
-        "conformance": "a",
-        "level": "A",
-        "difficulty": 2,
-        "sites_affected": 13,
-        "total_occurrences": 946,
-        "max_pages": 58
-      },
-      {
-        "rule_id": 41,
-        "title": "Links on the same page with the same text alternative",
-        "description": "Two or more links on this page have the exact same link text \u2014 despite pointing to different URLs.",
-        "conformance": "aaa",
-        "level": "AAA",
-        "difficulty": 3,
-        "sites_affected": 1,
-        "total_occurrences": 760,
-        "max_pages": 300
-      },
-      {
-        "rule_id": 14,
-        "title": "Visible label and accessible name do not match",
-        "description": "The accessible name of any interactive element should contain its visible text label.",
-        "conformance": "a",
-        "level": "A",
-        "difficulty": 3,
-        "sites_affected": 13,
-        "total_occurrences": 596,
-        "max_pages": 102
-      },
-      {
-        "rule_id": 78,
-        "title": "Content missing after heading",
-        "description": "Headings are used to structure content in a hierarchy. This helps users to know where to start and how content sections relate to one another.\n\nContent should appear as expected including between headings of the same level and after the last section or page heading.",
-        "conformance": "si",
-        "level": "BP",
-        "difficulty": 2,
-        "sites_affected": 11,
-        "total_occurrences": 205,
-        "max_pages": 25
-      },
-      {
-        "rule_id": 42,
-        "title": "Role not inside the required context",
-        "description": "This page element has a `role` that only makes sense in the context of another `role`.",
-        "conformance": "a",
-        "level": "A",
-        "difficulty": 3,
-        "sites_affected": 13,
-        "total_occurrences": 185,
-        "max_pages": 24
-      },
-      {
-        "rule_id": 64,
-        "title": "Empty headings",
-        "description": "This page contains one or more \"empty\" headings (heading tags with no text content).",
-        "conformance": "a",
-        "level": "A",
-        "difficulty": 2,
-        "sites_affected": 11,
-        "total_occurrences": 112,
-        "max_pages": 18
-      },
-      {
-        "rule_id": 71,
-        "title": "Uneven spacing in text",
-        "description": "Text should not be \"justified\" (aligned to both margins). Instead, it should be aligned to the left, right or center. ",
-        "conformance": "aaa",
-        "level": "AAA",
-        "difficulty": 2,
-        "sites_affected": 8,
-        "total_occurrences": 79,
-        "max_pages": 8
-      },
-      {
-        "rule_id": 13,
-        "title": "Inline frame missing a text alternative",
-        "description": "Every inline frame (`iframe`) should have a text alternative that summarizes its content or purpose.",
-        "conformance": "a",
-        "level": "A",
-        "difficulty": 2,
-        "sites_affected": 10,
-        "total_occurrences": 63,
-        "max_pages": 21
-      },
-      {
-        "rule_id": 84,
-        "title": "Scrollable element is not keyboard accessible",
-        "description": "This page has a scrollable section that can't be operated by keyboard. ",
-        "conformance": "a",
-        "level": "A",
-        "difficulty": 2,
-        "sites_affected": 13,
-        "total_occurrences": 49,
-        "max_pages": 22
-      },
-      {
-        "rule_id": 72,
-        "title": "Text in all caps",
-        "description": "The `text-transform` property has been used to\u00a0display\u00a0an entire paragraph\u00a0in\u00a0uppercase\u00a0(capital letters).\u00a0",
-        "conformance": "si",
-        "level": "BP",
-        "difficulty": 2,
-        "sites_affected": 7,
-        "total_occurrences": 39,
-        "max_pages": 9
-      },
-      {
-        "rule_id": 60,
-        "title": "Grouped form controls missing an accessible name",
-        "description": "Grouped form controls can include elements such as checkboxes or radio buttons where the user needs to make a selection.\n\nEach group should have an accessible name so that screen reader users can understand the group\u2019s purpose.",
-        "conformance": "si",
-        "level": "BP",
-        "difficulty": 3,
-        "sites_affected": 13,
-        "total_occurrences": 16,
-        "max_pages": 2
-      },
-      {
-        "rule_id": 70,
-        "title": "HTML element is deprecated or obsolete",
-        "description": "HTML elements are updated over time and older versions are deprecated before becoming obsolete. If a deprecated or obsolete element is used, it may create usability issues.\n\n- <a href=\"https://www.w3.org/TR/2014/REC-html5-20141028/obsolete.html\" target=\"_blank\">Learn more about deprecated elements</a> ",
-        "conformance": "si",
-        "level": "BP",
-        "difficulty": 2,
-        "sites_affected": 4,
-        "total_occurrences": 6,
-        "max_pages": 2
-      },
-      {
-        "rule_id": 81,
-        "title": "Links in the same context with the same text alternative",
-        "description": "Two or more links in the <a href=\"https://www.w3.org/TR/WCAG21/#dfn-programmatically-determined-link-context\" target=\"_blank\">same context</a> have the exact same link text \u2014 despite pointing to different pages.\n\n",
-        "conformance": "a",
-        "level": "A",
-        "difficulty": 2,
-        "sites_affected": 1,
-        "total_occurrences": 3,
-        "max_pages": 2
-      }
-    ],
     "tag:Natural Sciences": [
       {
         "rule_id": 57,
@@ -5602,7 +5314,7 @@
         "level": "ARIA",
         "difficulty": 4,
         "sites_affected": 16,
-        "total_occurrences": 1573883,
+        "total_occurrences": 1573871,
         "max_pages": 3154
       },
       {
@@ -5657,7 +5369,7 @@
         "level": "AAA",
         "difficulty": 3,
         "sites_affected": 16,
-        "total_occurrences": 23659,
+        "total_occurrences": 23658,
         "max_pages": 607
       },
       {
@@ -5668,7 +5380,7 @@
         "level": "AAA",
         "difficulty": 3,
         "sites_affected": 16,
-        "total_occurrences": 17314,
+        "total_occurrences": 17313,
         "max_pages": 164
       },
       {
@@ -5901,6 +5613,294 @@
         "sites_affected": 1,
         "total_occurrences": 1,
         "max_pages": 1
+      }
+    ],
+    "tag:Social Sciences": [
+      {
+        "rule_id": 57,
+        "title": "Text not included in an ARIA landmark",
+        "description": "All perceivable text content should be included in an <a href=\"https://www.w3.org/WAI/ARIA/apg/practices/landmark-regions/\" target=\"_blank\">ARIA landmark</a>.   \n\nPerceivable text content refers to text that can be perceived by users of assistive technology \u2014 some of which may be invisible to sighted users.",
+        "conformance": "aria",
+        "level": "ARIA",
+        "difficulty": 4,
+        "sites_affected": 13,
+        "total_occurrences": 1625908,
+        "max_pages": 3595
+      },
+      {
+        "rule_id": 111,
+        "title": "Interactive element does not meet enhanced size",
+        "description": "Interactive elements, like buttons or links, should be at least 44 by 44 pixels, so they can easily be clicked or tapped by all users.",
+        "conformance": "aaa",
+        "level": "AAA",
+        "difficulty": 2,
+        "sites_affected": 13,
+        "total_occurrences": 596449,
+        "max_pages": 3595
+      },
+      {
+        "rule_id": 66,
+        "title": "Color contrast does not meet enhanced requirement",
+        "description": "There is insufficient color contrast between the text and background on this page to meet the enhanced contrast requirement.",
+        "conformance": "aaa",
+        "level": "AAA",
+        "difficulty": 2,
+        "sites_affected": 13,
+        "total_occurrences": 206536,
+        "max_pages": 3595
+      },
+      {
+        "rule_id": 113,
+        "title": "Interactive element does not meet minimum size nor spacing",
+        "description": "Interactive elements, like buttons or links, should be large enough or be positioned, so they can easily be clicked or tapped by users.\n\nElements should be at least 24 by 24 pixels, or if smaller, be positioned with enough spacing to not intersect with other interactive elements.",
+        "conformance": "aa",
+        "level": "AA",
+        "difficulty": 4,
+        "sites_affected": 13,
+        "total_occurrences": 99448,
+        "max_pages": 3595
+      },
+      {
+        "rule_id": 73,
+        "title": "Line height is below minimum value",
+        "description": "The `line-height` for paragraphs should be at least 1.5 times the font size. ",
+        "conformance": "aaa",
+        "level": "AAA",
+        "difficulty": 2,
+        "sites_affected": 13,
+        "total_occurrences": 59292,
+        "max_pages": 3595
+      },
+      {
+        "rule_id": 74,
+        "title": "Font size is fixed",
+        "description": "The `font-size` has been fixed using an <a href=\"https://www.w3.org/TR/css-values-3/#absolute-lengths\" target=\"_blank\">absolute length unit</a>, such as `px`, `pt` or `cm`.",
+        "conformance": "aaa",
+        "level": "AAA",
+        "difficulty": 3,
+        "sites_affected": 13,
+        "total_occurrences": 28680,
+        "max_pages": 1096
+      },
+      {
+        "rule_id": 80,
+        "title": "Line height is fixed",
+        "description": "The `line-height` has been fixed using an absolute length unit, such as `px`, `pt` or `cm`.",
+        "conformance": "aaa",
+        "level": "AAA",
+        "difficulty": 3,
+        "sites_affected": 13,
+        "total_occurrences": 21693,
+        "max_pages": 364
+      },
+      {
+        "rule_id": 69,
+        "title": "Color contrast does not meet minimum requirement",
+        "description": "There is insufficient color contrast between the text and background on this page to meet the minimum contrast requirement.",
+        "conformance": "aa",
+        "level": "AA",
+        "difficulty": 2,
+        "sites_affected": 13,
+        "total_occurrences": 5673,
+        "max_pages": 143
+      },
+      {
+        "rule_id": 53,
+        "title": "Headings are not structured",
+        "description": "One or more heading levels have been skipped. \n\n",
+        "conformance": "si",
+        "level": "BP",
+        "difficulty": 2,
+        "sites_affected": 13,
+        "total_occurrences": 5248,
+        "max_pages": 1204
+      },
+      {
+        "rule_id": 11,
+        "title": "Link missing a text alternative",
+        "description": "Links should always have a text alternative. The link text can be inserted into the HTML \u2014 it does **not** need to be visible to pass this check.",
+        "conformance": "a",
+        "level": "A",
+        "difficulty": 3,
+        "sites_affected": 13,
+        "total_occurrences": 4487,
+        "max_pages": 824
+      },
+      {
+        "rule_id": 2,
+        "title": "Image missing a text alternative",
+        "description": "All non-decorative images must have a text alternative (also known as \"alt text\"). ",
+        "conformance": "a",
+        "level": "A",
+        "difficulty": 1,
+        "sites_affected": 12,
+        "total_occurrences": 4100,
+        "max_pages": 746
+      },
+      {
+        "rule_id": 85,
+        "title": "Overuse of italics",
+        "description": "The `font-style` property has been used to display an entire paragraph in italics.",
+        "conformance": "si",
+        "level": "BP",
+        "difficulty": 2,
+        "sites_affected": 13,
+        "total_occurrences": 2986,
+        "max_pages": 711
+      },
+      {
+        "rule_id": 68,
+        "title": "Container element is empty",
+        "description": "Some roles are designed to contain other roles. This element has this type of role, but it doesn't contain any <a href=\"https://www.w3.org/TR/wai-aria-1.1/#mustContain\" target=\"_blank\">required-owned elements</a>.\n",
+        "conformance": "a",
+        "level": "A",
+        "difficulty": 3,
+        "sites_affected": 13,
+        "total_occurrences": 1438,
+        "max_pages": 455
+      },
+      {
+        "rule_id": 62,
+        "title": "Links are not clearly identifiable",
+        "description": "Color alone is not enough to distinguish a link from the surrounding text.",
+        "conformance": "a",
+        "level": "A",
+        "difficulty": 2,
+        "sites_affected": 13,
+        "total_occurrences": 947,
+        "max_pages": 58
+      },
+      {
+        "rule_id": 41,
+        "title": "Links on the same page with the same text alternative",
+        "description": "Two or more links on this page have the exact same link text \u2014 despite pointing to different URLs.",
+        "conformance": "aaa",
+        "level": "AAA",
+        "difficulty": 3,
+        "sites_affected": 1,
+        "total_occurrences": 760,
+        "max_pages": 300
+      },
+      {
+        "rule_id": 14,
+        "title": "Visible label and accessible name do not match",
+        "description": "The accessible name of any interactive element should contain its visible text label.",
+        "conformance": "a",
+        "level": "A",
+        "difficulty": 3,
+        "sites_affected": 13,
+        "total_occurrences": 596,
+        "max_pages": 102
+      },
+      {
+        "rule_id": 78,
+        "title": "Content missing after heading",
+        "description": "Headings are used to structure content in a hierarchy. This helps users to know where to start and how content sections relate to one another.\n\nContent should appear as expected including between headings of the same level and after the last section or page heading.",
+        "conformance": "si",
+        "level": "BP",
+        "difficulty": 2,
+        "sites_affected": 11,
+        "total_occurrences": 197,
+        "max_pages": 25
+      },
+      {
+        "rule_id": 42,
+        "title": "Role not inside the required context",
+        "description": "This page element has a `role` that only makes sense in the context of another `role`.",
+        "conformance": "a",
+        "level": "A",
+        "difficulty": 3,
+        "sites_affected": 13,
+        "total_occurrences": 187,
+        "max_pages": 24
+      },
+      {
+        "rule_id": 64,
+        "title": "Empty headings",
+        "description": "This page contains one or more \"empty\" headings (heading tags with no text content).",
+        "conformance": "a",
+        "level": "A",
+        "difficulty": 2,
+        "sites_affected": 11,
+        "total_occurrences": 100,
+        "max_pages": 17
+      },
+      {
+        "rule_id": 71,
+        "title": "Uneven spacing in text",
+        "description": "Text should not be \"justified\" (aligned to both margins). Instead, it should be aligned to the left, right or center. ",
+        "conformance": "aaa",
+        "level": "AAA",
+        "difficulty": 2,
+        "sites_affected": 8,
+        "total_occurrences": 79,
+        "max_pages": 8
+      },
+      {
+        "rule_id": 13,
+        "title": "Inline frame missing a text alternative",
+        "description": "Every inline frame (`iframe`) should have a text alternative that summarizes its content or purpose.",
+        "conformance": "a",
+        "level": "A",
+        "difficulty": 2,
+        "sites_affected": 10,
+        "total_occurrences": 64,
+        "max_pages": 21
+      },
+      {
+        "rule_id": 84,
+        "title": "Scrollable element is not keyboard accessible",
+        "description": "This page has a scrollable section that can't be operated by keyboard. ",
+        "conformance": "a",
+        "level": "A",
+        "difficulty": 2,
+        "sites_affected": 13,
+        "total_occurrences": 49,
+        "max_pages": 22
+      },
+      {
+        "rule_id": 72,
+        "title": "Text in all caps",
+        "description": "The `text-transform` property has been used to\u00a0display\u00a0an entire paragraph\u00a0in\u00a0uppercase\u00a0(capital letters).\u00a0",
+        "conformance": "si",
+        "level": "BP",
+        "difficulty": 2,
+        "sites_affected": 7,
+        "total_occurrences": 39,
+        "max_pages": 9
+      },
+      {
+        "rule_id": 60,
+        "title": "Grouped form controls missing an accessible name",
+        "description": "Grouped form controls can include elements such as checkboxes or radio buttons where the user needs to make a selection.\n\nEach group should have an accessible name so that screen reader users can understand the group\u2019s purpose.",
+        "conformance": "si",
+        "level": "BP",
+        "difficulty": 3,
+        "sites_affected": 13,
+        "total_occurrences": 16,
+        "max_pages": 2
+      },
+      {
+        "rule_id": 70,
+        "title": "HTML element is deprecated or obsolete",
+        "description": "HTML elements are updated over time and older versions are deprecated before becoming obsolete. If a deprecated or obsolete element is used, it may create usability issues.\n\n- <a href=\"https://www.w3.org/TR/2014/REC-html5-20141028/obsolete.html\" target=\"_blank\">Learn more about deprecated elements</a> ",
+        "conformance": "si",
+        "level": "BP",
+        "difficulty": 2,
+        "sites_affected": 4,
+        "total_occurrences": 6,
+        "max_pages": 2
+      },
+      {
+        "rule_id": 81,
+        "title": "Links in the same context with the same text alternative",
+        "description": "Two or more links in the <a href=\"https://www.w3.org/TR/WCAG21/#dfn-programmatically-determined-link-context\" target=\"_blank\">same context</a> have the exact same link text \u2014 despite pointing to different pages.\n\n",
+        "conformance": "a",
+        "level": "A",
+        "difficulty": 2,
+        "sites_affected": 1,
+        "total_occurrences": 3,
+        "max_pages": 2
       }
     ],
     "tag:Rails": [
@@ -6576,7 +6576,7 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 12,
-        "total_occurrences": 53577,
+        "total_occurrences": 53562,
         "max_pages": 2269
       },
       {
@@ -6809,7 +6809,7 @@
         "level": "ARIA",
         "difficulty": 4,
         "sites_affected": 11,
-        "total_occurrences": 223576,
+        "total_occurrences": 223422,
         "max_pages": 593
       },
       {
@@ -6820,7 +6820,7 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 11,
-        "total_occurrences": 91039,
+        "total_occurrences": 90986,
         "max_pages": 593
       },
       {
@@ -6831,7 +6831,7 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 11,
-        "total_occurrences": 31963,
+        "total_occurrences": 31930,
         "max_pages": 593
       },
       {
@@ -6842,7 +6842,7 @@
         "level": "AA",
         "difficulty": 4,
         "sites_affected": 11,
-        "total_occurrences": 18781,
+        "total_occurrences": 18809,
         "max_pages": 593
       },
       {
@@ -6853,7 +6853,7 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 11,
-        "total_occurrences": 10551,
+        "total_occurrences": 10539,
         "max_pages": 474
       },
       {
@@ -6864,7 +6864,7 @@
         "level": "AA",
         "difficulty": 2,
         "sites_affected": 7,
-        "total_occurrences": 5384,
+        "total_occurrences": 5359,
         "max_pages": 214
       },
       {
@@ -6875,7 +6875,7 @@
         "level": "AAA",
         "difficulty": 3,
         "sites_affected": 9,
-        "total_occurrences": 2382,
+        "total_occurrences": 2379,
         "max_pages": 159
       },
       {
@@ -6886,7 +6886,7 @@
         "level": "AAA",
         "difficulty": 3,
         "sites_affected": 9,
-        "total_occurrences": 1727,
+        "total_occurrences": 1724,
         "max_pages": 44
       },
       {
@@ -7007,7 +7007,7 @@
         "level": "A",
         "difficulty": 2,
         "sites_affected": 8,
-        "total_occurrences": 24,
+        "total_occurrences": 26,
         "max_pages": 17
       },
       {
@@ -7332,17 +7332,6 @@
         "max_pages": 3
       },
       {
-        "rule_id": 86,
-        "title": "Presentational element is exposed to assistive technologies",
-        "description": "An element has been marked as decorative, but it remains exposed to assistive technologies.\n\nThis may be because:\n- the element has an ARIA attribute (these contain \"instructions\" for assistive technologies), or\n- the element is focusable (meaning it can still be reached by keyboard)\n\n ",
-        "conformance": "si",
-        "level": "BP",
-        "difficulty": 1,
-        "sites_affected": 2,
-        "total_occurrences": 10,
-        "max_pages": 3
-      },
-      {
         "rule_id": 61,
         "title": "Page does not start with a level 1 heading",
         "description": "A level 1 heading `h1` tells the user what the page is about before they decide to navigate through the content. \n\nHeadings are used to structure content into a hierarchy of importance. If a page starts with a different heading level, it can cause confusion for the user.",
@@ -7387,15 +7376,15 @@
         "max_pages": 2
       },
       {
-        "rule_id": 75,
-        "title": "Font size is too small",
-        "description": "The `font-size` should not be smaller than 9 px, or `xx-small`. ",
+        "rule_id": 86,
+        "title": "Presentational element is exposed to assistive technologies",
+        "description": "An element has been marked as decorative, but it remains exposed to assistive technologies.\n\nThis may be because:\n- the element has an ARIA attribute (these contain \"instructions\" for assistive technologies), or\n- the element is focusable (meaning it can still be reached by keyboard)\n\n ",
         "conformance": "si",
         "level": "BP",
-        "difficulty": 2,
-        "sites_affected": 1,
+        "difficulty": 1,
+        "sites_affected": 2,
         "total_occurrences": 3,
-        "max_pages": 2
+        "max_pages": 1
       },
       {
         "rule_id": 87,
@@ -7404,6 +7393,17 @@
         "conformance": "si",
         "level": "BP",
         "difficulty": 4,
+        "sites_affected": 1,
+        "total_occurrences": 1,
+        "max_pages": 1
+      },
+      {
+        "rule_id": 75,
+        "title": "Font size is too small",
+        "description": "The `font-size` should not be smaller than 9 px, or `xx-small`. ",
+        "conformance": "si",
+        "level": "BP",
+        "difficulty": 2,
         "sites_affected": 1,
         "total_occurrences": 1,
         "max_pages": 1
@@ -7451,8 +7451,8 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 169,
-        "total_occurrences": 969550,
-        "max_pages": 2777
+        "total_occurrences": 969238,
+        "max_pages": 2775
       },
       {
         "rule_id": 66,
@@ -7462,8 +7462,8 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 155,
-        "total_occurrences": 942352,
-        "max_pages": 2777
+        "total_occurrences": 942113,
+        "max_pages": 2775
       },
       {
         "rule_id": 57,
@@ -7473,8 +7473,8 @@
         "level": "ARIA",
         "difficulty": 4,
         "sites_affected": 97,
-        "total_occurrences": 433496,
-        "max_pages": 2777
+        "total_occurrences": 433486,
+        "max_pages": 2775
       },
       {
         "rule_id": 69,
@@ -7495,8 +7495,8 @@
         "level": "A",
         "difficulty": 3,
         "sites_affected": 122,
-        "total_occurrences": 29193,
-        "max_pages": 2777
+        "total_occurrences": 29188,
+        "max_pages": 2775
       },
       {
         "rule_id": 53,
@@ -7506,7 +7506,7 @@
         "level": "BP",
         "difficulty": 2,
         "sites_affected": 124,
-        "total_occurrences": 27206,
+        "total_occurrences": 27203,
         "max_pages": 2747
       },
       {
@@ -7517,8 +7517,8 @@
         "level": "A",
         "difficulty": 3,
         "sites_affected": 16,
-        "total_occurrences": 25667,
-        "max_pages": 1096
+        "total_occurrences": 25662,
+        "max_pages": 1095
       },
       {
         "rule_id": 18,
@@ -7528,8 +7528,8 @@
         "level": "ARIA",
         "difficulty": 4,
         "sites_affected": 61,
-        "total_occurrences": 22449,
-        "max_pages": 2776
+        "total_occurrences": 22445,
+        "max_pages": 2774
       },
       {
         "rule_id": 74,
@@ -7539,8 +7539,8 @@
         "level": "AAA",
         "difficulty": 3,
         "sites_affected": 100,
-        "total_occurrences": 22249,
-        "max_pages": 1904
+        "total_occurrences": 22246,
+        "max_pages": 1901
       },
       {
         "rule_id": 62,
@@ -7550,8 +7550,8 @@
         "level": "A",
         "difficulty": 2,
         "sites_affected": 111,
-        "total_occurrences": 18001,
-        "max_pages": 1096
+        "total_occurrences": 18000,
+        "max_pages": 1095
       },
       {
         "rule_id": 2,
@@ -7561,8 +7561,8 @@
         "level": "A",
         "difficulty": 1,
         "sites_affected": 88,
-        "total_occurrences": 14404,
-        "max_pages": 2777
+        "total_occurrences": 14401,
+        "max_pages": 2775
       },
       {
         "rule_id": 73,
@@ -7583,8 +7583,8 @@
         "level": "AA",
         "difficulty": 4,
         "sites_affected": 35,
-        "total_occurrences": 10728,
-        "max_pages": 2226
+        "total_occurrences": 10731,
+        "max_pages": 2223
       },
       {
         "rule_id": 72,
@@ -7638,7 +7638,7 @@
         "level": "BP",
         "difficulty": 2,
         "sites_affected": 54,
-        "total_occurrences": 2003,
+        "total_occurrences": 1985,
         "max_pages": 590
       },
       {
@@ -7860,7 +7860,7 @@
         "level": "ARIA",
         "difficulty": 4,
         "sites_affected": 18,
-        "total_occurrences": 1082278,
+        "total_occurrences": 1082838,
         "max_pages": 2665
       },
       {
@@ -7871,7 +7871,7 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 18,
-        "total_occurrences": 319545,
+        "total_occurrences": 319310,
         "max_pages": 2665
       },
       {
@@ -7882,7 +7882,7 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 18,
-        "total_occurrences": 159756,
+        "total_occurrences": 160054,
         "max_pages": 2665
       },
       {
@@ -7893,7 +7893,7 @@
         "level": "AAA",
         "difficulty": 2,
         "sites_affected": 18,
-        "total_occurrences": 50429,
+        "total_occurrences": 50628,
         "max_pages": 2665
       },
       {
@@ -7904,7 +7904,7 @@
         "level": "AA",
         "difficulty": 4,
         "sites_affected": 18,
-        "total_occurrences": 30503,
+        "total_occurrences": 30509,
         "max_pages": 1391
       },
       {
@@ -7915,7 +7915,7 @@
         "level": "AAA",
         "difficulty": 3,
         "sites_affected": 18,
-        "total_occurrences": 15801,
+        "total_occurrences": 15802,
         "max_pages": 2246
       },
       {
@@ -7926,7 +7926,7 @@
         "level": "AAA",
         "difficulty": 3,
         "sites_affected": 17,
-        "total_occurrences": 11697,
+        "total_occurrences": 11698,
         "max_pages": 1123
       },
       {
@@ -7948,8 +7948,8 @@
         "level": "AA",
         "difficulty": 2,
         "sites_affected": 18,
-        "total_occurrences": 5187,
-        "max_pages": 241
+        "total_occurrences": 4950,
+        "max_pages": 238
       },
       {
         "rule_id": 11,
@@ -7959,7 +7959,7 @@
         "level": "A",
         "difficulty": 3,
         "sites_affected": 18,
-        "total_occurrences": 2506,
+        "total_occurrences": 2507,
         "max_pages": 1249
       },
       {
@@ -7970,7 +7970,7 @@
         "level": "BP",
         "difficulty": 2,
         "sites_affected": 18,
-        "total_occurrences": 2214,
+        "total_occurrences": 2208,
         "max_pages": 1079
       },
       {
@@ -8068,8 +8068,8 @@
         "conformance": "a",
         "level": "A",
         "difficulty": 2,
-        "sites_affected": 9,
-        "total_occurrences": 37,
+        "sites_affected": 8,
+        "total_occurrences": 30,
         "max_pages": 8
       },
       {
@@ -8079,7 +8079,7 @@
         "conformance": "si",
         "level": "BP",
         "difficulty": 2,
-        "sites_affected": 13,
+        "sites_affected": 12,
         "total_occurrences": 28,
         "max_pages": 3
       },
@@ -8381,8 +8381,8 @@
         "level": "BP",
         "difficulty": 1,
         "sites_affected": 1,
-        "total_occurrences": 9,
-        "max_pages": 3
+        "total_occurrences": 2,
+        "max_pages": 1
       },
       {
         "rule_id": 75,
@@ -8392,8 +8392,8 @@
         "level": "BP",
         "difficulty": 2,
         "sites_affected": 1,
-        "total_occurrences": 3,
-        "max_pages": 2
+        "total_occurrences": 1,
+        "max_pages": 1
       }
     ]
   }
