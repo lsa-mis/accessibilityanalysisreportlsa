@@ -151,12 +151,14 @@ SECTIONS: list[dict] = [
 # visible and reversible) so they drop off the active board.
 JUNK_TASK_CLEANUP = _env_bool("JUNK_TASK_CLEANUP", True)
 
-# Stale API-sourced tasks: an existing task whose own 'Source' field reads
-# 'Siteimprove API' but that matches no current site means the site left
-# Siteimprove (dropped from both the API and the CSV). Marked completed
-# (reversible, never deleted). CSV-sourced and human-created tasks (no
-# Source) are never touched — the decision reads the task's own provenance.
-STALE_API_TASK_CLEANUP = _env_bool("STALE_API_TASK_CLEANUP", True)
+# Stale sync-created tasks: an existing task whose own 'Source' field reads
+# 'Siteimprove API' or 'Siteimprove CSV export' but that matches no current
+# site means the site left Siteimprove (dropped from both the API and the
+# CSV). Its Status (Accessibility) is set to STATUS_ARCHIVED; the task stays
+# open (not completed) so it remains visible on the board. Human-created
+# tasks (no Source) and tasks in PROTECTED_SECTIONS are never touched — the
+# decision reads the task's own provenance.
+STALE_TASK_ARCHIVE = _env_bool("STALE_TASK_ARCHIVE", True)
 
 # Fields BLANKED on every task, every run (set to null). Requested to keep
 # them empty. WARNING — destructive: clears current values. These are
@@ -240,9 +242,18 @@ CREATABLE_TEXT_FIELDS: list[str] = [TAGS_FIELD]
 # the board it's skipped — unless CREATE_MISSING_FIELDS is on, in which case
 # the sync creates it as a number field and attaches it to the project.
 TARGET_PCT_FIELD = _env_str("TARGET_PCT_FIELD", "Siteimprove Target %")
+# Pages scanned in Siteimprove's last crawl. This column was added to the
+# board by hand, so the sync never creates it (NO_AUTO_CREATE_FIELDS).
+PAGES_FIELD = _env_str("PAGES_FIELD", "Number of Pages")
 NUMBER_FIELD_WRITES: dict[str, str] = {
     TARGET_PCT_FIELD: "target_percentage",
+    PAGES_FIELD: "pages",
 }
+NO_AUTO_CREATE_FIELDS: set[str] = {PAGES_FIELD}
+
+# Appended to the Siteimprove Tags mirror for sites whose target % is the
+# fetch's estimate rather than Siteimprove's own value.
+ESTIMATE_MARKER = "Target % (estimate)"
 NUMBER_FIELD_PRECISION = _env_int("NUMBER_FIELD_PRECISION", 1)
 
 # Allow the sync to create a missing number field (modifies the board
@@ -254,6 +265,22 @@ CREATE_MISSING_FIELDS = _env_bool("CREATE_MISSING_FIELDS", False)
 # overwrite a human-set status on existing tasks). Blank = don't set it.
 NEW_TASK_STATUS_ACCESSIBILITY = _env_str("NEW_TASK_STATUS_ACCESSIBILITY", "active")
 STATUS_ACCESSIBILITY_FIELD = "Status (Accessibility)"
+
+# Status (Accessibility) values the sync manages on existing tasks too:
+#   archived — sync-created task whose site is gone from the Siteimprove data
+#   private  — site the Siteimprove API returns with no accessibility score
+#              (it can't scan it, e.g. login required)
+#   active   — (NEW_TASK_STATUS_ACCESSIBILITY) restored when a private or
+#              archived site is back with a score
+# The options must already exist on the board's enum; a missing one is
+# logged and skipped. The sync only ever replaces a status that is blank or
+# one of SYNC_OVERWRITABLE_STATUSES, so any other value a person picked
+# (e.g. "in progress") is left alone.
+STATUS_ARCHIVED = _env_str("STATUS_ARCHIVED", "archived")
+STATUS_PRIVATE = _env_str("STATUS_PRIVATE", "private")
+SYNC_OVERWRITABLE_STATUSES = {
+    "", NEW_TASK_STATUS_ACCESSIBILITY.lower(), STATUS_ARCHIVED.lower(), STATUS_PRIVATE.lower(),
+}
 
 # --------------------------------------------------------------------------
 # Safety switches

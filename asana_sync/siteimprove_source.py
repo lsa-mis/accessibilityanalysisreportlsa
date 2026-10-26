@@ -27,6 +27,9 @@ class Site:
     score: float | None
     pages: int | None
     tags: list[str] = field(default_factory=list)
+    # True when target_percentage is the fetch's estimate (Siteimprove
+    # reported no site target yet), not Siteimprove's own number.
+    target_estimated: bool = False
     # Data provenance: "api" for rows the Siteimprove API returned,
     # "inventory" for stub rows appended from the CSV export at fetch time.
     source: str = "api"
@@ -79,15 +82,25 @@ def load_sites(url: str) -> list[Site]:
         site_url = r.get("url") or r.get("site") or ""
         if not site_url:
             continue  # can't match a site with no URL
+        target_pct = _num(r.get("target_percentage"))
+        # Siteimprove reports target score AND target % as 0 for sites it
+        # hasn't calculated a target for yet (their a11y score is real).
+        # That 0 isn't a measurement, so never pass it on as one. The fetch
+        # normally replaces it with an estimate (target_estimated); this
+        # guards older snapshots that predate that.
+        if (target_pct == 0 and _num(r.get("target_score")) == 0
+                and not r.get("target_estimated")):
+            target_pct = None
         sites.append(
             Site(
                 site_id=str(r.get("id") or ""),
                 name=r.get("site_name") or r.get("name") or site_url,
                 url=site_url,
-                target_percentage=_num(r.get("target_percentage")),
+                target_percentage=target_pct,
                 score=_num(r.get("score")),
                 pages=_int(r.get("pages")),
                 tags=list(r.get("tags") or []),
+                target_estimated=bool(r.get("target_estimated")),
                 source="inventory" if r.get("source") == "inventory" else "api",
             )
         )

@@ -902,10 +902,13 @@
       border-radius: 3px;
       font-size: 0.75rem;
       font-weight: 600;
+      white-space: nowrap;
     }
     .badge.error { background: var(--danger-soft); color: var(--danger); }
     .badge.warn  { background: var(--warning-soft); color: var(--warning); }
     .badge.ok    { background: var(--success-soft); color: var(--success); }
+    .est { font-size: 0.7rem; color: var(--ink-60); white-space: nowrap; }
+    .muted { color: var(--ink-60); }
     .empty {
       padding: 3rem 1rem;
       text-align: center;
@@ -1029,6 +1032,18 @@
           <button class="pill" data-filter="error">Errors</button>
         </div>
         <span class="filter-hint" id="filter-status-hint"></span>
+      </div>
+      <div class="filter-row">
+        <span class="filter-label">Scan</span>
+        <div id="filter-scan" role="group" aria-label="Scan status filter" style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+          <button class="pill active" data-filter="all" title="Clear scan filters">All</button>
+          <button class="pill" data-filter="ok" title="Scanned recently and found pages">OK</button>
+          <button class="pill" data-filter="failed" title="Siteimprove reported a crawl error, or the last scan found 0 pages">Failed</button>
+          <button class="pill" data-filter="stale" title="Last scan finished more than 14 days ago">Not scanned recently</button>
+          <button class="pill" data-filter="running" title="A scan is in progress">Scanning</button>
+          <button class="pill" data-filter="no-status" title="Siteimprove has no scan timestamp for the site">No status</button>
+        </div>
+        <span class="filter-hint" id="filter-scan-hint"></span>
       </div>
       <div class="filter-row">
         <span class="filter-label">Platform</span>
@@ -1163,7 +1178,8 @@
             <th data-key="site_name" data-type="string" aria-sort="ascending">Site</th>
             <th data-key="score" data-type="number" class="col-score" title="Siteimprove accessibility DCI score (0–100). Reflects all WCAG levels INCLUDING AAA and Best Practices — broader than the Title II target lens.">Score (DCI · incl. AAA)</th>
             <th data-key="target_percentage" data-type="number" class="col-score" title="Progress toward the Title II target — A + AA + ARIA only. 100% = meets target. Excludes AAA and Best Practices.">Target % (Title II)</th>
-            <th data-key="pages" data-type="number" class="col-pages" title="Site page count from Siteimprove">Pages</th>
+            <th data-key="pages" data-type="number" class="col-pages" title="Pages Siteimprove scanned in its last crawl (from the Siteimprove CSV export when the API has no count)">Pages scanned</th>
+            <th data-key="scan" data-type="string" title="Siteimprove scan status: OK, failed (crawl error or 0 pages found), not scanned recently, scanning, or no status">Scan</th>
             <th data-key="pages_with_issues" data-type="number" class="col-pages" title="Max pages affected by any single accessibility issue">Pages w/ issues</th>
             <th data-key="issue_types" data-type="number" class="col-occ" title="Distinct issue types found on the site">Types</th>
             <th data-key="lvl_a" data-type="number" class="col-occ" title="WCAG Level A — occurrences">A</th>
@@ -1179,7 +1195,7 @@
           </tr>
         </thead>
         <tbody id="sites-body">
-          <tr><td colspan="16" class="empty">Loading…</td></tr>
+          <tr><td colspan="17" class="empty">Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -1195,6 +1211,7 @@
       search: "",
       levelFilters: new Set(),    // empty = no level filter
       statusFilters: new Set(),   // empty = no status filter
+      scanFilters: new Set(),     // empty = no scan-status filter
       tagFilters: new Set(),      // empty = no tag filter
       platformFilters: new Set(), // empty = no platform filter
       sortKey: "site_name",
@@ -1352,6 +1369,9 @@
           tags,
           platform: platformFor(tags),
           status: hasErr ? "error" : (s.pages || s.pages_with_issues ? "ok" : "no-data"),
+          // Scan status from the fetch ("no status" -> "no-status"); "" for
+          // CSV-only sites and snapshots that predate scan status.
+          scan: s.scan_status ? String(s.scan_status).replace(/\s+/g, "-") : "",
         });
       }
       return out;
@@ -1374,6 +1394,8 @@
         }
         // Status: site status must be ONE of the selected (OR within row).
         if (statuses.size > 0 && !statuses.has(s.status)) return false;
+        // Scan status: ONE of the selected (OR within row).
+        if (state.scanFilters.size > 0 && !state.scanFilters.has(s.scan)) return false;
         // Platform: site's derived platform must be one of the selected.
         if (state.platformFilters.size > 0 && !state.platformFilters.has(s.platform)) return false;
         // Tags: site must have ANY of the selected tags (OR within row).
@@ -1424,7 +1446,9 @@
           ? `matching ${labels.slice(0, 3).join(", ")} +${labels.length - 3} more`
           : `matching ${labels.join(" or ")}`;
       }
-      const map = { ok: "Has data", "no-data": "No data", error: "Errors" };
+      const map = kind === "scan"
+        ? { ok: "OK", failed: "Failed", stale: "Not scanned recently", running: "Scanning", "no-status": "No status" }
+        : { ok: "Has data", "no-data": "No data", error: "Errors" };
       return `matching ${arr.map(v => map[v] || v).join(" or ")}`;
     }
 
@@ -1513,6 +1537,18 @@
       if (av < bv) return dir === "asc" ? -1 : 1;
       if (av > bv) return dir === "asc" ? 1 : -1;
       return 0;
+    }
+
+    function scanBadge(s) {
+      const when = s.last_crawl ? `Last scan: ${String(s.last_crawl).slice(0, 10)}` : "No scan timestamp";
+      const why = s.crawl_error ? ` — ${s.crawl_error}` : "";
+      const title = escapeHtml(when + why);
+      if (s.scan === "failed")    return `<span class="badge error" title="${title}">failed</span>`;
+      if (s.scan === "stale")     return `<span class="badge warn" title="${title}">not recent</span>`;
+      if (s.scan === "no-status") return `<span class="badge warn" title="${title}">no status</span>`;
+      if (s.scan === "running")   return `<span class="badge" title="${title}">scanning</span>`;
+      if (s.scan === "ok")        return `<span class="badge ok" title="${title}">ok</span>`;
+      return '<span class="muted">—</span>';
     }
 
     function statusBadge(status) {
@@ -1940,7 +1976,7 @@
         `${filteredSites.length.toLocaleString()} of ${state.sites.length.toLocaleString()} sites shown`;
 
       if (sorted.length === 0) {
-        body.innerHTML = '<tr><td colspan="16" class="empty">No sites match current filters.</td></tr>';
+        body.innerHTML = '<tr><td colspan="17" class="empty">No sites match current filters.</td></tr>';
         return;
       }
 
@@ -1961,8 +1997,11 @@
               ${tagsHtml ? `<div style="margin-top:3px;">${tagsHtml}</div>` : ""}
             </td>
             <td class="num col-score">${fmtScore(s.score)}</td>
-            <td class="num col-score">${fmtScore(s.target_percentage)}</td>
-            <td class="num col-pages">${fmtNumber(s.pages)}</td>
+            <td class="num col-score">${fmtScore(s.target_percentage)}${s.target_estimated
+              ? ' <span class="est" title="Siteimprove has not calculated a target for this site yet. Estimated from sites with a similar DCI score.">(estimate)</span>'
+              : ""}</td>
+            <td class="num col-pages"${s.pages_source === "csv" ? ' title="From the Siteimprove CSV export"' : ""}>${fmtNumber(s.pages)}</td>
+            <td>${scanBadge(s)}</td>
             <td class="num col-pages">${fmtNumber(s.pages_with_issues)}</td>
             <td class="num col-occ">${fmtNumber(s.issue_types)}</td>
             <td class="num col-occ">${fmtNumber(s.lvl_a)}</td>
@@ -2305,7 +2344,7 @@
         renderAll();
       } catch (err) {
         document.getElementById("sites-body").innerHTML =
-          `<tr><td colspan="16" class="empty">Failed to load data: ${escapeHtml(err.message)}</td></tr>`;
+          `<tr><td colspan="17" class="empty">Failed to load data: ${escapeHtml(err.message)}</td></tr>`;
       }
     }
 
@@ -2369,7 +2408,10 @@
         ["Platform",                     s => s.platform || ""],
         ["Score",                        s => s.score ?? ""],
         ["Target %",                     s => s.target_percentage ?? ""],
-        ["Pages",                        s => s.pages ?? ""],
+        ["Target % estimated",           s => s.target_estimated ? "yes" : ""],
+        ["Pages scanned",                s => s.pages ?? ""],
+        ["Scan status",                  s => s.scan_status || ""],
+        ["Last scan",                    s => s.last_crawl || ""],
         ["Pages with issues",            s => s.pages_with_issues ?? ""],
         ["Issue types",                  s => s.issue_types ?? ""],
         ["A occurrences",                s => s.lvl_a ?? 0],
@@ -2444,6 +2486,7 @@
     }
     wireFilterGroup("filter-level",    "levelFilters",    "filter-level-hint",    "level");
     wireFilterGroup("filter-status",   "statusFilters",   "filter-status-hint",   "status");
+    wireFilterGroup("filter-scan",     "scanFilters",     "filter-scan-hint",     "scan");
     wireFilterGroup("filter-platform", "platformFilters", "filter-platform-hint", "platform");
     wireFilterGroup("filter-tags",     "tagFilters",      "filter-tags-hint",     "tag");
 
@@ -2451,6 +2494,7 @@
       return state.search.trim() !== "" ||
              state.levelFilters.size    > 0 ||
              state.statusFilters.size   > 0 ||
+             state.scanFilters.size     > 0 ||
              state.platformFilters.size > 0 ||
              state.tagFilters.size      > 0;
     }
@@ -2464,12 +2508,14 @@
       state.search = "";
       state.levelFilters.clear();
       state.statusFilters.clear();
+      state.scanFilters.clear();
       state.platformFilters.clear();
       state.tagFilters.clear();
       const searchEl = document.getElementById("search");
       if (searchEl) searchEl.value = "";
       syncFilterGroup("filter-level",    state.levelFilters);
       syncFilterGroup("filter-status",   state.statusFilters);
+      syncFilterGroup("filter-scan",     state.scanFilters);
       syncFilterGroup("filter-platform", state.platformFilters);
       syncFilterGroup("filter-tags",     state.tagFilters);
       const clearHint = (id) => {
@@ -2478,6 +2524,7 @@
       };
       clearHint("filter-level-hint");
       clearHint("filter-status-hint");
+      clearHint("filter-scan-hint");
       clearHint("filter-platform-hint");
       clearHint("filter-tags-hint");
       renderAll();

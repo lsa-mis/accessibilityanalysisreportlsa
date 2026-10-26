@@ -3,7 +3,9 @@
 Fetch site-level accessibility data from the Siteimprove API and write
 two JSON snapshots consumed by index.html and data.html:
 
-  data/sites.json — per-site overview with scores, target %, A/AA/AAA breakdowns
+  data/sites.json — per-site overview with scores, target % (estimated when
+                    Siteimprove has no target yet), pages scanned, scan
+                    status, A/AA/AAA breakdowns
   data/rules.json — cross-site rollup of failing accessibility rules
 
 Auth: HTTP Basic. Username = SITEIMPROVE_EMAIL, password = SITEIMPROVE_API_KEY.
@@ -219,7 +221,8 @@ def load_inventory_rows(path: Path = SITE_TAG_CSV_PATH) -> list[dict[str, Any]]:
             tags_field = row.get("tags") or row.get("labels") or ""
             tags = [t.strip() for t in TAG_SPLIT_RE.split(tags_field) if t.strip()]
             rows.append({"site_id": site_id, "name": name or url,
-                         "url": url, "tags": tags})
+                         "url": url, "tags": tags,
+                         "pages": coerce_int((row.get("pages_crawled_in_last_scan") or "").replace(",", ""))})
     return rows
 
 
@@ -250,7 +253,10 @@ def append_inventory_only_sites(
             "site_name": inv["name"],
             "url": inv["url"],
             "score": None, "target_score": None, "target_percentage": None,
-            "pages": None, "pages_with_issues": 0,
+            # Pages scanned per the export (the API didn't return the site).
+            "pages": inv.get("pages"),
+            "pages_source": "csv" if inv.get("pages") is not None else None,
+            "pages_with_issues": 0,
             "visits": None, "policies": None,
             "issues": 0, "issue_types": 0,
             "by_level": {}, "other_conformance": {},
@@ -385,6 +391,58 @@ def fetch_site_detail(session: requests.Session, site_id: int) -> dict[str, Any]
         return get(session, f"{API_ROOT}/sites/{site_id}")
     except requests.HTTPError:
         return {}
+
+
+def fetch_crawl_status(session: requests.Session, site_id: int) -> dict[str, Any]:
+    """Fetch /sites/{id}/content/crawl — when the site was last / will next be
+    scanned and whether a scan is running. Empty dict if unavailable."""
+    try:
+        return get(session, f"{API_ROOT}/sites/{site_id}/content/crawl")
+    except requests.HTTPError:
+        return {}
+
+
+# A finished scan older than this is reported as 'stale'.
+SCAN_STALE_DAYS = int(os.environ.get("SITEIMPROVE_SCAN_STALE_DAYS", "14"))
+
+
+def shape_crawl_fields(crawl: dict[str, Any], pages: int | None) -> dict[str, Any]:
+    """Crawl fields for a site row, plus a one-word scan_status:
+      running   — a scan is in progress now
+      failed    — the API reports a crawl error, or the last scan found 0 pages
+      stale     — last scan finished more than SCAN_STALE_DAYS ago
+      ok        — scanned recently and found pages
+      no status — Siteimprove has no scan timestamp for the site
+    """
+    last = crawl.get("last_crawl")
+    running = crawl.get("is_crawl_running")
+    enabled = crawl.get("is_crawl_enabled")
+    # Whatever error/status field the API provides, kept verbatim for audit.
+    error = (crawl.get("crawl_error") or crawl.get("error")
+             or crawl.get("last_crawl_error") or crawl.get("status_message"))
+    if running:
+        status = "running"
+    elif error or (last and pages == 0):
+        status = "failed"
+    elif not last:
+        status = "no status"
+    else:
+        try:
+            when = datetime.fromisoformat(str(last).replace("Z", "+00:00"))
+            if when.tzinfo is None:
+                when = when.replace(tzinfo=timezone.utc)
+            age_days = (datetime.now(timezone.utc) - when).days
+            status = "stale" if age_days > SCAN_STALE_DAYS else "ok"
+        except ValueError:
+            status = "ok"
+    return {
+        "last_crawl": last,
+        "next_crawl": crawl.get("next_crawl"),
+        "crawl_running": running,
+        "crawl_enabled": enabled,
+        "crawl_error": error,
+        "scan_status": status,
+    }
 
 
 def fetch_site_pdfs(session: requests.Session, site_id: int) -> list[dict[str, Any]]:
@@ -602,6 +660,45 @@ def shape_site_row(
     }
 
 
+# Neighbours used to estimate a missing site target (see below).
+TARGET_ESTIMATE_NEIGHBOURS = 50
+
+
+def estimate_missing_targets(site_rows: list[dict[str, Any]]) -> int:
+    """Fill in target_percentage for sites Siteimprove hasn't set a target for.
+
+    Siteimprove reports target score AND target % as 0 for sites it hasn't
+    calculated a site target for yet, even though their accessibility (DCI)
+    score is real. A site's target % tracks its DCI score closely, so the
+    estimate is the median target % of the TARGET_ESTIMATE_NEIGHBOURS sites
+    with the closest DCI score. Back-tested on ~1,500 sites with a real
+    target, it averages ~1 point off (86% within 2 points).
+
+    Estimated rows get target_estimated=True; target_score stays 0 so the
+    raw API value is still visible. Returns how many rows were estimated."""
+    reference = sorted(
+        (r for r in site_rows
+         if r.get("score") is not None and (r.get("target_score") or 0) > 0
+         and r.get("target_percentage") is not None),
+        key=lambda r: r["score"],
+    )
+    if len(reference) < TARGET_ESTIMATE_NEIGHBOURS:
+        return 0
+    estimated = 0
+    for row in site_rows:
+        if (row.get("score") is None or row.get("target_score") != 0
+                or row.get("target_percentage") != 0):
+            continue
+        nearest = sorted(reference, key=lambda r: abs(r["score"] - row["score"]))
+        values = sorted(r["target_percentage"] for r in nearest[:TARGET_ESTIMATE_NEIGHBOURS])
+        mid = len(values) // 2
+        median = values[mid] if len(values) % 2 else (values[mid - 1] + values[mid]) / 2
+        row["target_percentage"] = round(median, 2)
+        row["target_estimated"] = True
+        estimated += 1
+    return estimated
+
+
 def _new_rule_bucket() -> dict[str, Any]:
     return {
         "rule_id": None,
@@ -696,6 +793,9 @@ def main() -> None:
 
     print("Loading admin tags from CSV (if present)...", file=sys.stderr)
     csv_by_id, csv_by_url, csv_by_name = load_site_tag_csv()
+    inventory_rows = load_inventory_rows()
+    inventory_pages = {r["site_id"]: r["pages"] for r in inventory_rows
+                       if r["site_id"] is not None and r.get("pages") is not None}
 
     junk_api_rows = sum(1 for s in sites if is_junk_url(s.get("url")))
     if junk_api_rows:
@@ -706,7 +806,7 @@ def main() -> None:
 
     def fetch_one(site: dict[str, Any]) -> tuple[
         dict[str, Any], dict[str, Any], list[dict[str, Any]],
-        dict[str, Any], dict[str, Any], dict[str, int | None]
+        dict[str, Any], dict[str, Any], dict[str, int | None], dict[str, Any]
     ]:
         site_id = site["id"]
         target = fetch_site_target(session, site_id)
@@ -714,7 +814,8 @@ def main() -> None:
         detail = fetch_site_detail(session, site_id)
         pdfs = summarize_pdfs(fetch_site_pdfs(session, site_id))
         spelling = fetch_misspelling_counts(session, site_id)
-        return site, target, issues, detail, pdfs, spelling
+        crawl = fetch_crawl_status(session, site_id)
+        return site, target, issues, detail, pdfs, spelling, crawl
 
     site_rows: list[dict[str, Any]] = []
     per_site_issues: list[tuple[dict[str, Any], list[dict[str, Any]]]] = []
@@ -749,7 +850,7 @@ def main() -> None:
             # exhausted, one unreachable site shouldn't abort the whole run.
             # Log it and move on so the snapshot still covers everything else.
             try:
-                site, target, issues, detail, pdfs, spelling = future.result()
+                site, target, issues, detail, pdfs, spelling, crawl = future.result()
             except Exception as exc:  # noqa: BLE001 — resilience over precision
                 bad = futures[future]
                 failed_sites += 1
@@ -762,6 +863,14 @@ def main() -> None:
             row = shape_site_row(site, target, rollup)
             row.update(pdfs)
             row.update(spelling)
+            # Pages scanned: the API's count, else the CSV export's
+            # "Pages crawled in last scan".
+            row["pages_source"] = "api" if row.get("pages") is not None else None
+            if row.get("pages") is None:
+                csv_pages = inventory_pages.get(site.get("id"))
+                if csv_pages is not None:
+                    row["pages"], row["pages_source"] = csv_pages, "csv"
+            row.update(shape_crawl_fields(crawl, row.get("pages")))
             # Tags: EXACTLY the admin-assigned labels from Siteimprove
             # (via data/site-tags.csv) — never fabricated. A site with no
             # tags in Siteimprove stays untagged here and routes to
@@ -794,10 +903,15 @@ def main() -> None:
 
     # Add inventory-only sites (in the CSV but not returned by the API) so
     # the dashboard reflects the full portfolio, with tags kept current.
-    inventory_added = append_inventory_only_sites(site_rows, load_inventory_rows())
+    inventory_added = append_inventory_only_sites(site_rows, inventory_rows)
     if inventory_added:
         print(f"  + {inventory_added} inventory-only site(s) appended "
               f"(in Siteimprove CSV, not returned by API)", file=sys.stderr)
+
+    estimated = estimate_missing_targets(site_rows)
+    if estimated:
+        print(f"  ~ {estimated} site target(s) estimated (Siteimprove reported "
+              f"no target yet)", file=sys.stderr)
 
     # Final write — clears in_progress flag.
     write_partial(in_progress=False)

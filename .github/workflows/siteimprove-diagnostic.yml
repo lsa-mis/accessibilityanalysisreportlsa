@@ -1,0 +1,38 @@
+name: Siteimprove API diagnostic
+
+# Manual, read-only: prints the raw Siteimprove API responses (site detail,
+# site target, groups, crawl status) for a sample of sites to the run log.
+# Writes nothing — no commits, no Asana. Used to check why some sites report
+# a 0 target score and which scan-status fields the API exposes.
+on:
+  workflow_dispatch:
+    inputs:
+      site_ids:
+        description: "Comma-separated site IDs (blank = sample from data/sites.json)"
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r scripts/requirements.txt
+
+      - name: Dump raw API responses
+        env:
+          SITEIMPROVE_EMAIL: ${{ secrets.SITEIMPROVE_EMAIL }}
+          SITEIMPROVE_API_KEY: ${{ secrets.SITEIMPROVE_API_KEY }}
+          SITE_IDS: ${{ inputs.site_ids }}
+        run: python scripts/siteimprove_diagnostic.py "$SITE_IDS"
