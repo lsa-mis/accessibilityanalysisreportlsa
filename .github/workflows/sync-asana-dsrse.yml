@@ -1,0 +1,42 @@
+name: Sync Siteimprove → DS/RSE a11y board
+
+# Manual only: updates Siteimprove Target % on the DS/RSE a11y Asana board for
+# sites tagged RSE / WP-DigitalScholarship / Omeka, matched by the board's
+# Public URL column. Update-only — never creates tasks, fields or sections.
+# Independent of the inventory sync in sync-asana.yml.
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (log only, write nothing)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: siteimprove-asana-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run DS/RSE sync
+        env:
+          ASANA_TOKEN: ${{ secrets.ASANA_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          TAG_OVERLAY_FROM_CSV: ${{ vars.TAG_OVERLAY_FROM_CSV || 'true' }}
+          TARGET_PCT_FIELD: ${{ vars.TARGET_PCT_FIELD }}
+          DSRSE_PROJECT_GID: ${{ vars.DSRSE_PROJECT_GID }}
+          DSRSE_URL_FIELD: ${{ vars.DSRSE_URL_FIELD }}
+        run: python -m asana_sync.dsrse_sync

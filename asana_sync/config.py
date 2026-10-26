@@ -100,6 +100,17 @@ ASANA_WORKSPACE_GID = os.environ.get("ASANA_WORKSPACE_GID", "").strip() or None
 ASANA_TOKEN = os.environ.get("ASANA_TOKEN", "").strip()
 
 # --------------------------------------------------------------------------
+# DS/RSE a11y board — a second, narrower target (asana_sync/dsrse_sync.py),
+# run manually via .github/workflows/sync-asana-dsrse.yml. Only sites
+# carrying one of DSRSE_TAGS are considered. Update-only: each is matched to
+# the task whose URL column (DSRSE_URL_FIELD) holds the same URL, and only
+# TARGET_PCT_FIELD is written. No tasks, fields or sections are ever created.
+# --------------------------------------------------------------------------
+DSRSE_PROJECT_GID = _env_str("DSRSE_PROJECT_GID", "1219897101076354")
+DSRSE_TAGS = {"rse", "wp-digitalscholarship", "omeka"}
+DSRSE_URL_FIELD = _env_str("DSRSE_URL_FIELD", "Public URL")
+
+# --------------------------------------------------------------------------
 # Sections — created if missing, in this order. Each section lists the tags
 # that route a site to it (case-insensitive, 'tag:' prefix stripped). A
 # section may also list "prefix" matchers (e.g. 'wp-' catches WP-Sites,
