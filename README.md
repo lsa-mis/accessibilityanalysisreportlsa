@@ -133,3 +133,12 @@ The `asana_sync/` package pushes the fresh Siteimprove data to the Asana project
 - **Safety:** writes are gated by the `DRY_RUN` repo variable (default `true`). Set it to `false` to let scheduled/chained runs write to the board. Manual runs (Actions → Run workflow) use the *Dry run* checkbox.
 - **Tuning (optional repo variables):** `ASANA_PROJECT_GID`, `CREATE_MISSING` (create tasks for missing sites), `MAX_CREATES`, `CREATE_MISSING_FIELDS` (auto-create the `Siteimprove Target %` number field), `REMEDIATION_THRESHOLD`.
 - **Run locally:** `ASANA_TOKEN=… DRY_RUN=true python -m asana_sync.sync` (reads the repo's local data files by default).
+
+### DS/RSE a11y board
+
+A separate, **manual-only** workflow — `.github/workflows/sync-asana-dsrse.yml` (Actions → *Sync Siteimprove → DS/RSE a11y board* → Run workflow, *Dry run* on by default) — runs `python -m asana_sync.dsrse_sync`. For every site tagged **RSE**, **WP-DigitalScholarship** or **Omeka**, it updates `Siteimprove Target %` on the **DS/RSE a11y** Asana board.
+
+- **Matching:** each site is matched to the task whose **Public URL** column holds the same URL (scheme, `www.` and trailing slash ignored). A URL found on more than one task is logged and skipped.
+- **Update-only:** writes only `Siteimprove Target %`, and only when the value changed. It never creates, moves, renames, completes or deletes tasks, and never adds fields or sections. Sites with no matching task are just listed in the log.
+- **Settings:** `DSRSE_PROJECT_GID` (default `1219897101076354`), `DSRSE_URL_FIELD` (default `Public URL`); `ASANA_TOKEN` is shared with the inventory sync. Not chained to the weekend refresh. The token's account must be able to edit this board.
+- **Run locally:** `ASANA_TOKEN=… DRY_RUN=true python -m asana_sync.dsrse_sync`.
