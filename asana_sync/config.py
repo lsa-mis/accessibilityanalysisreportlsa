@@ -154,7 +154,7 @@ JUNK_TASK_CLEANUP = _env_bool("JUNK_TASK_CLEANUP", True)
 # Stale sync-created tasks: an existing task whose own 'Source' field reads
 # 'Siteimprove API' or 'Siteimprove CSV export' but that matches no current
 # site means the site left Siteimprove (dropped from both the API and the
-# CSV). Its Status (Accessibility) is set to STATUS_ARCHIVED; the task stays
+# CSV). Its Accessibility Project Status is set to Archived; the task stays
 # open (not completed) so it remains visible on the board. Human-created
 # tasks (no Source) and tasks in PROTECTED_SECTIONS are never touched — the
 # decision reads the task's own provenance.
@@ -266,20 +266,28 @@ CREATE_MISSING_FIELDS = _env_bool("CREATE_MISSING_FIELDS", False)
 NEW_TASK_STATUS_ACCESSIBILITY = _env_str("NEW_TASK_STATUS_ACCESSIBILITY", "active")
 STATUS_ACCESSIBILITY_FIELD = "Status (Accessibility)"
 
-# Status (Accessibility) values the sync manages on existing tasks too:
-#   archived — sync-created task whose site is gone from the Siteimprove data
-#   private  — site the Siteimprove API returns with no accessibility score
-#              (it can't scan it, e.g. login required)
-#   active   — (NEW_TASK_STATUS_ACCESSIBILITY) restored when a private or
-#              archived site is back with a score
-# The options must already exist on the board's enum; a missing one is
-# logged and skipped. The sync only ever replaces a status that is blank or
-# one of SYNC_OVERWRITABLE_STATUSES, so any other value a person picked
-# (e.g. "in progress") is left alone.
-STATUS_ARCHIVED = _env_str("STATUS_ARCHIVED", "archived")
-STATUS_PRIVATE = _env_str("STATUS_PRIVATE", "private")
-SYNC_OVERWRITABLE_STATUSES = {
-    "", NEW_TASK_STATUS_ACCESSIBILITY.lower(), STATUS_ARCHIVED.lower(), STATUS_PRIVATE.lower(),
+# Accessibility Project Status — the sync manages a few of its options so the
+# board shows where Siteimprove stands for each site:
+#   Archived                    — sync-created task whose site is gone from
+#                                 the Siteimprove data (task stays open)
+#   Private                     — the Siteimprove API returns the site with no
+#                                 accessibility score (it can't scan it, e.g.
+#                                 login required)
+#   Siteimprove Scan inProgress — Siteimprove hasn't calculated a site target
+#                                 yet (Target % is the fetch's estimate)
+# Private / Scan inProgress are cleared again once they no longer apply;
+# Archived is never cleared automatically. The sync only ever replaces a
+# blank value or one of these, so any status a person set (In Progress,
+# On Hold, …) is left alone. The options must already exist on the board.
+# Status (Accessibility) is not involved — it only gets
+# NEW_TASK_STATUS_ACCESSIBILITY on new tasks, as before.
+PROJECT_STATUS_FIELD = _env_str("PROJECT_STATUS_FIELD", "Accessibility Project Status")
+PROJECT_STATUS_ARCHIVED = "Archived"
+PROJECT_STATUS_PRIVATE = "Private"
+PROJECT_STATUS_SCAN_PENDING = "Siteimprove Scan inProgress"
+SYNC_OWNED_PROJECT_STATUSES = {
+    PROJECT_STATUS_ARCHIVED.lower(), PROJECT_STATUS_PRIVATE.lower(),
+    PROJECT_STATUS_SCAN_PENDING.lower(),
 }
 
 # --------------------------------------------------------------------------
