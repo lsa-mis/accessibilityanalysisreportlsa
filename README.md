@@ -9,7 +9,8 @@ index.html            Narrative accessibility report (published via Pages)
 data.html             Live dashboard — searchable, filterable per-site view
 favicon.svg           Shared favicon for both pages
 data/
-  sites.json          Per-site snapshot written by the fetch (consumed by both pages + Asana sync)
+  sites.json          Per-site snapshot written by the fetch (consumed by both pages + Asana sync):
+                      scores, target % (estimated when Siteimprove has none), pages scanned, scan status
   rules.json          Cross-site rule rollups (global + per-tag)
   site-tags.csv       Admin site labels exported from the Siteimprove UI
 scripts/
@@ -128,11 +129,23 @@ If the token is ever exposed, rotate it in Siteimprove (Settings → API users),
 
 The `asana_sync/` package pushes the fresh Siteimprove data to the Asana project **External LSA Websites and Applications Inventory** — updating each site's `Added to Siteimprove` / `Siteimprove Issues Remediation (98%)` / `Siteimprove Target %` fields and creating tasks (in the right platform section) for sites not yet on the board.
 
+- **Number of Pages:** pages Siteimprove scanned in its last crawl (the API's count, or the CSV export's *Pages crawled in last scan* when the API has none). This column was added by hand; the sync fills it but never creates it.
+- **Estimated Target %:** for sites Siteimprove hasn't calculated a target for yet (it reports target score and target % as 0 while the accessibility score is real), the fetch estimates the target % as the median target % of the 50 sites with the closest accessibility score. Back-tested against ~1,500 sites with a real target, it averages about 1 point off. Estimated values carry `(estimate)` on the dashboard and `Target % (estimate)` in the task's `Siteimprove Tags`, and never set the 98% remediation field. A real target from Siteimprove replaces the estimate automatically.
+- **Status (Accessibility):**
+  - `archived` — a sync-created task (Source = Siteimprove API or CSV export) whose site is no longer in the Siteimprove data. The task stays open.
+  - `private` — the Siteimprove API returns the site but with no accessibility score (it can't scan it, e.g. it needs a login).
+  - back to `active` when such a site has a score again.
+  - The sync only replaces a blank status or one of these three; any other status a person set is left alone, as is anything in the Rails section. The options must already exist on the board.
+
 - **Chained automatically:** `.github/workflows/sync-asana.yml` runs via `workflow_run` whenever **Refresh Siteimprove data** finishes successfully. It reads `data/sites.json` directly from the checkout — the single source of truth (the fetch already folds in CSV-only sites and tags), no URLs, no Pages-deploy wait.
 - **Credentials:** add an Asana Personal Access Token as the repo secret `ASANA_TOKEN` (a user/service account that can edit that project).
 - **Safety:** writes are gated by the `DRY_RUN` repo variable (default `true`). Set it to `false` to let scheduled/chained runs write to the board. Manual runs (Actions → Run workflow) use the *Dry run* checkbox.
 - **Tuning (optional repo variables):** `ASANA_PROJECT_GID`, `CREATE_MISSING` (create tasks for missing sites), `MAX_CREATES`, `CREATE_MISSING_FIELDS` (auto-create the `Siteimprove Target %` number field), `REMEDIATION_THRESHOLD`.
 - **Run locally:** `ASANA_TOKEN=… DRY_RUN=true python -m asana_sync.sync` (reads the repo's local data files by default).
+
+### Siteimprove API diagnostic
+
+`.github/workflows/siteimprove-diagnostic.yml` (manual, read-only) prints the raw Siteimprove API responses — site detail, site target, groups, crawl status — for a sample of sites (or the site IDs you enter) to the run log. Use it to check what the API actually returns before changing how a field is read. It writes nothing.
 
 ### DS/RSE a11y board
 

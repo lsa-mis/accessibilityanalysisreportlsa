@@ -10,6 +10,8 @@ For the one project named in config.ASANA_PROJECT_NAME:
      Siteimprove Issues Remediation (98%)) when they differ.
   4. Create a task in the right section for any Siteimprove site that has
      no matching task (when CREATE_MISSING is on).
+  5. Set Status (Accessibility): private for sites the API can't score,
+     archived for sync-created tasks whose site left Siteimprove.
 
 Honours DRY_RUN (default true) — in dry-run nothing is written and every
 intended change is logged. Run:  python -m src.sync   (from repo root)
@@ -68,7 +70,8 @@ def derive_field_values(site: Site) -> dict[str, str]:
     when the site was actually scored (has a target %); for unscored sites
     we omit it rather than claim False."""
     out = {"added_to_siteimprove": "True"}
-    if site.target_percentage is not None:
+    # An estimated target % is never used to claim remediation either way.
+    if site.target_percentage is not None and not site.target_estimated:
         met = site.target_percentage >= config.REMEDIATION_THRESHOLD
         out["remediation_met"] = "True" if met else "False"
     # Provenance: which pipeline input this row came from.
@@ -83,6 +86,10 @@ def derive_number_values(site: Site) -> dict[str, float]:
     out: dict[str, float] = {}
     if site.target_percentage is not None:
         out["target_percentage"] = round(site.target_percentage, 2)
+    # 0 is a real page count (the last scan found nothing) — only a missing
+    # value is skipped.
+    if site.pages is not None:
+        out["pages"] = site.pages
     return out
 
 
@@ -95,7 +102,28 @@ def derive_text_values(site: Site) -> dict[str, str]:
         (t.split(":", 1)[1] if ":" in t else t).strip()
         for t in site.tags
     )
+    if site.target_estimated:
+        labels.append(config.ESTIMATE_MARKER)
     return {"tags_text": ", ".join(labels)}
+
+
+def desired_status(site: Site, current: str | None) -> str | None:
+    """Status (Accessibility) the sync wants for a site still in the data,
+    or None to leave the field alone.
+
+    private — the API returns the site but with no accessibility score.
+    active  — the site has a score again after being private or archived.
+    Only a blank status or one of the sync's own values is ever replaced."""
+    have = (current or "").strip().lower()
+    if have not in config.SYNC_OVERWRITABLE_STATUSES:
+        return None  # a person chose this status — leave it
+    if site.source == "api" and site.score is None:
+        want = config.STATUS_PRIVATE
+    elif have in (config.STATUS_PRIVATE.lower(), config.STATUS_ARCHIVED.lower()):
+        want = config.NEW_TASK_STATUS_ACCESSIBILITY
+    else:
+        return None  # blank or active, nothing to change
+    return want if want and want.lower() != have else None
 
 
 def current_text_value(task: dict, field_name: str) -> str | None:
@@ -272,6 +300,14 @@ def main() -> None:
     workspace_gid = (project.get("workspace") or {}).get("gid") or config.ASANA_WORKSPACE_GID
     for fname in config.NUMBER_FIELD_WRITES:
         if fname in field_map:
+            if field_map[fname].get("type") not in (None, "number"):
+                print(f"  ⚠ field {fname!r} is {field_map[fname].get('type')!r}, not a "
+                      f"number field — not synced.", file=sys.stderr)
+                del field_map[fname]
+            continue
+        if fname in config.NO_AUTO_CREATE_FIELDS:
+            print(f"  ⚠ field not found, not synced: {fname!r} (add it to the "
+                  f"board; the sync doesn't create it).", file=sys.stderr)
             continue
         if config.CREATE_MISSING_FIELDS and workspace_gid:
             gid = asana.create_number_field(workspace_gid, project_gid, fname,
@@ -406,6 +442,7 @@ def main() -> None:
     updated = created = skipped_cap = unmatched_status = 0
     moved = dup_source_rows = 0
     status_meta = field_map.get(config.STATUS_ACCESSIBILITY_FIELD)
+    missing_status_options: set[str] = set()
     pending_updates: list[tuple[str, str, dict]] = []
     pending_moves: list[tuple[str, str, str]] = []
     seen_source_urls: set[str] = set()
@@ -431,6 +468,18 @@ def main() -> None:
             if not config.UPDATE_EXISTING:
                 continue
             payload, notes = build_field_payload(site, field_map, existing)
+            # Status (Accessibility): private / back to active. Never on
+            # tasks in a protected (human-curated) section.
+            if status_meta and not (task_project_sections(existing) & protected_gids):
+                want = desired_status(
+                    site, current_enum_name(existing, config.STATUS_ACCESSIBILITY_FIELD))
+                if want:
+                    opt = enum_option_gid(status_meta, want)
+                    if opt:
+                        payload[status_meta["gid"]] = opt
+                        notes.append(f"{config.STATUS_ACCESSIBILITY_FIELD.strip()}={want}")
+                    else:
+                        missing_status_options.add(want)
             task_data: dict = {}
             if payload:
                 task_data["custom_fields"] = payload
@@ -465,9 +514,13 @@ def main() -> None:
                 skipped_cap += 1
                 continue
             payload, _ = build_field_payload(site, field_map, None)
-            # Status (Accessibility) on new tasks only.
-            if status_meta and config.NEW_TASK_STATUS_ACCESSIBILITY:
-                opt = enum_option_gid(status_meta, config.NEW_TASK_STATUS_ACCESSIBILITY)
+            # Status (Accessibility) on new tasks: private when the API has
+            # no score for the site, otherwise the configured default.
+            new_status = (config.STATUS_PRIVATE
+                          if site.source == "api" and site.score is None
+                          else config.NEW_TASK_STATUS_ACCESSIBILITY)
+            if status_meta and new_status:
+                opt = enum_option_gid(status_meta, new_status)
                 if opt:
                     payload[status_meta["gid"]] = opt
                 else:
@@ -481,16 +534,20 @@ def main() -> None:
     # Board hygiene pass over tasks NO site row matched:
     #  - junk-named tasks (login-gateway URLs from before the data filter)
     #    are marked completed so they drop off the active board.
-    #  - stale API-sourced tasks: a task whose own 'Source' field reads
-    #    'Siteimprove API' but that matches no current site means the site
-    #    left Siteimprove entirely (gone from both the API and the CSV) —
-    #    complete it too. Reading the task's recorded provenance means
-    #    CSV-sourced tasks and human-created tasks (no Source) are never
-    #    touched. Everything else unmatched is reported, not modified.
-    #  All completions are reversible; the sync never deletes.
+    #  - stale sync-created tasks: a task whose own 'Source' field reads
+    #    'Siteimprove API' or 'Siteimprove CSV export' but that matches no
+    #    current site means the site left Siteimprove entirely (gone from
+    #    both the API and the CSV). Its Status (Accessibility) is set to
+    #    archived; the task stays open so it remains visible. Reading the
+    #    task's recorded provenance means human-created tasks (no Source)
+    #    are never touched, and neither is anything in a protected section
+    #    or with a status a person chose. Everything else unmatched is
+    #    reported, not modified.
+    #  Nothing is ever deleted.
     junk_completed = 0
-    stale_api_completed = 0
+    stale_archived = 0
     unmatched_report: list[str] = []
+    sync_sources = {config.SOURCE_OPTION_API, config.SOURCE_OPTION_CSV}
     for t in tasks:
         key = normalize_url(t.get("name"))
         if key and key in matched_urls:
@@ -503,12 +560,25 @@ def main() -> None:
                 pending_updates.append((t["gid"], tname, {"completed": True}))
                 junk_completed += 1
                 print(f"  ✔ completing junk task: {tname}")
-        elif (config.STALE_API_TASK_CLEANUP
-              and current_enum_name(t, config.SOURCE_FIELD) == config.SOURCE_OPTION_API):
-            pending_updates.append((t["gid"], tname, {"completed": True}))
-            stale_api_completed += 1
-            print(f"  ✔ completing stale API-sourced task (site gone from "
-                  f"Siteimprove): {tname}")
+        elif (config.STALE_TASK_ARCHIVE
+              and current_enum_name(t, config.SOURCE_FIELD) in sync_sources
+              and not (task_project_sections(t) & protected_gids)):
+            have = (current_enum_name(t, config.STATUS_ACCESSIBILITY_FIELD) or "").strip().lower()
+            if have == config.STATUS_ARCHIVED.lower():
+                continue  # already archived
+            if have not in config.SYNC_OVERWRITABLE_STATUSES:
+                unmatched_report.append(f"{tname}  (gone from Siteimprove; status "
+                                        f"{have!r} left as set)")
+                continue
+            opt = enum_option_gid(status_meta, config.STATUS_ARCHIVED) if status_meta else None
+            if not opt:
+                missing_status_options.add(config.STATUS_ARCHIVED)
+                unmatched_report.append(tname)
+                continue
+            pending_updates.append((t["gid"], tname,
+                                    {"custom_fields": {status_meta["gid"]: opt}}))
+            stale_archived += 1
+            print(f"  ▣ archiving task (site gone from Siteimprove): {tname}")
         else:
             unmatched_report.append(tname)
 
@@ -525,8 +595,12 @@ def main() -> None:
     print(f"  updated:        {updated}")
     if junk_completed:
         print(f"  junk tasks completed: {junk_completed}")
-    if stale_api_completed:
-        print(f"  stale API-sourced tasks completed: {stale_api_completed}")
+    if stale_archived:
+        print(f"  tasks archived (site gone from Siteimprove): {stale_archived}")
+    if missing_status_options:
+        print(f"  ⚠ {config.STATUS_ACCESSIBILITY_FIELD.strip()!r} has no option(s) "
+              f"{', '.join(sorted(map(repr, missing_status_options)))} — add them on "
+              f"the board; those status changes were skipped.", file=sys.stderr)
     if unmatched_report:
         print(f"  unmatched tasks on board (no site row; left untouched): "
               f"{len(unmatched_report)}")
