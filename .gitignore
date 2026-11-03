@@ -11,3 +11,6 @@ venv/
 # OS
 .DS_Store
 Thumbs.db
+
+# Encrypted snapshots are built at deploy time
+data/*.enc.json

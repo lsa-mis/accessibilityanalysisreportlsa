@@ -906,6 +906,52 @@
       0%, 100% { opacity: 1; transform: scale(1); }
       50%      { opacity: 0.4; transform: scale(1.4); }
     }
+    /* Password gate — the published data files are encrypted (see
+       scripts/encrypt_data.py); this form collects the password. */
+    body.locked > header, body.locked > main { display: none; }
+    .gate { display: none; }
+    body.locked .gate {
+      display: flex;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .gate form {
+      width: 100%;
+      max-width: 22rem;
+      background: var(--paper-light);
+      border: 1px solid var(--rule);
+      border-top: 4px solid var(--um-blue);
+      border-radius: 6px;
+      padding: 1.5rem;
+    }
+    .gate h1 { margin: 0 0 0.5rem; font-size: 1.25rem; color: var(--um-blue); }
+    .gate p { margin: 0 0 1rem; font-size: 0.9rem; }
+    .gate label { display: block; font-weight: 600; margin-bottom: 0.35rem; }
+    .gate input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0.5rem 0.6rem;
+      font: inherit;
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      background: #fff;
+    }
+    .gate button {
+      margin-top: 0.9rem;
+      width: 100%;
+      padding: 0.55rem;
+      font: inherit;
+      font-weight: 600;
+      color: #fff;
+      background: var(--um-blue);
+      border: 0;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .gate button:disabled { opacity: 0.6; cursor: progress; }
+    .gate .gate-error { color: var(--danger); margin: 0.75rem 0 0; font-size: 0.9rem; }
     footer {
       margin-top: 2rem;
       padding: 1rem 0;
@@ -915,7 +961,17 @@
     }
   </style>
 </head>
-<body>
+<body class="locked">
+  <div class="gate">
+    <form id="gate-form" novalidate>
+      <h1>LSA Web Accessibility Dashboard</h1>
+      <p>This dashboard is password protected.</p>
+      <label for="gate-password">Password</label>
+      <input id="gate-password" type="password" autocomplete="current-password" required aria-describedby="gate-error" />
+      <button type="submit">Unlock</button>
+      <p id="gate-error" class="gate-error" role="alert"></p>
+    </form>
+  </div>
   <header>
     <h1>LSA Web Accessibility Dashboard</h1>
     <p>Live snapshot of accessibility scores, page counts, and issue occurrences across LSA sites — refreshed weekly from Siteimprove.</p>
@@ -2166,9 +2222,7 @@
 
     async function loadRulesQuietly() {
       try {
-        const res = await fetch("data/rules.json", { cache: "no-cache" });
-        if (!res.ok) return null;
-        return await res.json();
+        return await fetchData("rules");
       } catch (_) {
         return null;
       }
@@ -2176,12 +2230,10 @@
 
     async function load() {
       try {
-        const [sitesRes, rulesPayload] = await Promise.all([
-          fetch("data/sites.json", { cache: "no-cache" }),
+        const [data, rulesPayload] = await Promise.all([
+          fetchData("sites"),
           loadRulesQuietly(),
         ]);
-        if (!sitesRes.ok) throw new Error(`HTTP ${sitesRes.status}`);
-        const data = await sitesRes.json();
         const raw = Array.isArray(data.sites) ? data.sites : [];
         state.sites = decorate(raw);
         rulesData = rulesPayload;
@@ -2395,7 +2447,119 @@
       });
     });
 
-    load();
+    // ---- Password gate ----
+    // The Pages deploy publishes only encrypted snapshots
+    // (data/<name>.enc.json, written by scripts/encrypt_data.py). The key is
+    // derived from the password with PBKDF2 and the files are decrypted with
+    // AES-GCM. When no encrypted file exists (local dev against the repo),
+    // the plain JSON is loaded and the gate is skipped.
+    const PASSWORD_KEY = "lsa-dashboard-password";
+    let dataKey = null;        // CryptoKey once unlocked
+    let encrypted = true;      // false when serving plain JSON locally
+
+    function b64ToBytes(b64) {
+      return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    }
+
+    async function fetchEncrypted(name) {
+      const res = await fetch(`data/${name}.enc.json`, { cache: "no-cache" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    }
+
+    async function deriveKey(password, payload) {
+      const base = await crypto.subtle.importKey(
+        "raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]);
+      return crypto.subtle.deriveKey(
+        { name: "PBKDF2", hash: "SHA-256", salt: b64ToBytes(payload.salt), iterations: payload.iterations },
+        base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+    }
+
+    async function decryptPayload(key, payload) {
+      const plain = await crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: b64ToBytes(payload.iv) }, key, b64ToBytes(payload.ct));
+      return JSON.parse(new TextDecoder().decode(plain));
+    }
+
+    async function fetchData(name) {
+      if (!encrypted) {
+        const res = await fetch(`data/${name}.json`, { cache: "no-cache" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      }
+      return decryptPayload(dataKey, await fetchEncrypted(name));
+    }
+
+    // Resolves true when the password decrypts the sites snapshot.
+    async function tryUnlock(password, payload) {
+      try {
+        const key = await deriveKey(password, payload);
+        await decryptPayload(key, payload);
+        dataKey = key;
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function storePassword(password) {
+      try { sessionStorage.setItem(PASSWORD_KEY, password); } catch (_) {}
+    }
+
+    function storedPassword() {
+      try { return sessionStorage.getItem(PASSWORD_KEY); } catch (_) { return null; }
+    }
+
+    function unlockPage() {
+      document.body.classList.remove("locked");
+      load();
+    }
+
+    async function startGate() {
+      let payload;
+      try {
+        payload = await fetchEncrypted("sites");
+      } catch (_) {
+        encrypted = false;
+        unlockPage();
+        return;
+      }
+
+      const saved = storedPassword();
+      if (saved && await tryUnlock(saved, payload)) {
+        unlockPage();
+        return;
+      }
+
+      const form = document.getElementById("gate-form");
+      const input = document.getElementById("gate-password");
+      const error = document.getElementById("gate-error");
+      const button = form.querySelector("button");
+      input.focus();
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        error.textContent = "";
+        if (!input.value) {
+          error.textContent = "Enter the password.";
+          input.focus();
+          return;
+        }
+        button.disabled = true;
+        button.textContent = "Unlocking…";
+        const ok = await tryUnlock(input.value, payload);
+        button.disabled = false;
+        button.textContent = "Unlock";
+        if (ok) {
+          storePassword(input.value);
+          unlockPage();
+        } else {
+          error.textContent = "Incorrect password. Try again.";
+          input.select();
+        }
+      });
+    }
+
+    startGate();
   </script>
 </body>
 </html>
