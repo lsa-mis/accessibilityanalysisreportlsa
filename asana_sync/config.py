@@ -125,6 +125,7 @@ DSRSE_URL_FIELD = _env_str("DSRSE_URL_FIELD", "Public URL")
 #   rse + wp-digitalscholarship-> RSE         (RSE before WordPress)
 #   rse alone                  -> RSE
 #   wp-digitalscholarship only -> WordPress
+#   wp-courses (+ wp)          -> Courses Site
 # So RSE is checked before every other section.
 SECTIONS: list[dict] = [
     # RSE (or a legacy literal 'Internal' tag) wins over everything: such a
@@ -135,6 +136,9 @@ SECTIONS: list[dict] = [
     {"name": "AEM",          "match": ["aem"]},
     {"name": "Omeka",        "match": ["omeka"]},
     {"name": "Google Sites", "match": ["google-sites", "google sites", "gsites"]},
+    # WP-Courses sites get their own section. Must stay above WordPress,
+    # whose 'wp-' prefix would otherwise claim them.
+    {"name": "Courses Site", "match": ["wp-courses"]},
     {"name": "WordPress",    "match": ["wp", "wordpress"], "prefix": ["wp-"]},
     {"name": "dotNet",       "match": ["dotnet", ".net", "asp.net"]},
     {"name": "Development",  "match": ["development"]},
