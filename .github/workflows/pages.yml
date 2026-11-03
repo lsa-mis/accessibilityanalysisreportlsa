@@ -28,13 +28,26 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # The dashboard is password protected: only data.html and encrypted
+      # copies of the snapshots are published — never the plain JSON, the
+      # tag CSV or source-data/. The password is the DASHBOARD_PASSWORD
+      # repo secret; data.html decrypts in the browser.
+      #
       # The narrative report (index.html) is unpublished for now: the site
-      # root redirects to the dashboard instead. To publish the report
-      # again, delete this step and upload `.` as before.
+      # root redirects to the dashboard instead.
       - name: Build site
+        env:
+          DASHBOARD_PASSWORD: ${{ secrets.DASHBOARD_PASSWORD }}
         run: |
-          mkdir _site
-          rsync -a --exclude .git --exclude _site ./ _site/
+          pip install cryptography
+          mkdir -p _site/data
+          cp data.html favicon.svg _site/
+          python scripts/encrypt_data.py _site/data
           cat > _site/index.html <<'EOF'
           <!doctype html>
           <html lang="en">
