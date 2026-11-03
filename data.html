@@ -215,43 +215,6 @@
     .stats-section.cat-occ   { --cat-color: #7a4a8a; }
     .stats-section.cat-pdf   { --cat-color: #5e1616; }
     .stats-section.cat-spell { --cat-color: #6b3a00; }
-    .stats-section.cat-time  { --cat-color: #3d434a; }
-    /* The Manual Testing card embeds an editable rate input. The card sits
-       in static HTML (not regenerated on render) so the input keeps focus
-       while you type. */
-    .card-with-input { padding-bottom: 0.85rem; }
-    .card-input-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 0.4rem;
-      margin-top: 0.55rem;
-      padding-top: 0.55rem;
-      border-top: 1px dashed var(--rule);
-      font-size: 0.78rem;
-      color: var(--ink-60);
-    }
-    .card-input-row input {
-      width: 56px;
-      padding: 0.3rem 0.45rem;
-      border: 1px solid var(--um-blue);
-      border-radius: 3px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      font-family: inherit;
-      color: var(--um-blue);
-      background: #fff;
-    }
-    .card-input-row input:focus {
-      outline: 2px solid var(--um-blue);
-      outline-offset: 0;
-      border-color: var(--um-blue);
-    }
-    .card-input-row .reconfig-hint {
-      font-style: italic;
-      color: var(--ink-60);
-      margin-left: 0.15rem;
-    }
     .card {
       background: var(--paper-light);
       border: 1px solid var(--rule);
@@ -276,7 +239,6 @@
     .card.cat-occ   { --cat-color: #7a4a8a; }
     .card.cat-pdf   { --cat-color: #5e1616; }
     .card.cat-spell { --cat-color: #6b3a00; }
-    .card.cat-time  { --cat-color: #3d434a; }
     .card .label {
       font-size: 0.75rem;
       text-transform: uppercase;
@@ -682,7 +644,7 @@
     }
     .ready-row {
       display: grid;
-      grid-template-columns: 1fr 120px 90px 90px;
+      grid-template-columns: 1fr 120px 90px;
       gap: 0.85rem;
       align-items: center;
       padding: 0.45rem 0.75rem;
@@ -703,13 +665,13 @@
       font-weight: 700; color: #1f7f3f; text-align: right;
       font-variant-numeric: tabular-nums;
     }
-    .ready-row .r-pages, .ready-row .r-hours {
+    .ready-row .r-pages {
       text-align: right; color: var(--ink-60);
       font-variant-numeric: tabular-nums;
     }
     .ready-head {
       display: grid;
-      grid-template-columns: 1fr 120px 90px 90px;
+      grid-template-columns: 1fr 120px 90px;
       gap: 0.85rem;
       padding: 0.4rem 0.75rem;
       font-size: 0.7rem;
@@ -725,7 +687,6 @@
     .ready-head span:not(:first-child) { text-align: right; }
     @media (max-width: 600px) {
       .ready-row, .ready-head { grid-template-columns: 1fr 70px 60px; }
-      .ready-row .r-hours, .ready-head .h-hours { display: none; }
     }
 
     /* ============================================================
@@ -961,7 +922,9 @@
   </header>
   <main>
     <div class="meta">
+      <!-- Narrative report is unpublished for now (see .github/workflows/pages.yml).
       <a href="index.html" class="back-btn"><span class="arrow" aria-hidden="true">←</span>Back to narrative report</a>
+      -->
       <span>Last refreshed: <strong id="generated-at">—</strong></span>
     </div>
 
@@ -1063,43 +1026,6 @@
 
     <div class="summary-cards" id="summary-cards"></div>
 
-    <!-- Manual testing block sits in static HTML so the rate input stays
-         focused while you type. renderManualTesting() updates only the
-         hours value + the in-blurb rate echo. -->
-    <div class="stats-block">
-      <div class="stats-section cat-time">
-        <div class="stats-section-title">
-          <span class="accent" aria-hidden="true"></span>
-          <span class="label">Manual testing</span>
-          <span class="blurb">
-            Estimated first-pass effort at
-            <strong><span id="manual-rate-echo">15</span> min / page</strong>
-            across the filtered portfolio. Adjust the rate below to model different scenarios.
-          </span>
-        </div>
-        <div class="stats-section-grid">
-          <div class="card cat-time card-with-input">
-            <div class="label">Total hours estimate</div>
-            <div class="value" id="manual-test-hours">—</div>
-            <div class="card-input-row">
-              <label for="minutes-per-page" style="font-weight:500;color:var(--ink);">Rate:</label>
-              <input
-                type="number"
-                id="minutes-per-page"
-                min="1"
-                max="240"
-                step="1"
-                value="15"
-                aria-label="Estimated minutes per page for manual accessibility testing"
-              />
-              <span>min / page</span>
-              <span class="reconfig-hint">— reconfigurable, recomputes on change</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <div class="viz-grid">
       <div class="viz-card full" style="border-left: 4px solid var(--um-maize);">
         <h3>15 sites furthest from Title II target</h3>
@@ -1132,26 +1058,12 @@
         <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
           <h3 style="margin:0;">Ready for manual testing</h3>
           <div style="display:flex;align-items:center;gap:0.85rem;flex-wrap:wrap;">
-            <label style="font-size:0.82rem;color:var(--ink-60);display:inline-flex;align-items:center;gap:0.4rem;">
-              <span style="font-weight:600;color:var(--ink);">Rate:</span>
-              <input
-                type="number"
-                id="minutes-per-page-ready"
-                min="1"
-                max="240"
-                step="1"
-                value="15"
-                style="width:56px;padding:0.3rem 0.45rem;border:1px solid #1f7f3f;border-radius:3px;font-size:0.95rem;font-weight:600;color:#174531;font-family:inherit;background:#fff;"
-                aria-label="Estimated minutes per page for manual accessibility testing"
-              />
-              <span>min / page</span>
-            </label>
             <button type="button" id="export-ready" class="export-btn" aria-label="Export the ready-for-manual-testing list to CSV">
               <span class="icon" aria-hidden="true">⤓</span> Export this list
             </button>
           </div>
         </div>
-        <div class="viz-sub">Sites at <strong>≥97.5% of their Title II target</strong> — automated remediation is essentially done, so the next step is human review (keyboard navigation, screen-reader flow, focus order, meaningful alt text). Respects the active filters above. Sorted by page count so the smallest manual-testing jobs surface first. The rate here is shared with the Manual testing stat above.</div>
+        <div class="viz-sub">Sites at <strong>≥97.5% of their Title II target</strong> — automated remediation is essentially done, so the next step is human review (keyboard navigation, screen-reader flow, focus order, meaningful alt text). Respects the active filters above. Sorted by page count so the smallest manual-testing jobs surface first.</div>
         <div class="ready-stats" id="ready-stats"></div>
         <div class="ready-list" id="ready-list"></div>
       </div>
@@ -1190,12 +1102,11 @@
             <th data-key="pdf_count" data-type="number" class="col-pdf" title="PDFs flagged by Siteimprove for accessibility validation">PDFs</th>
             <th data-key="pdfs_with_issues" data-type="number" class="col-pdf" title="PDFs with at least one accessibility issue">PDFs w/ issues</th>
             <th data-key="misspellings" data-type="number" class="col-spell" title="Confirmed misspellings flagged by Siteimprove QA">Misspellings</th>
-            <th data-key="est_hours" data-type="number" title="Estimated manual-test hours = pages × minutes/page">Est. hrs</th>
             <th data-key="status" data-type="string">Status</th>
           </tr>
         </thead>
         <tbody id="sites-body">
-          <tr><td colspan="17" class="empty">Loading…</td></tr>
+          <tr><td colspan="16" class="empty">Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -1229,9 +1140,6 @@
       error:     "#5e1616",
     };
 
-    // Manual-test estimate: minutes per page. Adjustable via the input control.
-    let manualMinutesPerPage = 15;
-
     const fmtNumber = (v) =>
       v === null || v === undefined ? "—" : Number(v).toLocaleString();
 
@@ -1240,21 +1148,6 @@
       const n = Number(v);
       return Number.isNaN(n) ? "—" : n.toFixed(1);
     };
-
-    const fmtHours = (v) => {
-      if (v === null || v === undefined) return "—";
-      const n = Number(v);
-      if (Number.isNaN(n) || n <= 0) return "—";
-      if (n < 1)  return n.toFixed(1) + "h";
-      if (n < 100) return n.toFixed(1) + "h";
-      return Math.round(n).toLocaleString() + "h";
-    };
-
-    function estTestHours(s) {
-      const pages = s.pages || s.pages_with_issues || 0;
-      if (!pages) return 0;
-      return (pages * manualMinutesPerPage) / 60;
-    }
 
     function median(values) {
       const arr = values.filter(v => v !== null && v !== undefined && !Number.isNaN(v))
@@ -1859,14 +1752,13 @@
       const totalPages = filteredSites.reduce((acc, s) => acc + (s.pages || 0), 0);
       const totalPagesWithIssues = filteredSites.reduce((acc, s) => acc + (s.pages_with_issues || 0), 0);
       const sitesWithIssuePages = filteredSites.filter(s => (s.pages_with_issues || 0) > 0).length;
-      const totalTestHours = filteredSites.reduce((acc, s) => acc + estTestHours(s), 0);
       const totalPdfs = filteredSites.reduce((acc, s) => acc + (s.pdf_count || 0), 0);
       const totalPdfsWithIssues = filteredSites.reduce((acc, s) => acc + (s.pdfs_with_issues || 0), 0);
       const totalMisspellings = filteredSites.reduce((acc, s) => acc + (s.misspellings || 0), 0);
       const sitesWithMisspellings = filteredSites.filter(s => (s.misspellings || 0) > 0).length;
 
       // Group cards under a titled section so the eye scans by category
-      // (Sites, Score, Pages, Occurrences, PDFs, Spelling, Manual testing)
+      // (Sites, Score, Pages, Occurrences, PDFs, Spelling)
       // instead of decoding 14 cards in a flat grid.
       const sections = [
         {
@@ -1920,9 +1812,6 @@
             { label: "Sites w/ misspellings", value: sitesWithMisspellings.toLocaleString() },
           ],
         },
-        // Manual testing lives in static HTML below the summary grid so the
-        // rate input stays focused while you type. renderManualTesting()
-        // updates its value separately.
       ];
 
       document.getElementById("summary-cards").innerHTML = sections.map((sec) => `
@@ -1976,7 +1865,7 @@
         `${filteredSites.length.toLocaleString()} of ${state.sites.length.toLocaleString()} sites shown`;
 
       if (sorted.length === 0) {
-        body.innerHTML = '<tr><td colspan="17" class="empty">No sites match current filters.</td></tr>';
+        body.innerHTML = '<tr><td colspan="16" class="empty">No sites match current filters.</td></tr>';
         return;
       }
 
@@ -2012,7 +1901,6 @@
             <td class="num col-pdf">${fmtNumber(s.pdf_count)}</td>
             <td class="num col-pdf">${fmtNumber(s.pdfs_with_issues)}</td>
             <td class="num col-spell">${fmtNumber(s.misspellings)}</td>
-            <td class="num">${fmtHours(estTestHours(s))}</td>
             <td>${statusBadge(s.status)}</td>
           </tr>`;
       }).join("");
@@ -2202,12 +2090,10 @@
 
       const ready = readySites(filteredSites);
       const totalPages = ready.reduce((acc, s) => acc + (s.pages || 0), 0);
-      const totalHours = ready.reduce((acc, s) => acc + estTestHours(s), 0);
 
       statsEl.innerHTML = [
         { num: ready.length.toLocaleString(), lbl: "sites ready" },
         { num: totalPages.toLocaleString(),   lbl: "pages to review" },
-        { num: fmtHours(totalHours),          lbl: `est. effort (${manualMinutesPerPage}min/pg)` },
       ].map(s => `
         <div class="ready-stat">
           <div class="num">${escapeHtml(String(s.num))}</div>
@@ -2224,7 +2110,6 @@
           <span>Site</span>
           <span>Target %</span>
           <span>Pages</span>
-          <span class="h-hours">Est. hrs</span>
         </div>`;
       const rows = ready.map(s => `
         <div class="ready-row">
@@ -2234,7 +2119,6 @@
           </div>
           <span class="r-pct">${s.target_percentage.toFixed(2)}%</span>
           <span class="r-pages">${fmtNumber(s.pages)}</span>
-          <span class="r-hours">${fmtHours(estTestHours(s))}</span>
         </div>`).join("");
       listEl.innerHTML = head + rows;
     }
@@ -2249,7 +2133,6 @@
         ["Platform",  s => s.platform || ""],
         ["Target %",  s => s.target_percentage ?? ""],
         ["Pages",     s => s.pages ?? ""],
-        [`Est. test hours (${manualMinutesPerPage}min/pg)`, s => estTestHours(s).toFixed(2)],
       ];
       const lines = [cols.map(([h]) => csvCell(h)).join(",")];
       for (const s of ready) lines.push(cols.map(([, fn]) => csvCell(fn(s))).join(","));
@@ -2265,19 +2148,10 @@
       URL.revokeObjectURL(url);
     }
 
-    function renderManualTesting(filteredSites) {
-      const totalTestHours = filteredSites.reduce((acc, s) => acc + estTestHours(s), 0);
-      const hoursEl = document.getElementById("manual-test-hours");
-      const echoEl = document.getElementById("manual-rate-echo");
-      if (hoursEl) hoursEl.textContent = fmtHours(totalTestHours);
-      if (echoEl) echoEl.textContent = String(manualMinutesPerPage);
-    }
-
     function renderAll() {
       const filtered = applyFilters();
       renderCompliance(filtered);
       renderSummary(filtered);
-      renderManualTesting(filtered);
       renderCharts(filtered);
       renderRules();
       renderReady(filtered);
@@ -2344,7 +2218,7 @@
         renderAll();
       } catch (err) {
         document.getElementById("sites-body").innerHTML =
-          `<tr><td colspan="17" class="empty">Failed to load data: ${escapeHtml(err.message)}</td></tr>`;
+          `<tr><td colspan="16" class="empty">Failed to load data: ${escapeHtml(err.message)}</td></tr>`;
       }
     }
 
@@ -2352,27 +2226,6 @@
       state.search = e.target.value;
       renderAll();
     });
-
-    // Two rate inputs (Manual testing stat + Ready-for-manual-testing
-    // section) both drive the same manualMinutesPerPage. Whichever the
-    // user edits, mirror the value into the other and re-render. The
-    // edited input keeps focus because we only set the OTHER input's value.
-    const rateInputIds = ["minutes-per-page", "minutes-per-page-ready"];
-    function wireRateInput(id) {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.addEventListener("input", (e) => {
-        const n = Math.max(1, Math.min(240, Number(e.target.value) || 15));
-        manualMinutesPerPage = n;
-        for (const otherId of rateInputIds) {
-          if (otherId === id) continue;
-          const other = document.getElementById(otherId);
-          if (other && other.value !== String(n)) other.value = String(n);
-        }
-        renderAll();
-      });
-    }
-    rateInputIds.forEach(wireRateInput);
 
     // ============================================================
     // CSV export of the currently-filtered + sorted table.
@@ -2422,7 +2275,6 @@
         ["PDFs",                         s => s.pdf_count ?? ""],
         ["PDFs with issues",             s => s.pdfs_with_issues ?? ""],
         ["Misspellings",                 s => s.misspellings ?? ""],
-        [`Est. test hours (${manualMinutesPerPage}min/pg)`, s => estTestHours(s).toFixed(2)],
         ["Status",                       s => s.status],
       ];
       const lines = [cols.map(([h]) => csvCell(h)).join(",")];

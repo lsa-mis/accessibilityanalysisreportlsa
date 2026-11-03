@@ -28,10 +28,32 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      # The narrative report (index.html) is unpublished for now: the site
+      # root redirects to the dashboard instead. To publish the report
+      # again, delete this step and upload `.` as before.
+      - name: Build site
+        run: |
+          mkdir _site
+          rsync -a --exclude .git --exclude _site ./ _site/
+          cat > _site/index.html <<'EOF'
+          <!doctype html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <title>LSA Web Accessibility Dashboard</title>
+            <meta http-equiv="refresh" content="0; url=data.html">
+            <link rel="canonical" href="data.html">
+          </head>
+          <body>
+            <p><a href="data.html">Go to the LSA Web Accessibility Dashboard</a></p>
+          </body>
+          </html>
+          EOF
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
 
       - name: Deploy to GitHub Pages
         id: deployment

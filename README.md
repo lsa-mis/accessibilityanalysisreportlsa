@@ -5,7 +5,7 @@ Data pipeline, live dashboards, and workflow automations for LSA's web-accessibi
 ## Structure
 
 ```
-index.html            Narrative accessibility report (published via Pages)
+index.html            Narrative accessibility report (not published for now; the Pages root redirects to data.html)
 data.html             Live dashboard — searchable, filterable per-site view
 favicon.svg           Shared favicon for both pages
 data/
@@ -28,7 +28,7 @@ source-data/          Original analysis spreadsheets (manual exports)
 ```
 Sat & Sun 11:00 UTC  Refresh Siteimprove data
    ├─ commits data/sites.json + data/rules.json
-   ├─ triggers Pages deploy (dashboard + report go live)
+   ├─ triggers Pages deploy (dashboard goes live)
    └─ workflow_run → Sync Siteimprove → Asana
         └─ updates fields / sections, creates missing tasks
 ```
