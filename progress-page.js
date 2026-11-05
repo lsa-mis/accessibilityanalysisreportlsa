@@ -17,7 +17,7 @@
   let entries = [], mapping = {}, fromE = null, toE = null, before = null, after = null, comparison = null;
   let sort = "site", direction = 1, generation = 0, period = "month", tab = "overview", siteFilter = "all", showAllSites = false;
   let focusSummary = false;
-  let trendMetric = "mean", picker = null, viewMonth = null, pickerOpener = null, exportTab = "summary";
+  let picker = null, viewMonth = null, pickerOpener = null, exportTab = "summary";
   const platforms = new Set(), tags = new Set();
   let department = "", search = "";
   const cache = new Map();
@@ -231,14 +231,13 @@
     // Only snapshots that can be compared are drawn. Older imports without scan
     // quality details are left out of the chart and the table entirely.
     const pts = entries.filter(comparable);
-    const value = e => trendMetric === "mean" ? e.mean_target : e.eligible_count;
-    for (const b of document.querySelectorAll("#trend-metric button")) b.setAttribute("aria-pressed", String(b.dataset.metric === trendMetric));
+    const value = e => e.mean_target;
     if (!pts.length) {
       el("trend-plot").innerHTML = `<p class="trend-empty">No comparable snapshots yet. The trend starts with the first nightly refresh that records scan quality details.</p>`;
       el("trend-plot").setAttribute("aria-label", "Trend: no comparable snapshots yet");
       el("trend-max").textContent = el("trend-min").textContent = "";
       el("trend-x").innerHTML = "";
-      el("trend-body").innerHTML = `<tr><td colspan="5" class="empty">No comparable snapshots yet.</td></tr>`;
+      el("trend-body").innerHTML = `<tr><td colspan="4" class="empty">No comparable snapshots yet.</td></tr>`;
       return;
     }
     const vals = pts.map(value).filter(v => v !== null && v !== undefined);
@@ -248,7 +247,7 @@
     const span = Math.max(1, dN - d0);
     const x = e => pts.length === 1 ? 50 : (dayNum(e.date) - d0) / span * 100;
     const y = v => Math.max(5, Math.min(95, 100 - (v - lo) / (hi - lo) * 100));
-    const show = v => trendMetric === "mean" ? pct(v) : fmt(v);
+    const show = v => pct(v);
     let path = "", prev = null;
     pts.forEach(e => {
       const v = value(e);
@@ -260,7 +259,7 @@
     const bands = [];
     for (let i = 1; i < pts.length; i++) if (dayNum(pts[i].date) - dayNum(pts[i - 1].date) > 10) bands.push([x(pts[i - 1]), x(pts[i]) - x(pts[i - 1])]);
     const fx = fromE && comparable(fromE) ? x(fromE) : 0, tx = toE ? x(toE) : 0;
-    el("trend-plot").setAttribute("aria-label", `${trendMetric === "mean" ? "Average score" : "Sites with a reliable score"} for ${pts.length} comparable snapshot${pts.length === 1 ? "" : "s"} from ${longDate(pts[0].date)} to ${longDate(pts.at(-1).date)}${vals.length ? `, ranging from ${show(Math.min(...vals))} to ${show(Math.max(...vals))}` : ""}. The data table below lists every snapshot and lets you start the comparison on any of them.`);
+    el("trend-plot").setAttribute("aria-label", `Average score for ${pts.length} comparable snapshot${pts.length === 1 ? "" : "s"} from ${longDate(pts[0].date)} to ${longDate(pts.at(-1).date)}${vals.length ? `, ranging from ${show(Math.min(...vals))} to ${show(Math.max(...vals))}` : ""}. The data table below lists every snapshot and lets you start the comparison on any of them.`);
     el("trend-plot").innerHTML =
       bands.map(([l, w]) => `<div class="trend-band" style="left:${l.toFixed(2)}%;width:${w.toFixed(2)}%"><span>No snapshots</span></div>`).join("") +
       `<div class="trend-sel" aria-hidden="true" style="left:${fx.toFixed(2)}%;width:${Math.max(0, tx - fx).toFixed(2)}%"></div>` +
@@ -289,7 +288,7 @@
     el("trend-body").innerHTML = [...pts].reverse().map(e => {
       const notes = [e === fromE ? "Start date" : "", e === toE ? "End date" : "", e.historical ? "Imported snapshot" : "Nightly snapshot"].filter(Boolean).join("; ");
       const canStart = toE && e.date < toE.date && e !== fromE;
-      return `<tr><td>${escape(longDate(e.date))}</td><td class="num tnum">${pct(e.mean_target)}</td><td class="num tnum">${fmt(e.eligible_count)} of ${fmt(e.site_count)}</td><td>${escape(notes)}</td>
+      return `<tr><td>${escape(longDate(e.date))}</td><td class="num tnum">${pct(e.mean_target)}</td><td>${escape(notes)}</td>
         <td>${canStart ? `<button type="button" class="btn" data-start-index="${entries.indexOf(e)}" aria-label="Start the comparison on ${escape(longDate(e.date))}">Start here</button>` : ""}</td></tr>`;
     }).join("");
   }
@@ -672,7 +671,6 @@
       if (!comparable(entry) || entry.date >= toE.date) return;
       fromE = entry; period = "custom"; el("date-note").textContent = ""; loadComparison();
     });
-    el("trend-metric").addEventListener("click", e => { const b = e.target.closest("button[data-metric]"); if (b) { trendMetric = b.dataset.metric; renderTrend(); } });
     el("step-earlier").addEventListener("click", () => {
       const options = entries.filter(x => comparable(x) && x.date < fromE.date);
       if (options.length) { fromE = options.at(-1); period = "custom"; loadComparison(); }
