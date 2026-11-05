@@ -28,7 +28,7 @@
       <div class="site-header__top">
         <div>
           <h1 class="site-title">LSA Web Accessibility Data Dashboard</h1>
-          <p class="site-welcome">Welcome. This is Siteimprove accessibility data for LSA websites, last pulled <strong id="generated-at">…</strong>.</p>
+          <p class="site-welcome">Welcome. Siteimprove accessibility data for LSA websites, updated <strong id="generated-at">…</strong>.</p>
         </div>
         <button type="button" class="search-trigger" data-open-search aria-haspopup="dialog">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
@@ -129,21 +129,21 @@
         <section class="card stack" aria-labelledby="far-heading">
           <div>
             <h2 id="far-heading">Furthest from the goal</h2>
-            <p class="card-sub">Sites with the lowest confirmed scores right now. Bars run from 50% to 100%.</p>
+            <p class="card-sub">Lowest confirmed scores. Bars show the score out of 100%.</p>
           </div>
           <ul class="plain-list" id="far-list"></ul>
         </section>
         <section class="card stack" aria-labelledby="levels-heading">
           <div>
             <h2 id="levels-heading">Issues by type</h2>
-            <p class="card-sub">How often each type of problem appears. Best practices are optional.</p>
+            <p class="card-sub">Share of all problems found. Best practices are optional.</p>
           </div>
           <ul class="plain-list levels" id="levels-list"></ul>
         </section>
         <section class="card stack" aria-labelledby="top-problems-heading">
           <div>
             <h2 id="top-problems-heading">Most common problems</h2>
-            <p class="card-sub">The problems found on the most sites. Select one for details.</p>
+            <p class="card-sub">Found on the most sites.</p>
           </div>
           <ol class="plain-list" id="top-problems"></ol>
           <button type="button" class="btn" id="see-all-problems" style="align-self:flex-start">See all common problems</button>
@@ -157,7 +157,7 @@
       <section class="card stack" aria-labelledby="aud-heading">
         <div>
           <h2 id="aud-heading">Who needs training?</h2>
-          <p class="card-sub">Each problem is fixed by a different group of people. Select a group to see only its topics. Guidance is a draft for the team to review.</p>
+          <p class="card-sub">Select a group to see its topics. Guidance is a draft.</p>
         </div>
         <div class="aud-cards" id="aud-cards" role="group" aria-label="Filter problems by who fixes them"></div>
         <button type="button" class="link-btn" id="aud-reset" hidden style="align-self:flex-start">Show problems for every group</button>
@@ -183,7 +183,7 @@
         <div class="space-between">
           <div>
             <h2 id="ready-heading">Ready for manual testing</h2>
-            <p class="card-sub">Sites with a confirmed score at or above their ready line: <strong>93% for LSA AEM sites</strong> and <strong>98% for every other platform</strong>. Automated checks can’t catch everything, so these are next for hands-on testing. Smallest sites first.</p>
+            <p class="card-sub">Confirmed score of <strong>93%+ for LSA AEM</strong> or <strong>98%+ for other platforms</strong>. Smallest sites first.</p>
           </div>
           <button type="button" class="btn no-print" id="export-ready">Export list</button>
         </div>
@@ -208,7 +208,7 @@
         <div class="space-between">
           <div>
             <h2 id="missing-heading">Sites with missing data</h2>
-            <p class="card-sub">Siteimprove has no data, or only part of it, for these sites. Missing numbers are left out of totals and averages and show as “—”, never as zero.</p>
+            <p class="card-sub">Missing numbers show as “—” and are left out of totals.</p>
           </div>
           <button type="button" class="btn no-print" id="export-missing">Export list</button>
         </div>
@@ -216,10 +216,10 @@
         <details class="missing-help">
           <summary>What to do about each reason</summary>
           <ul>
-            <li><strong>Never scanned by Siteimprove:</strong> the site is listed but has no pages. Ask the Siteimprove admin to start a scan, or remove the site if it is no longer used.</li>
-            <li><strong>Last check failed:</strong> Siteimprove could not reach or read the site. Check that the address works and isn’t behind a login.</li>
-            <li><strong>Check in progress:</strong> Siteimprove is scanning the site now. It should have data after the next nightly refresh.</li>
-            <li><strong>No score yet, Issue counts or PDF counts not collected:</strong> usually follows from one of the reasons above.</li>
+            <li><strong>Never scanned:</strong> ask the Siteimprove admin to scan it, or remove it if unused.</li>
+            <li><strong>Last check failed:</strong> make sure the address works and isn’t behind a login.</li>
+            <li><strong>Check in progress:</strong> data should arrive after the next nightly refresh.</li>
+            <li><strong>No score, issue or PDF counts:</strong> usually caused by one of the above.</li>
           </ul>
         </details>
         <div class="table-scroll" tabindex="0" role="region" aria-label="Sites with missing data, scrolls sideways">
@@ -261,12 +261,12 @@
     <details class="card glossary">
       <summary>How to read this, and terms used</summary>
       <ul>
-        <li><strong>Score</strong> is Siteimprove’s Title II target: how many Level A, Level AA and ARIA checks a site passes. 100% meets the goal. It shows progress, not legal compliance.</li>
-        <li><strong>Overall score</strong> is Siteimprove’s DCI score. It also counts optional checks, so it is usually lower.</li>
-        <li><strong>Issues (occurrences)</strong> counts every time a required check fails on a page.</li>
-        <li><strong>Ready for manual testing</strong>: a site with a confirmed score of at least 93% for LSA AEM sites, or 98% for every other platform, and a working last check. Estimated scores never count.</li>
-        <li><strong>Level A</strong> and <strong>Level AA</strong> are the WCAG (Web Content Accessibility Guidelines) levels Title II requires. <strong>ARIA</strong> is code that tells screen readers what custom controls do. <strong>Best practices</strong> are optional suggestions.</li>
-        <li>Missing data is shown as “—” and is never counted as zero. Test and development sites are always hidden.</li>
+        <li><strong>Score:</strong> Siteimprove’s Title II target (Level A, AA and ARIA checks). 100% is the goal. Shows progress, not legal compliance.</li>
+        <li><strong>Overall score:</strong> Siteimprove’s DCI score, which also counts optional checks.</li>
+        <li><strong>Issues (occurrences):</strong> each time a required check fails on a page.</li>
+        <li><strong>Ready for manual testing:</strong> confirmed score of 93%+ (LSA AEM) or 98%+ (other platforms).</li>
+        <li><strong>Level A, AA:</strong> WCAG levels Title II requires. <strong>ARIA:</strong> code that describes controls to screen readers. <strong>Best practices:</strong> optional.</li>
+        <li>Missing data shows as “—”, never zero. Test and development sites are hidden.</li>
       </ul>
     </details>
   </main>

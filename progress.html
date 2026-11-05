@@ -34,7 +34,7 @@
       <div class="site-header__top">
         <div>
           <h1 class="site-title">LSA Web Accessibility Data Dashboard</h1>
-          <p class="site-welcome">Welcome. This shows how LSA websites have changed over time, using Siteimprove data last pulled <strong id="latest-date">…</strong>.</p>
+          <p class="site-welcome">Welcome. How LSA websites have changed over time, updated <strong id="latest-date">…</strong>.</p>
         </div>
         <button type="button" class="search-trigger" data-open-search aria-haspopup="dialog">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
@@ -118,7 +118,7 @@
         <section class="card stack" aria-labelledby="trend-heading">
           <div>
             <h2 id="trend-heading">Trend: average score</h2>
-            <p class="card-sub">Each point is the average score of all sites in a saved snapshot that can be compared. Click a point, use the buttons below, or open the data table to change the start date. Gaps mean no snapshot was saved; nothing is filled in.</p>
+            <p class="card-sub">Average score per snapshot. Click a point or use the table to change the start date.</p>
           </div>
           <div class="trend">
             <div class="trend-y tnum muted" aria-hidden="true"><span id="trend-max"></span><span id="trend-min"></span></div>
@@ -150,7 +150,7 @@
           <section class="card stack" aria-labelledby="wp-heading">
             <div>
               <h2 id="wp-heading">Ready for manual testing</h2>
-              <p class="card-sub">Sites with a confirmed score on both dates that crossed their ready line: 93% for LSA AEM sites, 98% for every other platform.</p>
+              <p class="card-sub">Crossed their line (93% LSA AEM, 98% others) between the two dates.</p>
             </div>
             <div class="cross-grid">
               <button type="button" class="cross-btn cross-btn--up" data-site-filter="up"><span>↑ Became ready</span><strong class="tnum" id="wp-up">—</strong><span class="link-text">View these sites</span></button>
@@ -161,7 +161,7 @@
           <section class="card stack" aria-labelledby="coverage-heading">
             <div>
               <h2 id="coverage-heading">What’s counted</h2>
-              <p class="card-sub">Only matched sites feed the numbers above. Everything else is listed, not hidden.</p>
+              <p class="card-sub">Only matched sites count toward the numbers above.</p>
             </div>
             <div class="coverage-bar" id="coverage-bar" aria-hidden="true"></div>
             <ul class="plain-list" id="coverage"></ul>
@@ -185,7 +185,7 @@
         <section class="card stack" aria-labelledby="departments-heading">
           <div>
             <h2 id="departments-heading">By department</h2>
-            <p class="card-sub">Same definitions as the overview. Today’s department list is applied to both dates. Sites without a department are shown as Unmapped, never guessed. Select a department to see its sites.</p>
+            <p class="card-sub">Today’s department list applies to both dates. Select a department to see its sites.</p>
           </div>
           <div class="table-scroll" tabindex="0" role="region" aria-label="Department comparison, scrolls sideways">
             <table class="data-table">
@@ -230,12 +230,12 @@
     <details class="card glossary">
       <summary>How these numbers work, and terms used</summary>
       <ul id="definitions">
-        <li><strong>Matched sites</strong> have a confirmed Siteimprove score on both dates. Every change on this page uses only them, so new or missing sites never look like progress.</li>
-        <li><strong>Score</strong> is Siteimprove’s Title II target (Level A, Level AA and ARIA checks). A site is ready for manual testing at 93% or higher if it is an LSA AEM site, or 98% or higher on every other platform. It shows progress, not proof of compliance or of manual testing.</li>
-        <li><strong>Issues (occurrences)</strong> count every time a Level A, Level AA or ARIA check fails on a page. A drop is a net change in what was detected, not a count of verified fixes; changes in scanned pages move it too.</li>
-        <li><strong>Points</strong> means percentage points: the plain difference between two percentages (96.2% to 96.5% is +0.3 points).</li>
-        <li><strong>Needs reliable data</strong> covers estimated scores, failed checks and older imports without quality details. They are listed, never counted as zero.</li>
-        <li>If no snapshot exists on a chosen date, the nearest earlier one is used and its real date is shown. The pull time is not the time Siteimprove last checked a site.</li>
+        <li><strong>Matched sites:</strong> a confirmed score on both dates. All changes use only these.</li>
+        <li><strong>Score:</strong> Siteimprove’s Title II target (Level A, AA and ARIA). Ready for manual testing at 93%+ (LSA AEM) or 98%+ (others). Not proof of compliance.</li>
+        <li><strong>Issues (occurrences):</strong> each time a required check fails on a page. A drop is a net change, not verified fixes.</li>
+        <li><strong>Points:</strong> percentage points (96.2% to 96.5% is +0.3).</li>
+        <li><strong>Needs reliable data:</strong> estimated scores, failed checks or older imports. Never counted as zero.</li>
+        <li><strong>Reliable data</strong> starts with snapshots from October 26, 2026, which record scan quality details.</li>
       </ul>
     </details>
   </main>

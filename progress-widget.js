@@ -31,9 +31,20 @@
       if (token !== generation) return;
       const dates = ProgressCore.daily(index.entries), latest = dates.at(-1);
       if (!latest) throw new Error("No saved snapshots yet.");
-      const earlier = ProgressCore.baseline(dates, latest, "month");
+      // Compare with a month ago; if that snapshot isn't reliable (an older
+      // import without scan quality details), use the first reliable one.
+      const reliable = e => !!e && e.eligible_count > 0;
+      let earlier = ProgressCore.baseline(dates, latest, "month"), fallback = false;
+      if (!reliable(earlier)) {
+        earlier = dates.find(e => reliable(e) && e.date < latest.date) || null;
+        fallback = !!earlier;
+      }
       const warning = ProgressClient.freshness(latest, status);
-      if (!earlier) { target.textContent = `${warning} There is no snapshot from a month ago yet. Open the progress page to compare two saved dates.`.trim(); return; }
+      if (!earlier) {
+        if (heading) heading.textContent = "Change over time";
+        target.textContent = `${warning} Changes appear once two reliable snapshots exist.`.trim();
+        return;
+      }
       const get = entry => {
         if (!snapshots.has(entry.path)) snapshots.set(entry.path, load(entry.path.replace(/\.json\.gz$/, "")).catch(failure => { snapshots.delete(entry.path); throw failure; }));
         return snapshots.get(entry.path);
@@ -41,9 +52,9 @@
       const [before, after] = await Promise.all([get(earlier), get(latest)]);
       if (token !== generation) return;
       const r = ProgressCore.compare(before, after, mapping, filter);
-      if (heading) heading.textContent = `Change since ${longDate(earlier.date)}`;
+      if (heading) heading.textContent = `Change since ${longDate(earlier.date)}${fallback ? " (first reliable data)" : ""}`;
       if (!r.matched) {
-        target.innerHTML = `<span>No sites have reliable data on both ${esc(longDate(earlier.date))} and ${esc(longDate(latest.date))}, so changes can’t be shown yet.</span>${warning ? ` <span class="muted">${esc(warning)}</span>` : ""}`;
+        target.innerHTML = `<span>No sites have reliable data on both dates yet.</span>${warning ? ` <span class="muted">${esc(warning)}</span>` : ""}`;
         return;
       }
       const net = r.newly_ready === null ? null : r.newly_ready - r.regressed;
@@ -53,7 +64,7 @@
         pill(net, true, `${net} more site${net === 1 ? "" : "s"} ready for manual testing`, `${Math.abs(net || 0)} fewer site${net === -1 ? "" : "s"} ready for manual testing`, "Same number of sites ready for manual testing"),
         pill(pp, true, `Average score up ${Math.abs(pp || 0)} points`, `Average score down ${Math.abs(pp || 0)} points`, "Average score unchanged"),
         pill(occPct, false, `${Math.abs(occPct || 0)}% more issues found`, `${Math.abs(occPct || 0)}% fewer issues found`, "Same number of issues found"),
-        `<span class="muted">Compares ${r.matched.toLocaleString("en-US")} sites that have data for both dates.${occPct === null ? " Issue counts can’t be compared for these dates." : ""}${warning ? " " + esc(warning) : ""}</span>`,
+        `<span class="muted">Based on ${r.matched.toLocaleString("en-US")} matched sites.${warning ? " " + esc(warning) : ""}</span>`,
       ].join(" ");
     } catch (failure) {
       if (token === generation) target.textContent = `Progress history is unavailable: ${failure.message}`;

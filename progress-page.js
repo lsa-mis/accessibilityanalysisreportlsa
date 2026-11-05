@@ -138,9 +138,8 @@
         banner.innerHTML = `
           <svg class="notice-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
           <div class="notice-body">
-            <h2 id="not-comparable-title">This start date can’t be compared yet</h2>
-            <p>${escape(longDate(fromE.date))} comes from older history that was imported without scan quality details. Comparing it would give misleading changes, so the numbers below are left blank.</p>
-            ${firstGood ? `<p>Comparable snapshots start on <strong>${escape(longDate(firstGood.date))}</strong>. Older dates still appear in the trend.</p>` : "<p>No comparable snapshots have been saved yet.</p>"}
+            <h2 id="not-comparable-title">This start date can’t be compared</h2>
+            <p>${escape(longDate(fromE.date))} is an older import without scan quality details. ${firstGood ? `Comparable snapshots start on <strong>${escape(longDate(firstGood.date))}</strong>.` : "No comparable snapshots yet."}</p>
             <div class="pill-row">
               ${canSwitch ? `<button type="button" class="btn btn-primary" id="use-first-comparable">Compare from ${escape(longDate(firstGood.date))} instead</button>` : ""}
               <button type="button" class="btn" id="choose-other-start">Choose another start date</button>
@@ -314,27 +313,27 @@
     const pp = c.target.change;
     const setAside = c.added + c.removed + c.gaps;
     el("headline").textContent = c.matched
-      ? `From ${longDate(fromE.date)} to ${longDate(toE.date)}, sites ready for manual testing went from ${fmt(at.before)} to ${fmt(at.after)} (${at.after === at.before ? "no change" : signed(at.after - at.before)}; ready means 93%+ for LSA AEM sites, 98%+ for others). The average score moved ${signed(pp, 2)} points${occPct === null ? ". Issue counts can’t be compared for these dates." : `, and detected issues ${occPct <= 0 ? "fell" : "rose"} ${fmt(Math.abs(occPct), 1)}%.`}`
-      : `No sites have reliable data on both ${longDate(fromE.date)} and ${longDate(toE.date)}, so changes can’t be shown. Try a later start date.`;
+      ? `${longDate(fromE.date)} to ${longDate(toE.date)}: ${fmt(at.before)} → ${fmt(at.after)} sites ready for manual testing (${at.after === at.before ? "no change" : signed(at.after - at.before)}). Average score ${signed(pp, 2)} points.${occPct === null ? "" : ` Issues ${occPct <= 0 ? "down" : "up"} ${fmt(Math.abs(occPct), 1)}%.`}`
+      : `No sites have reliable data on both dates. Try a later start date.`;
     const card = (title, now, from, delta, note) => `<div class="card kpi"><h3>${escape(title)}</h3>
       <div class="pill-row" style="align-items:baseline"><span class="kpi-value tnum">${escape(now)}</span><span class="muted tnum">from ${escape(from)}</span></div>${delta}<span class="muted" style="font-size:14px">${escape(note)}</span></div>`;
     el("metrics").innerHTML = c.matched ? [
-      card("Sites ready for manual testing", fmt(at.after), fmt(at.before), pill(at.after - at.before, true, `${signed(at.after - at.before)} sites`), `Of ${fmt(c.matched)} matched sites. Ready means 93%+ for LSA AEM sites, 98%+ for others.`),
-      card("Average score", pct(c.target.after), pct(c.target.before), pill(pp === null ? null : Number(pp.toFixed(2)), true, `${signed(pp, 2)} points`), `Mean of the same ${fmt(c.matched)} sites on both dates.`),
-      card("Issues (occurrences)", fmt(occ.after), fmt(occ.before), pill(occPct === null ? null : Number(occPct.toFixed(1)), false, `${signed(occPct, 1)}% detected`), occ.count ? `Level A, AA and ARIA, for ${fmt(occ.count)} sites with comparable issue data. Not a count of verified fixes.` : "No sites have comparable issue data for these dates."),
-      card("Sites in this comparison", fmt(c.matched), `${fmt(c.matched + setAside)} total`, `<span class="pill pill-flat">${fmt(setAside)} set aside</span>`, "New, missing or unreliable sites are left out of the changes. See “What’s counted”."),
+      card("Sites ready for manual testing", fmt(at.after), fmt(at.before), pill(at.after - at.before, true, `${signed(at.after - at.before)} sites`), `93%+ for LSA AEM, 98%+ for others.`),
+      card("Average score", pct(c.target.after), pct(c.target.before), pill(pp === null ? null : Number(pp.toFixed(2)), true, `${signed(pp, 2)} points`), `Same ${fmt(c.matched)} sites on both dates.`),
+      card("Issues (occurrences)", fmt(occ.after), fmt(occ.before), pill(occPct === null ? null : Number(occPct.toFixed(1)), false, `${signed(occPct, 1)}% detected`), occ.count ? `Detected, not verified fixes.` : "Not available for these dates."),
+      card("Sites in this comparison", fmt(c.matched), `${fmt(c.matched + setAside)} total`, `<span class="pill pill-flat">${fmt(setAside)} set aside</span>`, "New, missing or unreliable sites are left out."),
     ].join("") : [
-      card("Sites ready for manual testing", "—", "—", `<span class="pill pill-flat">Not comparable</span>`, "No sites have reliable data on both dates."),
-      card("Average score", "—", "—", `<span class="pill pill-flat">Not comparable</span>`, "Unknown values are never shown as zero."),
-      card("Issues (occurrences)", "—", "—", `<span class="pill pill-flat">Not comparable</span>`, "Choose a later start date to see changes."),
+      card("Sites ready for manual testing", "—", "—", `<span class="pill pill-flat">Not comparable</span>`, "No reliable data on both dates."),
+      card("Average score", "—", "—", `<span class="pill pill-flat">Not comparable</span>`, "Not available."),
+      card("Issues (occurrences)", "—", "—", `<span class="pill pill-flat">Not comparable</span>`, "Not available."),
       card("Sites in this comparison", "0", `${fmt(setAside)} total`, `<span class="pill pill-flat">All set aside</span>`, "See “What’s counted” for reasons."),
     ].join("");
 
     el("wp-up").textContent = fmt(c.newly_ready);
     el("wp-down").textContent = fmt(c.regressed);
     el("wp-note").textContent = c.ready_matched
-      ? `Out of ${fmt(c.ready_matched)} matched sites. Each site is measured against its own line: 93% for LSA AEM sites, 98% for every other platform. A site seen for the first time above its line does not count as crossing.`
-      : "Needs confirmed scores on both dates.";
+      ? `Of ${fmt(c.ready_matched)} matched sites.`
+      : "Needs scores on both dates.";
 
     const total = c.matched + setAside || 1;
     const cov = [
@@ -474,17 +473,21 @@
       const requested = days === null ? null : new Date((dayNum(toE.date) - days) * 86400000).toISOString().slice(0, 10);
       fromE = days === null ? core.baseline(entries, toE, "month") : entries.filter(e => e.date <= requested).at(-1) || null;
       if (!fromE) {
-        el("date-note").textContent = `There is no saved snapshot from ${p === "week" ? "a week" : p === "month" ? "a month" : "three months"} before ${longDate(toE.date)}. Choose another start date.`;
+        el("date-note").textContent = `No snapshot from ${p === "week" ? "a week" : p === "month" ? "a month" : "three months"} earlier. Choose another start date.`;
         fromE = entries[0];
         return loadComparison();
       }
-      const wanted = days === null ? core.baseline(entries, toE, "month") : null;
       const target = days === null ? null : requested;
-      el("date-note").textContent = target && fromE.date !== target
-        ? `No snapshot was saved exactly on ${longDate(target)}, so the closest earlier one (${longDate(fromE.date)}) is used.`
-        : wanted ? `Compared with the last saved snapshot a month earlier: ${longDate(fromE.date)}.` : "";
+      const first = entries.find(comparable);
+      if (!comparable(fromE) && first && first.date < toE.date) {
+        // A month (or week, or quarter) back is an older import: start from the first reliable snapshot.
+        fromE = first;
+        el("date-note").textContent = `Reliable data starts ${longDate(first.date)}, so the comparison starts there.`;
+      } else {
+        el("date-note").textContent = target && fromE.date !== target ? `Closest earlier snapshot: ${longDate(fromE.date)}.` : "";
+      }
     }
-    if (p === "start") el("date-note").textContent = `The first snapshot that can be compared is ${longDate(fromE.date)}.`;
+    if (p === "start") el("date-note").textContent = `First reliable snapshot: ${longDate(fromE.date)}.`;
     return loadComparison();
   }
 

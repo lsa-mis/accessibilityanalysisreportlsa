@@ -123,6 +123,22 @@ function decorate(sites) {
   return out;
 }
 
+// Readable site names: Siteimprove often uses the address as the name, so
+// drop "https://", "www." and a trailing slash, and fall back to the address.
+function cleanAddress(value) {
+  return String(value || "").trim().replace(/^https?:\/\//i, "").replace(/^www\./i, "").replace(/\/+$/, "");
+}
+function siteLabel(s) {
+  const name = String(s.site_name || "").trim();
+  if (!name) return cleanAddress(s.url) || "(unnamed site)";
+  return /^(https?:\/\/|www\.)/i.test(name) || /^[\w.-]+\.[a-z]{2,}(\/\S*)?$/i.test(name) ? cleanAddress(name) : name;
+}
+// The address under the name, only when it adds something.
+function siteAddressLine(s) {
+  const address = cleanAddress(s.url);
+  return address && address !== siteLabel(s) ? `<span class="site-url">${escapeHtml(address)}</span>` : "";
+}
+
 const hasTarget = (s) => typeof s.target_percentage === "number" && Number.isFinite(s.target_percentage);
 function targetGroupOf(s) {
   if (!hasTarget(s)) return "none";
@@ -360,7 +376,7 @@ function renderHero(baseSites) {
   $("hero-at").textContent = counts.at.toLocaleString("en-US");
   $("hero-total").textContent = total.toLocaleString("en-US");
   $("hero-sub").textContent = total
-    ? `${(counts.at / total * 100).toFixed(1)}% of sites with a score. Another ${counts.near.toLocaleString("en-US")} are close, scoring 95% or more.`
+    ? `${(counts.at / total * 100).toFixed(1)}% of scored sites. ${counts.near.toLocaleString("en-US")} more are close (95%+).`
     : "No sites have a score yet.";
   $("hero-bar").innerHTML = ["at", "near", "below"].map(k =>
     `<span style="width:${total ? (counts[k] / total * 100).toFixed(2) : 0}%;background:${GROUPS[k].bar}"></span>`).join("");
@@ -397,15 +413,27 @@ function renderSummary(filtered) {
   const missing = filtered.filter(s => missingReasons(s).length).length;
   const note = $("notice-missing-metrics");
   note.hidden = !missing;
-  note.innerHTML = missing ? `${fmtNumber(missing)} site${missing === 1 ? " has" : "s have"} missing or incomplete data. Missing numbers are left out of these totals, never counted as zero. <button type="button" class="link-btn" data-go-tab="missing">See which sites</button>` : "";
+  note.innerHTML = missing ? `${fmtNumber(missing)} site${missing === 1 ? " has" : "s have"} missing data, left out of these totals. <button type="button" class="link-btn" data-go-tab="missing">See which sites</button>` : "";
 }
 
 function renderFar(filtered) {
   const list = filtered.filter(s => hasTarget(s) && !s.target_estimated).sort((a, b) => a.target_percentage - b.target_percentage).slice(0, 8);
-  $("far-list").innerHTML = list.length ? list.map(s =>
-    `<li class="far-row"><button type="button" class="name-btn" data-site="${escapeHtml(s.id)}">${escapeHtml(s.site_name || s.url)}</button>
-      <span class="bar" aria-hidden="true"><span style="width:${Math.max(2, (s.target_percentage - 50) * 2).toFixed(1)}%;background:#7A3300"></span></span>
-      <span class="tnum far-value">${fmtPct(s.target_percentage)}</span></li>`).join("")
+  $("far-list").innerHTML = list.length ? list.map((s, i) => {
+    const gap = 100 - s.target_percentage;
+    const meta = [s.platform, s.pages ? `${fmtNumber(s.pages)} page${s.pages === 1 ? "" : "s"}` : ""].filter(Boolean).join(" · ");
+    return `<li class="far-row">
+      <span class="far-rank tnum" aria-hidden="true">${i + 1}</span>
+      <div class="far-main">
+        <button type="button" class="name-btn" data-site="${escapeHtml(s.id)}">${escapeHtml(siteLabel(s))}</button>
+        <span class="far-meta">${escapeHtml(meta)}</span>
+        <span class="bar far-bar" aria-hidden="true"><span style="width:${Math.max(1, s.target_percentage).toFixed(1)}%;background:#7A3300"></span></span>
+      </div>
+      <div class="far-score">
+        <strong class="tnum">${fmtPct(s.target_percentage)}</strong>
+        <span class="tnum">${fmtNumber(Number(gap.toFixed(1)))} points to go</span>
+      </div>
+    </li>`;
+  }).join("")
     : `<li class="empty">No sites with a confirmed score match these filters.</li>`;
 }
 
@@ -455,7 +483,7 @@ function renderProblems(rows, filteredCount) {
   }
   const perSite = rows.length > 0 && rows.every(r => r.hasSiteData);
   note.hidden = perSite;
-  note.textContent = perSite ? "" : "Site lists for each problem appear after the next nightly data refresh. Until then, numbers below cover all sites and ignore the filters.";
+  note.textContent = perSite ? "" : "Site lists start after the next nightly refresh. Until then, totals cover all sites.";
 
   const auds = ProblemsCore.audiences(rows, guide);
   $("aud-cards").innerHTML = auds.map(a =>
@@ -521,7 +549,7 @@ function renderProblems(rows, filteredCount) {
       ${sites.length ? `<div class="table-scroll" tabindex="0" role="region" aria-label="Sites with the most cases, scrolls sideways">
         <table class="data-table"><caption class="sr-only">Sites with the most cases of ${escapeHtml(selected.name)}</caption>
           <thead><tr><th scope="col">Site</th><th scope="col">Platform</th><th scope="col" class="num">Times found</th><th scope="col" class="num">Pages affected</th><th scope="col">On almost every page</th></tr></thead>
-          <tbody>${shown.map(x => `<tr><td><button type="button" class="name-btn" data-site="${escapeHtml(x.site.id)}">${escapeHtml(x.site.site_name || x.site.url)}</button>${readyTag(x.site)}</td>
+          <tbody>${shown.map(x => `<tr><td><button type="button" class="name-btn" data-site="${escapeHtml(x.site.id)}">${escapeHtml(siteLabel(x.site))}</button>${readyTag(x.site)}</td>
             <td>${escapeHtml(x.site.platform)}</td><td class="num tnum">${fmtNumber(x.occurrences)}</td>
             <td class="num tnum">${fmtNumber(x.pages)} of ${fmtNumber(x.site.pages)}</td><td>${x.everywhere ? "Yes" : "No"}</td></tr>`).join("")}</tbody></table></div>
         ${!state.problemShowAll && sites.length > 8 ? `<button type="button" class="btn" id="problem-show-all" style="align-self:flex-start">Show all ${fmtNumber(sites.length)} sites</button>` : ""}`
@@ -530,8 +558,8 @@ function renderProblems(rows, filteredCount) {
     <div class="two-col">
       <div class="soft-box"><h3>Why it matters</h3><p>${escapeHtml(g.why || "Guidance for this check has not been written yet.")}</p>
         <p><strong>Training tip:</strong> ${theme
-          ? "This is usually built into the site theme, so one fix by a developer or designer repairs every page. Train the people who build themes rather than every editor."
-          : "This is fixed page by page by whoever edits the content. Training the editors of the sites below will make the biggest difference."}</p></div>
+          ? "Usually in the site theme: one developer or designer fix covers every page."
+          : "Fixed page by page: train the editors of the sites below."}</p></div>
       <div class="soft-box"><h3>How to fix it</h3>${(g.fix || []).length ? `<ul>${g.fix.map(f => `<li>${escapeHtml(f)}</li>`).join("")}</ul>` : "<p class=\"muted\">No steps written yet.</p>"}</div>
     </div>
     <div class="two-col">
@@ -587,9 +615,9 @@ function renderMissing(filtered) {
   $("missing-filters").innerHTML = `<button type="button" class="chip" data-missing="all" aria-pressed="${state.missingFilter === "all"}">All <span class="tnum">(${rows.length})</span></button>` +
     keys.map(k => `<button type="button" class="chip" data-missing="${k}" aria-pressed="${state.missingFilter === k}">${MISSING[k]} <span class="tnum">(${counts[k]})</span></button>`).join("");
   const shown = rows.filter(r => state.missingFilter === "all" || r.reasons.includes(state.missingFilter))
-    .sort((a, b) => b.reasons.length - a.reasons.length || (a.s.site_name || a.s.url || "").localeCompare(b.s.site_name || b.s.url || ""));
+    .sort((a, b) => b.reasons.length - a.reasons.length || siteLabel(a.s).localeCompare(siteLabel(b.s)));
   $("missing-list").innerHTML = shown.length ? shown.map(({ s, reasons }) =>
-    `<tr><td><button type="button" class="name-btn" data-site="${escapeHtml(s.id)}">${escapeHtml(s.site_name || s.url || "(unnamed)")}</button><span class="site-url">${escapeHtml(s.url || "")}</span></td>
+    `<tr><td><button type="button" class="name-btn" data-site="${escapeHtml(s.id)}">${escapeHtml(siteLabel(s))}</button>${siteAddressLine(s)}</td>
       <td>${escapeHtml(s.platform)}</td>
       <td><span class="pill-row">${reasons.map(k => `<span class="pill ${k === "never" || k === "failed" ? "pill-bad" : "pill-flat"}">${MISSING[k]}</span>`).join("")}</span></td>
       <td>${escapeHtml(SCAN_WORDS[s.scan] || "Unknown")}${s.last_crawl ? `<span class="site-url">${escapeHtml(longDate(s.last_crawl))}</span>` : ""}</td>
@@ -614,7 +642,7 @@ function renderReady(filtered) {
   $("ready-count").textContent = fmtNumber(ready.length);
   $("ready-pages").textContent = fmtNumber(ready.reduce((n, s) => n + (s.pages || 0), 0));
   $("ready-list").innerHTML = ready.length ? ready.map(s =>
-    `<tr class="ready-row"><td><button type="button" class="name-btn" data-site="${escapeHtml(s.id)}">${escapeHtml(s.site_name || s.url)}</button><span class="site-url">${escapeHtml(s.url || "")}</span></td>
+    `<tr class="ready-row"><td><button type="button" class="name-btn" data-site="${escapeHtml(s.id)}">${escapeHtml(siteLabel(s))}</button>${siteAddressLine(s)}</td>
       <td>${escapeHtml(s.platform)}</td><td class="num tnum">${fmtPct(s.target_percentage)} <span class="muted">(line ${readyLine(s)}%)</span></td><td class="num tnum">${fmtNumber(s.pages)}</td><td>${escapeHtml(longDate(s.last_crawl))}</td></tr>`).join("")
     : `<tr><td colspan="5" class="empty">No sites have reached their ready line with these filters.</td></tr>`;
   const byPlatform = {};
@@ -672,7 +700,7 @@ function renderTable(filtered) {
   const rows = state.showAllRows ? sorted : sorted.slice(0, 100);
   $("sites-body").innerHTML = rows.length ? rows.map(s => {
     const cells = [
-      `<td><button type="button" class="name-btn" data-site="${escapeHtml(s.id)}">${escapeHtml(s.site_name || "(unnamed)")}</button>${readyTag(s)}<span class="site-url">${escapeHtml(s.url || "")}</span></td>`,
+      `<td><button type="button" class="name-btn" data-site="${escapeHtml(s.id)}">${escapeHtml(siteLabel(s))}</button>${readyTag(s)}${siteAddressLine(s)}</td>`,
       `<td>${escapeHtml(s.platform)}</td>`,
       `<td>${scoreCell(s)}</td>`,
       `<td class="num tnum">${s.scan === "failed" ? "—" : fmtNumber(s.pages)}</td>`,
@@ -736,7 +764,7 @@ function openSite(id) {
   const s = state.sites.find(x => String(x.id) === String(id));
   if (!s) return;
   SitePanel.open({
-    title: s.site_name || s.url || "Site",
+    title: siteLabel(s),
     closeLabel: "Close site details",
     build(body, head) {
       if (s.url) {
@@ -920,7 +948,7 @@ function wire() {
 
   SiteSearch.init({
     sites: () => state.sites.map(s => ({
-      label: s.site_name || s.url || "(unnamed)",
+      label: siteLabel(s),
       sub: [s.url, s.platform, isReady(s) ? "Ready for manual testing" : ""].filter(Boolean).join(" · "),
       pill: hasTarget(s) ? fmtPct(s.target_percentage) : "No score",
       pillClass: GROUPS[targetGroupOf(s)].pill,

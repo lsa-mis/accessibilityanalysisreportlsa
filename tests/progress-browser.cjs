@@ -23,7 +23,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8765";
     assert.equal(await page.locator("#date-picker").isVisible(), false);
     await page.getByRole("button", { name: "Last week", exact: true }).click();
     await page.locator("#report").waitFor({ state: "visible" });
-    assert.match(await page.locator("#date-note").innerText(), /snapshot/);
+    assert.match(await page.locator("#date-note").innerText(), /snapshot|Reliable data/);
     await page.getByRole("button", { name: "Sites", exact: true }).click();
     assert.match(page.url(), /#sites$/);
     await page.locator("#search").fill("no-match-integration-fixture");
@@ -44,7 +44,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8765";
       return row.lvl_a === null && selectedOccurrences(row) === null;
     });
     assert.equal(unavailable, true, "missing metrics must not render as zero");
-    await page.locator("#progress-widget-content").filter({ hasText: /both dates|data for both/ }).waitFor();
+    await page.locator("#progress-widget-content").filter({ hasText: /matched sites|both dates|reliable snapshots/ }).waitFor();
     // Ctrl/Cmd+K search opens a site's details panel; Escape closes it and focus returns.
     await page.locator("#search").click();
     await page.keyboard.press("Control+k");
