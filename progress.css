@@ -84,3 +84,12 @@ button.cal-day:hover { background: var(--good-bg); }
   .tab-panel[hidden] { display: flex !important; }
   .trend-plot, .trend-legend { break-inside: avoid; }
 }
+
+/* "Can't be compared yet" banner */
+.notice-block { display: flex; gap: 14px; align-items: flex-start; padding: 18px 20px; }
+.notice-icon { flex: none; color: var(--bad); margin-top: 2px; }
+.notice-body { display: flex; flex-direction: column; gap: 8px; max-width: 72ch; }
+.notice-body h2 { margin: 0; font-size: 18px; line-height: 1.35; color: var(--ink); }
+.notice-body p { margin: 0; font-size: 16px; line-height: 1.6; color: var(--ink-2); }
+.notice-body .pill-row { margin-top: 4px; }
+#summary-heading:focus { outline: 3px solid var(--navy); outline-offset: 4px; }
