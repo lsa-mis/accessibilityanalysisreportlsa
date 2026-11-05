@@ -14,3 +14,5 @@ Thumbs.db
 
 # Encrypted snapshots are built at deploy time
 data/*.enc.json
+data/history/*.enc.json
+_site/

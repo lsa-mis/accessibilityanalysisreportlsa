@@ -17,6 +17,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -33,35 +34,44 @@ jobs:
         with:
           python-version: "3.12"
 
-      # The dashboard is password protected: only data.html and encrypted
-      # copies of the snapshots are published — never the plain JSON, the
-      # tag CSV or source-data/. The password is the DASHBOARD_PASSWORD
-      # repo secret; data.html decrypts in the browser.
+      # The dashboard is password protected: only the pages, their scripts
+      # and encrypted copies of the snapshots are published — never the plain
+      # JSON, the tag CSV or source-data/. The password is the
+      # DASHBOARD_PASSWORD repo secret; the pages decrypt in the browser.
       #
-      # The narrative report (index.html) is unpublished for now: the site
-      # root redirects to the dashboard instead.
+      # Everything lives under /dashboard/ (index.html is the live snapshot).
+      # The site root and the old data.html / progress.html addresses redirect
+      # there, keeping any ?query and #tab so existing links still work.
+      # The narrative report (index.html in the repo) stays unpublished.
       - name: Build site
         env:
           DASHBOARD_PASSWORD: ${{ secrets.DASHBOARD_PASSWORD }}
         run: |
           pip install cryptography
-          mkdir -p _site/data
-          cp data.html favicon.svg _site/
-          python scripts/encrypt_data.py _site/data
-          cat > _site/index.html <<'EOF'
+          mkdir -p _site/dashboard/data
+          cp data.html progress.html dashboard.js dashboard.css site-shell.css site-search.js site-panel.js problems-core.js rule-guidance.js progress-core.js progress-client.js progress-page.js progress-widget.js progress.css favicon.svg _site/dashboard/
+          cp data.html _site/dashboard/index.html
+          python scripts/encrypt_data.py _site/dashboard/data
+          redirect() {
+            cat > "_site/$1" <<EOF
           <!doctype html>
           <html lang="en">
           <head>
             <meta charset="utf-8">
-            <title>LSA Web Accessibility Dashboard</title>
-            <meta http-equiv="refresh" content="0; url=data.html">
-            <link rel="canonical" href="data.html">
+            <title>LSA Website Accessibility Dashboard</title>
+            <meta http-equiv="refresh" content="0; url=$2">
+            <link rel="canonical" href="$2">
+            <script>location.replace("$2" + location.search + location.hash);</script>
           </head>
           <body>
-            <p><a href="data.html">Go to the LSA Web Accessibility Dashboard</a></p>
+            <p><a href="$2">Go to the LSA Website Accessibility Dashboard</a></p>
           </body>
           </html>
           EOF
+          }
+          redirect index.html dashboard/
+          redirect data.html dashboard/data.html
+          redirect progress.html dashboard/progress.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

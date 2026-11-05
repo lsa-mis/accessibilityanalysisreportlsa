@@ -2,14 +2,14 @@ name: Refresh Siteimprove data
 
 on:
   schedule:
-    # Saturdays and Sundays at 11:00 UTC (07:00 ET summer / 06:00 ET winter).
-    # 6 = Saturday, 0 = Sunday.
-    - cron: "0 11 * * 6,0"
+    # Spring-forward skipped hours advance to the next valid local time.
+    - cron: "0 2 * * *"
+      timezone: America/Detroit
   workflow_dispatch:
 
 permissions:
   contents: write
-  actions: write  # so we can dispatch the Pages deploy after pushing
+  actions: write
 
 concurrency:
   group: siteimprove-refresh
@@ -17,6 +17,8 @@ concurrency:
 
 jobs:
   refresh:
+    # A staging/manual branch must never publish to main or trigger live sync.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,76 +32,36 @@ jobs:
       - name: Install dependencies
         run: pip install -r scripts/requirements.txt
 
-      - name: Fetch Siteimprove data
+      - name: Collect and validate complete observation
+        id: collection
         env:
           SITEIMPROVE_EMAIL: ${{ secrets.SITEIMPROVE_EMAIL }}
           SITEIMPROVE_API_KEY: ${{ secrets.SITEIMPROVE_API_KEY }}
-          # Speed knobs (repo variables, optional). More workers = faster but
-          # closer to Siteimprove's rate limit — 429s are retried with backoff,
-          # so pushing to 12 is usually safe; back off if runs get slower.
           SITEIMPROVE_MAX_WORKERS: ${{ vars.SITEIMPROVE_MAX_WORKERS || '8' }}
           SITEIMPROVE_TIMEOUT: ${{ vars.SITEIMPROVE_TIMEOUT || '120' }}
-        run: python scripts/fetch_siteimprove.py
-
-      - name: Commit refreshed snapshot
-        id: commit
+          SITEIMPROVE_OUTPUT_DIR: ${{ runner.temp }}/siteimprove-collection
         run: |
-          set -e
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- data/sites.json data/rules.json; then
-            echo "No changes to commit."
-            echo "did_push=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          git add data/sites.json data/rules.json
-          git commit -m "Refresh Siteimprove site snapshot"
-          # Push with retry. If main moved while we were fetching, DO NOT
-          # rebase: both sides may have regenerated data/sites.json and a
-          # 35k-line JSON conflict can't be auto-resolved (this bit us —
-          # rebase died on CONFLICT and failed the run). Instead: save the
-          # fresh API data, hard-reset onto latest main (picking up any code
-          # changes), restore the fresh data, and commit clean.
-          for attempt in 1 2 3 4 5; do
-            if git push; then
-              echo "Push succeeded on attempt $attempt."
-              echo "did_push=true" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-            echo "Push attempt $attempt rejected — replaying snapshot onto latest main."
-            cp data/sites.json /tmp/fresh-sites.json
-            cp data/rules.json /tmp/fresh-rules.json
-            git fetch origin main
-            git reset --hard origin/main
-            cp /tmp/fresh-sites.json data/sites.json
-            cp /tmp/fresh-rules.json data/rules.json
-            # The snapshot was already generated with this run's CSV; if
-            # the CSV changed on main mid-run, the next scheduled fetch
-            # picks it up.
-            if git diff --quiet -- data/sites.json data/rules.json; then
-              echo "Latest main already has equivalent data. Nothing to push."
-              echo "did_push=false" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-            git add data/sites.json data/rules.json
-            git commit -m "Refresh Siteimprove site snapshot"
-          done
-          echo "Push failed after 5 attempts."
-          exit 1
+          mkdir -p "$SITEIMPROVE_OUTPUT_DIR"
+          cp data/site-departments.csv "$SITEIMPROVE_OUTPUT_DIR/"
+          python scripts/fetch_siteimprove.py
+          python scripts/progress_history.py --data-dir "$SITEIMPROVE_OUTPUT_DIR"
 
-      - name: Trigger Pages deploy
-        if: steps.commit.outputs.did_push == 'true'
+      - name: Publish observation or failed-attempt status
+        if: ${{ always() && !cancelled() }}
+        id: publish
+        env:
+          COLLECTION_SUCCESS: ${{ steps.collection.outcome == 'success' }}
+        run: |
+          if [ "$COLLECTION_SUCCESS" = "true" ]; then
+            python scripts/publish_progress.py --collection "$RUNNER_TEMP/siteimprove-collection" --success
+          else
+            python scripts/publish_progress.py --collection "$RUNNER_TEMP/siteimprove-collection"
+          fi
+
+      - name: Publish encrypted dashboard and refresh status
+        if: ${{ always() && steps.publish.outcome == 'success' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # GitHub's loop-protection prevents commits pushed via GITHUB_TOKEN
-          # from triggering other workflows on push. workflow_dispatch is
-          # exempt from that protection, so we explicitly kick the Pages
-          # deploy here. The 'if' above skips this when the script produced
-          # no diff (nothing to redeploy).
-          gh workflow run pages.yml --ref main
-          echo "Pages deploy dispatched."
+        run: gh workflow run pages.yml --ref main
 
-      # The Asana sync is chained natively via workflow_run in
-      # .github/workflows/sync-asana.yml — it fires automatically when this
-      # workflow completes successfully. No cross-repo dispatch / PAT needed.
+      # Asana's workflow_run handler syncs only successful main-branch runs.

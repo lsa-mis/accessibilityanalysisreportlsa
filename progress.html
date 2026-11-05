@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#00274C">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <title>Progress over time – LSA Website Accessibility Dashboard</title>
+  <link rel="stylesheet" href="site-shell.css">
+  <link rel="stylesheet" href="dashboard.css">
+  <link rel="stylesheet" href="progress.css">
+  <script src="progress-core.js" defer></script>
+  <script src="progress-client.js" defer></script>
+  <script src="site-panel.js" defer></script>
+  <script src="site-search.js" defer></script>
+  <script src="progress-page.js" defer></script>
+</head>
+<body class="locked">
+  <a class="skip-link" href="#main">Skip to results</a>
+
+  <div class="gate">
+    <form id="gate-form" novalidate>
+      <h1>LSA Website Accessibility Dashboard</h1>
+      <p class="muted" style="margin:0">Enter the shared password to see the data.</p>
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required aria-describedby="gate-error">
+      <button class="btn btn-primary" type="submit">Unlock</button>
+      <p id="gate-error" class="gate-error" role="alert"></p>
+    </form>
+  </div>
+
+  <header class="site-header">
+    <div class="site-header__inner">
+      <div class="site-header__top">
+        <div>
+          <h1 class="site-title">LSA Website Accessibility Dashboard</h1>
+          <p class="site-welcome">Welcome. This shows how LSA websites have changed over time, using Siteimprove data last pulled <strong id="latest-date">…</strong>.</p>
+        </div>
+        <button type="button" class="search-trigger" data-open-search aria-haspopup="dialog">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <span>Search sites</span><kbd>Ctrl+K</kbd>
+        </button>
+      </div>
+      <nav class="page-nav" aria-label="Dashboards">
+        <a href="data.html">Live snapshot</a>
+        <a href="progress.html" aria-current="page">Progress over time</a>
+      </nav>
+    </div>
+  </header>
+
+  <nav class="site-subnav no-print" aria-label="Progress views">
+    <div class="site-subnav__inner">
+      <button type="button" class="tab" data-tab="overview" aria-current="page">Overview</button>
+      <button type="button" class="tab" data-tab="departments" aria-current="false">Departments</button>
+      <button type="button" class="tab" data-tab="sites" aria-current="false">Sites</button>
+    </div>
+  </nav>
+
+  <main id="main" class="site-main" tabindex="-1">
+    <p id="load-status" role="status" class="muted" style="margin:0">Loading saved snapshots…</p>
+    <div id="report-error" class="notice" role="alert" hidden></div>
+    <div id="refresh-warning" class="notice" role="status" hidden></div>
+
+    <section class="card stack comparison-card" aria-labelledby="comparison-heading">
+      <h2 id="comparison-heading" class="sr-only">Choose what to compare</h2>
+      <div class="space-between">
+        <div class="pill-row" role="group" aria-label="Dates being compared">
+          <span class="filter-label" style="min-width:auto">Comparing</span>
+          <button type="button" class="date-btn date-btn--from" id="from-btn" aria-expanded="false" aria-controls="date-picker"></button>
+          <span aria-hidden="true">→</span>
+          <button type="button" class="date-btn date-btn--to" id="to-btn" aria-expanded="false" aria-controls="date-picker"></button>
+          <span class="muted" id="span-label"></span>
+        </div>
+        <div class="seg no-print" id="shortcuts" role="group" aria-label="Comparison period">
+          <button type="button" data-period="week" aria-pressed="false">Last week</button>
+          <button type="button" data-period="month" aria-pressed="false">Last month</button>
+          <button type="button" data-period="quarter" aria-pressed="false">Last 3 months</button>
+          <button type="button" data-period="start" aria-pressed="false">Since tracking began</button>
+        </div>
+      </div>
+      <div id="date-picker" class="date-picker no-print" role="dialog" aria-labelledby="calendar-title" hidden></div>
+      <p id="date-note" class="muted" style="margin:0;font-size:14px"></p>
+      <div class="filter-row no-print" role="group" aria-labelledby="platform-label">
+        <span class="filter-label" id="platform-label">Platform</span>
+        <div class="filter-row" id="filter-platform"></div>
+      </div>
+      <div class="filter-row no-print">
+        <label class="filter-label" for="search">Find a site</label>
+        <input id="search" class="text-input" type="search" placeholder="Name or web address" autocomplete="off">
+      </div>
+      <div id="active-filters" class="filter-row" hidden>
+        <span class="filter-label">Showing</span>
+        <div class="filter-row" id="active-filter-chips"></div>
+        <button type="button" class="btn" id="clear-filters">Clear filters</button>
+      </div>
+      <p class="sr-only" id="live-status" aria-live="polite"></p>
+    </section>
+
+    <div id="not-comparable" class="notice" role="status" hidden></div>
+
+    <div id="report" tabindex="-1" hidden>
+      <!-- OVERVIEW -->
+      <div id="panel-overview" class="tab-panel" tabindex="-1" aria-label="Overview">
+        <section class="card summary-card" aria-labelledby="summary-heading">
+          <div class="summary-text">
+            <h2 id="summary-heading" class="eyebrow">In plain words</h2>
+            <p id="headline"></p>
+            <p id="comparison-context" class="muted" style="font-size:14px;margin:0"></p>
+          </div>
+          <button type="button" class="btn no-print" id="open-export">Share or export</button>
+        </section>
+
+        <section aria-labelledby="metrics-heading">
+          <h2 id="metrics-heading" class="sr-only">Key numbers</h2>
+          <div class="grid-auto" id="metrics"></div>
+        </section>
+
+        <section class="card stack" aria-labelledby="trend-heading">
+          <div class="space-between">
+            <div>
+              <h2 id="trend-heading">Trend</h2>
+              <p class="card-sub">Each point is a saved snapshot of all sites. Click a point, use the buttons below, or open the data table to change the start date. Gaps mean no snapshot was saved; nothing is filled in.</p>
+            </div>
+            <div class="seg no-print" id="trend-metric" role="group" aria-label="Trend measure">
+              <button type="button" data-metric="mean" aria-pressed="true">Average score</button>
+              <button type="button" data-metric="eligible" aria-pressed="false">Sites with a reliable score</button>
+            </div>
+          </div>
+          <div class="trend">
+            <div class="trend-y tnum muted" aria-hidden="true"><span id="trend-max"></span><span id="trend-min"></span></div>
+            <div class="trend-main">
+              <div class="trend-plot" id="trend-plot" role="group"></div>
+              <div class="trend-x" id="trend-x" aria-hidden="true"></div>
+            </div>
+          </div>
+          <div class="trend-legend muted">
+            <span><span class="sw sw-from"></span>Start date (square)</span>
+            <span><span class="sw sw-to"></span>End date (large circle)</span>
+            <span><span class="sw sw-na"></span>Not comparable (hollow)</span>
+            <span><span class="sw sw-gap"></span>No snapshots (striped)</span>
+          </div>
+          <div class="pill-row no-print">
+            <button type="button" class="btn" id="step-earlier">← Earlier start</button>
+            <button type="button" class="btn" id="step-later">Later start →</button>
+            <button type="button" class="btn" id="toggle-trend-table" aria-expanded="false" aria-controls="trend-table-wrap">Show data as a table</button>
+          </div>
+          <div id="trend-table-wrap" class="table-scroll trend-table" tabindex="0" role="region" aria-label="Trend data as a table" hidden>
+            <table class="data-table">
+              <caption class="sr-only">Average score and sites with a reliable score for each saved snapshot, newest first</caption>
+              <thead><tr><th scope="col">Date</th><th scope="col" class="num">Average score</th><th scope="col" class="num">Sites with a reliable score</th><th scope="col">Source</th><th scope="col"><span class="sr-only">Action</span></th></tr></thead>
+              <tbody id="trend-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <div class="grid-panels">
+          <section class="card stack" aria-labelledby="wp-heading">
+            <div>
+              <h2 id="wp-heading">WordPress 98% line</h2>
+              <p class="card-sub">WordPress sites with a confirmed score on both dates that crossed 98%.</p>
+            </div>
+            <div class="cross-grid">
+              <button type="button" class="cross-btn cross-btn--up" data-site-filter="up"><span>↑ Reached 98%</span><strong class="tnum" id="wp-up">—</strong><span class="link-text">View these sites</span></button>
+              <button type="button" class="cross-btn cross-btn--down" data-site-filter="down"><span>↓ Dropped below 98%</span><strong class="tnum" id="wp-down">—</strong><span class="link-text">View these sites</span></button>
+            </div>
+            <p class="muted" id="wp-note" style="margin:0;font-size:14px"></p>
+          </section>
+          <section class="card stack" aria-labelledby="coverage-heading">
+            <div>
+              <h2 id="coverage-heading">What’s counted</h2>
+              <p class="card-sub">Only matched sites feed the numbers above. Everything else is listed, not hidden.</p>
+            </div>
+            <div class="coverage-bar" id="coverage-bar" aria-hidden="true"></div>
+            <ul class="plain-list" id="coverage"></ul>
+          </section>
+        </div>
+
+        <details class="card" id="extra-measures">
+          <summary class="details-summary">Other measures: Level AAA, best practices and PDFs</summary>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead><tr><th scope="col">Measure</th><th scope="col" class="num">Before</th><th scope="col" class="num">Now</th><th scope="col" class="num">Change</th><th scope="col" class="num">Sites compared</th></tr></thead>
+              <tbody id="supplementary-metrics"></tbody>
+            </table>
+          </div>
+        </details>
+        <p id="quality-note" class="notice" hidden></p>
+      </div>
+
+      <!-- DEPARTMENTS -->
+      <div id="panel-departments" class="tab-panel" tabindex="-1" aria-label="Departments" hidden>
+        <section class="card stack" aria-labelledby="departments-heading">
+          <div>
+            <h2 id="departments-heading">By department</h2>
+            <p class="card-sub">Same definitions as the overview. Today’s department list is applied to both dates. Sites without a department are shown as Unmapped, never guessed. Select a department to see its sites.</p>
+          </div>
+          <div class="table-scroll" tabindex="0" role="region" aria-label="Department comparison, scrolls sideways">
+            <table class="data-table">
+              <caption class="sr-only">Department comparison for the selected dates and filters</caption>
+              <thead><tr><th scope="col">Department</th><th scope="col" class="num">Matched sites</th><th scope="col">Sites at 98% (before → now)</th><th scope="col">Average score</th><th scope="col">Issues (occurrences)</th><th scope="col" class="num">Needs reliable data</th></tr></thead>
+              <tbody id="departments-body"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- SITES -->
+      <div id="panel-sites" class="tab-panel" tabindex="-1" aria-label="Sites" hidden>
+        <section class="card stack" aria-labelledby="sites-heading">
+          <div class="space-between">
+            <h2 id="sites-heading" tabindex="-1">Sites <span class="muted tnum" id="sites-count"></span></h2>
+            <button type="button" class="btn no-print" id="export-csv">Export comparison CSV</button>
+          </div>
+          <div class="filter-row no-print" id="site-filters" role="group" aria-label="Show sites"></div>
+          <div class="table-scroll" tabindex="0" role="region" aria-label="Site comparison, scrolls sideways">
+            <table class="data-table" id="sites-table">
+              <caption class="sr-only" id="sites-caption">Site comparison</caption>
+              <thead><tr>
+                <th scope="col" data-sort="site" aria-sort="ascending"><button type="button" class="sort-btn">Site</button></th>
+                <th scope="col">Department</th>
+                <th scope="col" class="num">Score before</th>
+                <th scope="col" class="num">Score now</th>
+                <th scope="col" data-sort="target"><button type="button" class="sort-btn">Score change</button></th>
+                <th scope="col" class="num">Issues now</th>
+                <th scope="col" data-sort="occurrences"><button type="button" class="sort-btn">Occurrence change</button></th>
+                <th scope="col" class="num">Pages (before → now)</th>
+                <th scope="col">Status</th>
+              </tr></thead>
+              <tbody id="sites-body"></tbody>
+            </table>
+          </div>
+          <button type="button" class="btn no-print" id="sites-show-all" hidden style="align-self:flex-start"></button>
+        </section>
+      </div>
+    </div>
+
+    <details class="card glossary">
+      <summary>How these numbers work, and terms used</summary>
+      <ul id="definitions">
+        <li><strong>Matched sites</strong> have a confirmed Siteimprove score on both dates. Every change on this page uses only them, so new or missing sites never look like progress.</li>
+        <li><strong>Score</strong> is Siteimprove’s Title II target (Level A, Level AA and ARIA checks). 98% and above is the WordPress line for manual testing. It shows progress, not proof of compliance or of manual testing.</li>
+        <li><strong>Issues (occurrences)</strong> count every time a Level A, Level AA or ARIA check fails on a page. A drop is a net change in what was detected, not a count of verified fixes; changes in scanned pages move it too.</li>
+        <li><strong>Points</strong> means percentage points: the plain difference between two percentages (96.2% to 96.5% is +0.3 points).</li>
+        <li><strong>Needs reliable data</strong> covers estimated scores, failed checks and older imports without quality details. They are listed, never counted as zero.</li>
+        <li>If no snapshot exists on a chosen date, the nearest earlier one is used and its real date is shown. The pull time is not the time Siteimprove last checked a site.</li>
+      </ul>
+    </details>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer__inner"><p id="refresh-meta"></p></div>
+  </footer>
+</body>
+</html>
