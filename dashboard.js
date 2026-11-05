@@ -403,7 +403,7 @@ function renderTopProblems(rows) {
   if (!rows) { box.innerHTML = `<li class="empty">Problem data is not available yet.</li>`; return; }
   const top = ProblemsCore.sortRows(rows, "sites").slice(0, 5);
   box.innerHTML = top.map(r =>
-    `<li><button type="button" class="problem-row" data-problem="${escapeHtml(r.id)}">
+    `<li><button type="button" class="problem-row chev" data-problem="${escapeHtml(r.id)}">
       <span class="pill pill-flat level-pill">${escapeHtml(r.level)}</span>
       <span class="problem-name">${escapeHtml(r.name)}</span>
       <span class="tnum problem-nums"><strong>${fmtNumber(r.sitesAffected)} sites</strong><br><span class="muted">${fmtNumber(r.occurrences)} times</span></span>
@@ -427,9 +427,10 @@ function renderProblems(rows, filteredCount) {
   const auds = ProblemsCore.audiences(rows, guide);
   $("aud-cards").innerHTML = auds.map(a =>
     `<button type="button" class="aud-btn" data-audience="${escapeHtml(a.key)}" aria-pressed="${state.problemAudience === a.key}">
-      <strong>${escapeHtml(a.label)}</strong>
+      <strong><span>${escapeHtml(a.label)}</span><span class="chev" aria-hidden="true"></span></strong>
       <span>${a.topics} topic${a.topics === 1 ? "" : "s"}${a.sites === null ? "" : " · " + fmtNumber(a.sites) + " sites"}</span>
-      <span>${a.share}% of all problems found</span></button>`).join("");
+      <span>${a.share}% of all problems found</span>
+      <span class="hint">${state.problemAudience === a.key ? "Showing only these. Select again to show all." : "Show only these topics"}</span></button>`).join("");
   $("aud-reset").hidden = !state.problemAudience;
 
   for (const b of document.querySelectorAll("#problem-sort button")) b.setAttribute("aria-pressed", String(b.dataset.sort === state.problemSort));
@@ -439,7 +440,7 @@ function renderProblems(rows, filteredCount) {
   $("problem-list").innerHTML = list.length ? list.map(r => {
     const v = state.problemSort === "sites" ? r.sitesAffected : r.occurrences;
     return `<li><button type="button" class="problem-btn" data-problem="${escapeHtml(r.id)}" aria-pressed="${selected && r.id === selected.id}">
-      <span class="problem-btn__top"><strong>${escapeHtml(r.name)}</strong><span class="pill pill-flat">${escapeHtml(r.level)}</span></span>
+      <span class="problem-btn__top"><strong>${escapeHtml(r.name)}</strong><span class="pill-row" style="flex:none"><span class="pill pill-flat">${escapeHtml(r.level)}</span><span class="chev" aria-hidden="true"></span></span></span>
       <span class="bar" aria-hidden="true"><span style="width:${(v / max * 100).toFixed(1)}%"></span></span>
       <span class="problem-btn__meta"><strong class="tnum">${fmtNumber(r.sitesAffected)} sites</strong>${perSite && filteredCount ? ` (${Math.round(r.sitesAffected / filteredCount * 100)}%)` : ""}
         <span class="muted">· ${fmtNumber(r.occurrences)} times · ${escapeHtml(ProblemsCore.audienceName(r.audience, guide))}</span></span>
@@ -481,6 +482,18 @@ function renderProblems(rows, filteredCount) {
       ${perSite ? `<div class="stat-box"><span class="label">Pages affected</span><span class="value tnum">${fmtNumber(selected.pages)}</span></div>
       <div class="stat-box"><span class="label">On almost every page</span><span class="value tnum">${fmtNumber(selected.every)}</span><span class="muted">sites, usually a theme fix</span></div>` : ""}
     </div>
+    <div class="stack" style="gap:8px">
+      <h3>Top sites with this problem</h3>
+      <p class="muted" style="margin:0;font-size:14px">Sites with the most cases first. Good places to start, or to invite to a training session. Select a site for its details.</p>
+      ${sites.length ? `<div class="table-scroll" tabindex="0" role="region" aria-label="Sites with the most cases, scrolls sideways">
+        <table class="data-table"><caption class="sr-only">Sites with the most cases of ${escapeHtml(selected.name)}</caption>
+          <thead><tr><th scope="col">Site</th><th scope="col">Platform</th><th scope="col" class="num">Times found</th><th scope="col" class="num">Pages affected</th><th scope="col">On almost every page</th></tr></thead>
+          <tbody>${shown.map(x => `<tr><td><button type="button" class="name-btn" data-site="${escapeHtml(x.site.id)}">${escapeHtml(x.site.site_name || x.site.url)}</button>${readyTag(x.site)}</td>
+            <td>${escapeHtml(x.site.platform)}</td><td class="num tnum">${fmtNumber(x.occurrences)}</td>
+            <td class="num tnum">${fmtNumber(x.pages)} of ${fmtNumber(x.site.pages)}</td><td>${x.everywhere ? "Yes" : "No"}</td></tr>`).join("")}</tbody></table></div>
+        ${!state.problemShowAll && sites.length > 8 ? `<button type="button" class="btn" id="problem-show-all" style="align-self:flex-start">Show all ${fmtNumber(sites.length)} sites</button>` : ""}`
+      : `<p class="notice" style="margin:0">The list of top sites for each problem starts with the next nightly data refresh (2 a.m. Detroit time), the first one that records which sites have each problem.</p>`}
+    </div>
     <div class="two-col">
       <div class="soft-box"><h3>Why it matters</h3><p>${escapeHtml(g.why || "Guidance for this check has not been written yet.")}</p>
         <p><strong>Training tip:</strong> ${theme
@@ -492,18 +505,7 @@ function renderProblems(rows, filteredCount) {
       <div><h3>Sites by platform</h3><ul class="mini-bars">${bars(byPlatform, "#00508F")}</ul></div>
       <div><h3>Sites by area</h3><ul class="mini-bars">${bars(byArea, "#4F7FB0")}</ul></div>
     </div>
-    <div class="stack" style="gap:8px">
-      <h3>Sites with the most cases</h3>
-      <p class="muted" style="margin:0;font-size:14px">Good places to start, or to invite to a training session.</p>
-      ${sites.length ? `<div class="table-scroll" tabindex="0" role="region" aria-label="Sites with the most cases, scrolls sideways">
-        <table class="data-table"><caption class="sr-only">Sites with the most cases of ${escapeHtml(selected.name)}</caption>
-          <thead><tr><th scope="col">Site</th><th scope="col">Platform</th><th scope="col" class="num">Times found</th><th scope="col" class="num">Pages affected</th><th scope="col">On almost every page</th></tr></thead>
-          <tbody>${shown.map(x => `<tr><td><button type="button" class="name-btn" data-site="${escapeHtml(x.site.id)}">${escapeHtml(x.site.site_name || x.site.url)}</button>${readyTag(x.site)}</td>
-            <td>${escapeHtml(x.site.platform)}</td><td class="num tnum">${fmtNumber(x.occurrences)}</td>
-            <td class="num tnum">${fmtNumber(x.pages)} of ${fmtNumber(x.site.pages)}</td><td>${x.everywhere ? "Yes" : "No"}</td></tr>`).join("")}</tbody></table></div>
-        ${!state.problemShowAll && sites.length > 8 ? `<button type="button" class="btn" id="problem-show-all" style="align-self:flex-start">Show all ${fmtNumber(sites.length)} sites</button>` : ""}`
-      : `<p class="muted">Site lists appear after the next nightly data refresh.</p>`}
-    </div>`;
+`;
   $("copy-brief").addEventListener("click", async () => {
     const text = ProblemsCore.brief(selected, guide, filteredCount, filterDescription());
     try { await navigator.clipboard.writeText(text); toast(`Training brief copied for “${selected.name}”.`); }
@@ -576,7 +578,7 @@ function renderTable(filtered) {
   $("sites-head").innerHTML = "<tr>" + cols.map(([key, label, type]) => {
     const active = state.sortKey === key;
     const sort = active ? (state.sortDir === "asc" ? "ascending" : "descending") : "none";
-    return `<th scope="col" aria-sort="${sort}" class="${type === "number" ? "num" : ""}"><button type="button" class="sort-btn" data-key="${key}">${escapeHtml(label)}<span aria-hidden="true">${active ? (state.sortDir === "asc" ? " ▲" : " ▼") : ""}</span></button></th>`;
+    return `<th scope="col" aria-sort="${sort}" class="${type === "number" ? "num" : ""}"><button type="button" class="sort-btn" data-key="${key}">${escapeHtml(label)}<span aria-hidden="true" class="${active ? "" : "sort-hint"}">${active ? (state.sortDir === "asc" ? " ▲" : " ▼") : " ↕"}</span></button></th>`;
   }).join("") + "</tr>";
   const sorted = filtered.slice().sort(compareSites);
   const rows = state.showAllRows ? sorted : sorted.slice(0, 100);
@@ -775,7 +777,11 @@ function wire() {
       if (state.tab !== "problems") setTab("problems");
       renderAll();
       const t = $("problem-title");
-      if (t && problem.closest("#top-problems")) t.focus();
+      if (t) {
+        const box = $("problem-detail").getBoundingClientRect();
+        if (problem.closest("#top-problems") || box.top < 0 || box.top > innerHeight * 0.6) $("problem-detail").scrollIntoView({ block: "start", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+        if (problem.closest("#top-problems")) t.focus();
+      }
       return;
     }
     if (e.target.closest("[data-clear-filters]")) clearAllFilters();
