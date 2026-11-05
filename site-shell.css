@@ -237,7 +237,26 @@ kbd {
   background: var(--ink); color: #FFFFFF; padding: 12px 18px; border-radius: 10px; font-weight: 600;
 }
 
-details.glossary summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; align-items: center; }
+/* Expand/collapse toggles look like links with a turning arrow. */
+details > summary {
+  list-style: none; cursor: pointer; font-weight: 700; min-height: 44px; display: flex; align-items: center; gap: 10px;
+  color: var(--link); text-decoration: underline; text-underline-offset: 3px;
+}
+details > summary::-webkit-details-marker { display: none; }
+details > summary::before {
+  content: ""; flex: none; width: 8px; height: 8px; margin: 0 4px 0 2px;
+  border-right: 2.5px solid currentColor; border-bottom: 2.5px solid currentColor;
+  transform: rotate(-45deg); transition: transform .15s;
+}
+details[open] > summary::before { transform: rotate(45deg); }
+details > summary:hover { color: var(--navy); text-decoration-thickness: 2px; }
+
+/* A right-pointing arrow on whole-row buttons that open or filter something. */
+.chev::after {
+  content: ""; display: inline-block; flex: none; width: 8px; height: 8px; margin-left: 4px;
+  border-right: 2.5px solid var(--link); border-bottom: 2.5px solid var(--link); transform: rotate(-45deg);
+}
+.sort-hint { color: var(--muted); font-size: 12px; }
 details.glossary ul { margin: 12px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; color: var(--ink-2); max-width: 80ch; }
 
 @media (max-width: 720px) {

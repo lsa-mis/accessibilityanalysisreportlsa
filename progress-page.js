@@ -92,8 +92,9 @@
 
   // ------------------------------------------------------------ controls
   function renderControls() {
-    el("from-btn").innerHTML = `<span class="sr-only">Start date: </span>${escape(longDate(fromE?.date))}`;
-    el("to-btn").innerHTML = `<span class="sr-only">End date: </span>${escape(longDate(toE?.date))}`;
+    const cal = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>';
+    el("from-btn").innerHTML = `${cal}<span class="sr-only">Start date: </span>${escape(longDate(fromE?.date))}<span class="sr-only">. Change start date</span><span class="caret" aria-hidden="true"></span>`;
+    el("to-btn").innerHTML = `${cal}<span class="sr-only">End date: </span>${escape(longDate(toE?.date))}<span class="sr-only">. Change end date</span><span class="caret" aria-hidden="true"></span>`;
     el("from-btn").setAttribute("aria-expanded", String(picker === "from"));
     el("to-btn").setAttribute("aria-expanded", String(picker === "to"));
     el("span-label").textContent = fromE && toE ? `${dayNum(toE.date) - dayNum(fromE.date)} days apart` : "";
@@ -309,7 +310,7 @@
     ];
     el("coverage-bar").innerHTML = cov.map(([, , , n, color]) => `<span style="width:${(n / total * 100).toFixed(2)}%;background:${color}"></span>`).join("");
     el("coverage").innerHTML = cov.map(([key, label, desc, n, color]) =>
-      `<li><button type="button" class="cov-row" data-site-filter="${key}" aria-label="${escape(`${label}: ${n} sites. ${desc}. Show these sites.`)}">
+      `<li><button type="button" class="cov-row chev" data-site-filter="${key}" aria-label="${escape(`${label}: ${n} sites. ${desc}. Show these sites.`)}">
         <span class="sw" style="background:${color}"></span><span class="grow"><strong>${escape(label)}</strong><span class="muted" style="font-size:14px">${escape(desc)}</span></span>
         <strong class="tnum">${fmt(n)}</strong></button></li>`).join("");
 
@@ -363,7 +364,9 @@
       else header.removeAttribute("aria-sort");
       const b = header.querySelector("button");
       b.querySelector(".arrow")?.remove();
-      if (header.dataset.sort === sort) b.insertAdjacentHTML("beforeend", `<span class="arrow" aria-hidden="true">${direction === 1 ? " ▲" : " ▼"}</span>`);
+      b.insertAdjacentHTML("beforeend", header.dataset.sort === sort
+        ? `<span class="arrow" aria-hidden="true">${direction === 1 ? " ▲" : " ▼"}</span>`
+        : `<span class="arrow sort-hint" aria-hidden="true"> ↕</span>`);
     }
     const shown = showAllSites ? rows : rows.slice(0, 100);
     const statusText = row => {
