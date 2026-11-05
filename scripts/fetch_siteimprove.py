@@ -24,9 +24,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlencode, urlparse
+from urllib.parse import urlencode
 
 import requests
+from site_urls import is_junk_url
 
 API_ROOT = os.environ.get("SITEIMPROVE_API_ROOT", "https://api.siteimprove.com/v2").rstrip("/")
 PAGE_SIZE = 100
@@ -34,7 +35,6 @@ REQUEST_TIMEOUT = int(os.environ.get("SITEIMPROVE_TIMEOUT", "120"))
 MAX_RETRIES = 5
 RETRY_BACKOFF_SECONDS = 5
 MAX_WORKERS = int(os.environ.get("SITEIMPROVE_MAX_WORKERS", "8"))
-FLUSH_EVERY_SECONDS = int(os.environ.get("SITEIMPROVE_FLUSH_SECONDS", "10"))
 
 LEVEL_KEYS = ("A", "AA", "AAA", "ARIA", "BP")
 
@@ -169,28 +169,6 @@ def _norm_site_url(url: str | None) -> str:
     if u.startswith("www."):
         u = u[4:]
     return u.rstrip("/")
-
-
-# Junk-row detection. The Siteimprove inventory export (and occasionally the
-# API) contains rows whose "URL" is a login gateway or auth redirect rather
-# than a real site — e.g. ~28 weblogin.umich.edu SSO?execution=… rows, a
-# test_login?token=… URL, and an accounts.google.com ServiceLogin wrapper.
-# These are artifacts of auth-walled sites, not web properties; without this
-# filter they pollute the dashboard and get created as Asana tasks under
-# Uncategorized. Kept deliberately narrow: named login hosts + unmistakable
-# auth-flow query markers only.
-JUNK_URL_QUERY = re.compile(r"execution=e\d+s\d+|ServiceLogin|test_login|[?&]token=", re.IGNORECASE)
-JUNK_HOSTS = {"weblogin.umich.edu", "accounts.google.com", "shibboleth.umich.edu"}
-
-
-def is_junk_url(url: str | None) -> bool:
-    if not url:
-        return False
-    parsed = urlparse(url if "://" in url else "https://" + url)
-    host = (parsed.hostname or "").lower()
-    if host in JUNK_HOSTS:
-        return True
-    return bool(JUNK_URL_QUERY.search(url))
 
 
 def load_inventory_rows(path: Path = SITE_TAG_CSV_PATH) -> list[dict[str, Any]]:
@@ -335,7 +313,9 @@ def paginate(session: requests.Session, path: str, params: dict[str, Any] | None
         params["page"] = page
         url = f"{API_ROOT}{path}?{urlencode(params)}"
         payload = get(session, url)
-        batch = payload.get("items") or []
+        if not isinstance(payload.get("items"), list):
+            raise ValueError(f"Malformed Siteimprove page for {path}: expected items array")
+        batch = payload["items"]
         items.extend(batch)
         total_pages = payload.get("total_pages") or 1
         if page >= total_pages or not batch:
@@ -359,15 +339,19 @@ def fetch_site_target(session: requests.Session, site_id: int) -> dict[str, Any]
     try:
         return get(session, f"{API_ROOT}/sites/{site_id}/a11y/overview/site_target/overview")
     except requests.HTTPError as exc:
+        if exc.response.status_code not in (403, 404):
+            raise
         return {"_error": f"target {exc.response.status_code}"}
 
 
-def fetch_site_issues(session: requests.Session, site_id: int) -> list[dict[str, Any]]:
+def fetch_site_issues(session: requests.Session, site_id: int) -> list[dict[str, Any]] | None:
     try:
         return paginate(session, f"/sites/{site_id}/a11y/issue_kinds/confirmed/issues")
     except requests.HTTPError as exc:
+        if exc.response.status_code not in (403, 404):
+            raise
         print(f"  issues fetch failed: {exc.response.status_code}", file=sys.stderr)
-        return []
+        return None
 
 
 def fetch_site_groups(session: requests.Session, site_id: int) -> list[str]:
@@ -398,7 +382,10 @@ def fetch_crawl_status(session: requests.Session, site_id: int) -> dict[str, Any
     scanned and whether a scan is running. Empty dict if unavailable."""
     try:
         return get(session, f"{API_ROOT}/sites/{site_id}/content/crawl")
-    except requests.HTTPError:
+    except requests.HTTPError as exc:
+        if exc.response.status_code not in (403, 404):
+            raise
+        print(f"  crawl status unavailable: HTTP {exc.response.status_code}", file=sys.stderr)
         return {}
 
 
@@ -445,12 +432,15 @@ def shape_crawl_fields(crawl: dict[str, Any], pages: int | None) -> dict[str, An
     }
 
 
-def fetch_site_pdfs(session: requests.Session, site_id: int) -> list[dict[str, Any]]:
+def fetch_site_pdfs(session: requests.Session, site_id: int) -> list[dict[str, Any]] | None:
     """Fetch list of PDFs flagged by the accessibility module for this site."""
     try:
         return paginate(session, f"/sites/{site_id}/a11y/validation/pdfs")
-    except requests.HTTPError:
-        return []
+    except requests.HTTPError as exc:
+        if exc.response.status_code not in (403, 404):
+            raise
+        print(f"  PDF data unavailable: HTTP {exc.response.status_code}", file=sys.stderr)
+        return None
 
 
 # Meta-tag generator strings → platform tag.
@@ -534,20 +524,24 @@ def summarize_pdfs(pdfs: list[dict[str, Any]]) -> dict[str, Any]:
     issue_keys = ("issues", "errors", "issue_count", "error_count", "occurrences")
     total_issues = 0
     pdfs_with_issues = 0
+    unknown_issues = False
     for pdf in pdfs:
-        n = 0
+        n = None
         for k in issue_keys:
             v = pdf.get(k)
-            if isinstance(v, (int, float)):
+            if isinstance(v, (int, float)) and not isinstance(v, bool) and v >= 0 and v == int(v):
                 n = int(v)
                 break
+        if n is None:
+            unknown_issues = True
+            continue
         if n > 0:
             pdfs_with_issues += 1
             total_issues += n
     return {
         "pdf_count": pdf_count,
-        "pdfs_with_issues": pdfs_with_issues,
-        "pdf_total_issues": total_issues,
+        "pdfs_with_issues": None if unknown_issues else pdfs_with_issues,
+        "pdf_total_issues": None if unknown_issues else total_issues,
     }
 
 
@@ -590,7 +584,10 @@ def aggregate_site_issues(issues: list[dict[str, Any]]) -> dict[str, Any]:
     for issue in issues:
         raw_level = issue.get("conformance")
         level = normalize_level(raw_level)
-        occ = coerce_int(issue.get("occurrences")) or 0
+        raw_occurrences = issue.get("occurrences")
+        occ = coerce_int(raw_occurrences)
+        if occ is None or occ < 0 or isinstance(raw_occurrences, bool) or (isinstance(raw_occurrences, float) and raw_occurrences != occ):
+            raise ValueError("Malformed Siteimprove issue: missing or invalid occurrence count")
         pages_affected = coerce_int(issue.get("pages")) or 0
         if pages_affected > max_pages_affected:
             max_pages_affected = pages_affected
@@ -776,6 +773,7 @@ def build_rule_rollup(
 
 
 def main() -> None:
+    collection_started = datetime.now(timezone.utc).isoformat(timespec="seconds")
     email = env("SITEIMPROVE_EMAIL")
     api_key = env("SITEIMPROVE_API_KEY")
 
@@ -805,14 +803,19 @@ def main() -> None:
                       if s.get("id") is not None and not is_junk_url(s.get("url"))]
 
     def fetch_one(site: dict[str, Any]) -> tuple[
-        dict[str, Any], dict[str, Any], list[dict[str, Any]],
+        dict[str, Any], dict[str, Any], list[dict[str, Any]] | None,
         dict[str, Any], dict[str, Any], dict[str, int | None], dict[str, Any]
     ]:
         site_id = site["id"]
         target = fetch_site_target(session, site_id)
         issues = fetch_site_issues(session, site_id)
         detail = fetch_site_detail(session, site_id)
-        pdfs = summarize_pdfs(fetch_site_pdfs(session, site_id))
+        pdf_rows = fetch_site_pdfs(session, site_id)
+        pdfs = summarize_pdfs(pdf_rows or [])
+        pdfs["pdfs_available"] = pdf_rows is not None
+        if pdf_rows is None:
+            for key in ("pdf_count", "pdfs_with_issues", "pdf_total_issues"):
+                pdfs[key] = None
         spelling = fetch_misspelling_counts(session, site_id)
         crawl = fetch_crawl_status(session, site_id)
         return site, target, issues, detail, pdfs, spelling, crawl
@@ -821,34 +824,32 @@ def main() -> None:
     per_site_issues: list[tuple[dict[str, Any], list[dict[str, Any]]]] = []
     total = len(runnable_sites)
     started = time.monotonic()
-    last_flush = started
 
-    out_dir = Path(__file__).resolve().parent.parent / "data"
+    out_dir = Path(os.environ.get("SITEIMPROVE_OUTPUT_DIR") or Path(__file__).resolve().parent.parent / "data")
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    def write_partial(in_progress: bool) -> None:
+    def write_snapshot() -> None:
         snapshot = {
             "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "started_at": collection_started,
+            "collection_complete": True,
+            "source_run": os.environ.get("GITHUB_RUN_ID", "local"),
             "site_count": len(site_rows),
-            "in_progress": in_progress,
+            "in_progress": False,
             "progress": {"completed": len(site_rows), "total": total},
             "sites": site_rows,
         }
         tmp = out_dir / "sites.json.tmp"
-        tmp.write_text(json.dumps(snapshot, indent=2) + "\n", encoding="utf-8")
+        tmp.write_text(json.dumps(snapshot, indent=2, allow_nan=False) + "\n", encoding="utf-8")
         tmp.replace(out_dir / "sites.json")
-
-    # Initial empty in-progress file so the dashboard can start polling immediately.
-    write_partial(in_progress=True)
 
     print(f"Fetching per-site data with {MAX_WORKERS} workers...", file=sys.stderr)
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = {executor.submit(fetch_one, s): s for s in runnable_sites}
         failed_sites = 0
         for index, future in enumerate(as_completed(futures), start=1):
-            # Isolate per-site failures: after in-request retries are
-            # exhausted, one unreachable site shouldn't abort the whole run.
-            # Log it and move on so the snapshot still covers everything else.
+            # Collect failure diagnostics before rejecting the observation;
+            # never publish a silently incomplete portfolio.
             try:
                 site, target, issues, detail, pdfs, spelling, crawl = future.result()
             except Exception as exc:  # noqa: BLE001 — resilience over precision
@@ -858,9 +859,15 @@ def main() -> None:
                       f"({bad.get('site_name') or bad.get('url')}): "
                       f"{type(exc).__name__}", file=sys.stderr)
                 continue
-            per_site_issues.append((site, issues))
-            rollup = aggregate_site_issues(issues)
+            per_site_issues.append((site, issues or []))
+            rollup = aggregate_site_issues(issues or [])
             row = shape_site_row(site, target, rollup)
+            row["issues_available"] = issues is not None
+            if issues is None:
+                row["issues"] = row["issue_types"] = None
+                row["pages_with_issues"] = None
+                row["by_level"] = {level: {"issues": None, "occurrences": None, "pages": None} for level in LEVEL_KEYS}
+                row["errors"] = (row["errors"] or []) + ["Confirmed issues unavailable"]
             row.update(pdfs)
             row.update(spelling)
             # Pages scanned: the API's count, else the CSV export's
@@ -891,15 +898,16 @@ def main() -> None:
             site_rows.append(row)
 
             now = time.monotonic()
-            if now - last_flush >= FLUSH_EVERY_SECONDS:
-                write_partial(in_progress=True)
-                last_flush = now
-
             if index % 25 == 0 or index == total:
                 elapsed = now - started
                 rate = index / elapsed if elapsed else 0
                 eta = (total - index) / rate if rate else 0
                 print(f"  {index}/{total} done ({rate:.1f}/s, ~{eta:.0f}s remaining)", file=sys.stderr)
+
+    if failed_sites:
+        raise RuntimeError(f"Collection incomplete: {failed_sites} site(s) failed; last-good snapshot preserved")
+    if not site_rows:
+        raise RuntimeError("Collection returned no sites; last-good snapshot preserved")
 
     # Add inventory-only sites (in the CSV but not returned by the API) so
     # the dashboard reflects the full portfolio, with tags kept current.
@@ -912,9 +920,6 @@ def main() -> None:
     if estimated:
         print(f"  ~ {estimated} site target(s) estimated (Siteimprove reported "
               f"no target yet)", file=sys.stderr)
-
-    # Final write — clears in_progress flag.
-    write_partial(in_progress=False)
 
     # Build a site_id -> tags lookup so the rule rollup can also produce
     # per-tag breakdowns (e.g. top issues across AEM-tagged sites only).
@@ -931,7 +936,10 @@ def main() -> None:
         "rules":  rule_rollup["rules"],
         "by_tag": rule_rollup["by_tag"],
     }
-    (out_dir / "rules.json").write_text(json.dumps(rules_snapshot, indent=2) + "\n", encoding="utf-8")
+    rules_temp = out_dir / "rules.json.tmp"
+    rules_temp.write_text(json.dumps(rules_snapshot, indent=2) + "\n", encoding="utf-8")
+    rules_temp.replace(out_dir / "rules.json")
+    write_snapshot()
     print(
         f"Wrote {out_dir / 'sites.json'} and {out_dir / 'rules.json'} "
         f"(global rules: {len(rule_rollup['rules'])}, "

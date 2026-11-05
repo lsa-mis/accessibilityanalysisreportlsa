@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LSA accessibility progress</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="progress.css">
+  <script defer src="progress-core.js"></script>
+  <script defer src="progress-client.js"></script>
+  <script defer src="progress-page.js"></script>
+</head>
+<body class="locked">
+  <a class="skip" href="#report">Skip to progress report</a>
+  <div class="gate">
+    <form id="gate-form">
+      <h1>LSA accessibility progress</h1>
+      <p>Use the shared dashboard password. Authorized viewers can see all departments.</p>
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required aria-describedby="gate-error">
+      <button type="submit">Unlock</button>
+      <p id="gate-error" class="error" role="alert"></p>
+    </form>
+  </div>
+  <main>
+    <a class="no-print" href="data.html">Back to live dashboard</a>
+    <h1>Accessibility progress</h1>
+    <p>Leadership and department reporting from dated Siteimprove observations. Changes are net detected counts, not verified fixes.</p>
+    <p id="load-status" role="status">Loading history...</p>
+    <div id="report-error" class="error" role="alert" hidden></div>
+    <div id="refresh-warning" class="warning" role="status" hidden></div>
+    <p id="refresh-meta" class="note"></p>
+    <section class="panel" aria-labelledby="comparison-heading">
+      <h2 id="comparison-heading">Choose a comparison</h2>
+      <div class="filters">
+        <label>Earlier observation <select id="before-date"></select></label>
+        <label>Later observation <select id="after-date"></select></label>
+        <label>Department <select id="department"><option value="">All departments</option></select></label>
+        <label>Search sites <input id="search" type="search" placeholder="Site name or URL"></label>
+      </div>
+      <p class="note">Select one or more platforms or tags using Control/Command or Shift. No selection means all; selected tags match any label.</p>
+      <div class="filters">
+        <label>Platforms <select id="platform" multiple aria-label="Platforms"></select></label>
+        <label>Siteimprove labels <select id="tags" multiple aria-label="Siteimprove labels"></select></label>
+      </div>
+      <div class="shortcuts" style="margin-top:1rem" role="group" aria-label="Baseline shortcuts">
+        <button data-period="day">Previous day</button>
+        <button data-period="week">Previous week</button>
+        <button data-period="month">Previous month</button>
+        <button id="clear-filters">Clear filters</button>
+      </div>
+      <p id="date-note" class="note"></p>
+    </section>
+    <div id="report" tabindex="-1" hidden>
+      <section class="panel" aria-labelledby="overview-heading">
+        <h2 id="overview-heading">Leadership overview</h2>
+        <p id="comparison-context"></p>
+        <p id="scope-context" class="note"></p>
+        <p id="coverage" class="note"></p>
+        <div id="metrics" class="cards"></div>
+        <details style="margin-top:1rem">
+          <summary>Separate AAA, best-practice, and PDF measures</summary>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Measure</th><th>Before</th><th>After</th><th>Net change</th><th>Comparable sites</th></tr></thead>
+            <tbody id="supplementary-metrics"></tbody>
+          </table></div>
+        </details>
+        <p id="quality-note" class="warning" hidden></p>
+        <p class="note" id="definitions">Headlines: WCAG A + AA + ARIA. Issue types are failing rules counted per site, not portfolio-distinct rules. Negative count changes mean net reductions; positive changes mean net increases. Different page/scan coverage can change counts. Target changes use percentage points. A 98% target is not proof of compliance or completed manual testing.</p>
+        <div class="actions">
+          <button id="export-csv">Export comparison CSV</button>
+          <button id="copy-summary">Copy summary</button>
+          <button id="print-report">Print report</button>
+        </div>
+        <p id="copy-result" role="status"></p>
+      </section>
+      <section class="panel" aria-labelledby="departments-heading">
+        <h2 id="departments-heading">Department progress</h2>
+        <p class="note">The latest primary-department mapping is applied to both dates. This describes current responsibilities, not historical ownership. Unmapped sites are never assigned by inference.</p>
+        <div class="table-wrap"><table>
+          <caption>Department comparison within the selected filters. Select a department to inspect its sites below.</caption>
+          <thead><tr><th>Department</th><th>Matched targets</th><th>Target change (pp)</th><th>Comparable issue sites</th><th>Occurrences before / after / change</th><th>Issue types before / after / change</th></tr></thead>
+          <tbody id="departments-body"></tbody>
+        </table></div>
+      </section>
+      <section class="panel" aria-labelledby="sites-heading">
+        <h2 id="sites-heading">Site comparison detail</h2>
+        <div class="table-wrap"><table id="sites-table">
+          <caption>Unavailable or unreliable metrics are shown as unknown, never zero. Page counts and last crawl are observations, not proof of retirement or fixes.</caption>
+          <thead><tr>
+            <th data-sort="site" aria-sort="ascending"><button>Site</button></th><th>Platform / department</th>
+            <th>Target before / after</th><th data-sort="target"><button>Target change (pp)</button></th>
+            <th>Occurrences before / after</th><th data-sort="occurrences"><button>Occurrence change</button></th>
+            <th>Issue types before / after / change</th><th>Pages before / after</th><th>Data quality / last crawl</th>
+          </tr></thead>
+          <tbody id="sites-body"></tbody>
+        </table></div>
+      </section>
+    </div>
+    <section id="trend-panel" class="panel" aria-labelledby="trend-heading" hidden>
+      <h2 id="trend-heading">Portfolio history (unfiltered)</h2>
+      <p class="note">Latest observation on each saved date; gaps are not interpolated. These per-date means have changing cohorts and must not be interpreted as matched-site remediation. Use the comparison above for changes.</p>
+      <details><summary>Show saved-date target trend and coverage</summary>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Date</th><th>Mean target %</th><th>Reliable targets / inventory</th><th>Source</th></tr></thead>
+          <tbody id="trend-body"></tbody>
+        </table></div>
+      </details>
+    </section>
+  </main>
+</body>
+</html>

@@ -17,6 +17,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -46,7 +47,7 @@ jobs:
         run: |
           pip install cryptography
           mkdir -p _site/data
-          cp data.html favicon.svg _site/
+          cp data.html progress.html progress-core.js progress-client.js progress-page.js progress-widget.js progress.css favicon.svg _site/
           python scripts/encrypt_data.py _site/data
           cat > _site/index.html <<'EOF'
           <!doctype html>

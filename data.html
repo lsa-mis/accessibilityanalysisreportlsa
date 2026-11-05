@@ -959,6 +959,9 @@
       color: var(--ink-60);
       text-align: center;
     }
+    .progress-panel { padding: 1.25rem; margin: 1.25rem 0; border: 1px solid var(--border, #c9d2dc); border-radius: 8px; background: #fff; }
+    .progress-panel h2 { margin: 0 0 .5rem; font-size: 1.2rem; }
+    .progress-panel p { margin: .5rem 0; }
   </style>
 </head>
 <body class="locked">
@@ -974,7 +977,7 @@
   </div>
   <header>
     <h1>LSA Web Accessibility Dashboard</h1>
-    <p>Live snapshot of accessibility scores, page counts, and issue occurrences across LSA sites — refreshed weekly from Siteimprove.</p>
+    <p>Live snapshot of accessibility scores, page counts, and issue occurrences across LSA sites — daily Siteimprove refresh scheduled for 2 a.m. Detroit time.</p>
   </header>
   <main>
     <div class="meta">
@@ -1013,9 +1016,17 @@
       </div>
     </section>
 
+    <section class="progress-panel" aria-labelledby="progress-widget-heading">
+      <h2 id="progress-widget-heading">Accessibility progress over time</h2>
+      <p id="progress-widget-content" role="status">Loading dated comparison...</p>
+      <p><a id="progress-link" href="progress.html">Open leadership and department progress reporting</a></p>
+      <p style="font-size:.85rem;">Month-over-month matched-site comparison; reflects platform, label, and search filters. Scan/status filters apply only to the live data below. Net count changes are not verified fixes.</p>
+    </section>
+
     <div id="notice-stale" class="notice warning" hidden>
       This snapshot was generated before the score/target field-mapping fix. Re-run <code>python scripts/fetch_siteimprove.py</code> to populate Score and Target % columns.
     </div>
+    <div id="notice-missing-metrics" class="notice warning" role="status" hidden></div>
 
     <div id="notice-live" class="notice live" hidden>
       <span class="pulse"></span><strong>Fetch in progress.</strong> Showing partial data; auto-refreshing every 10s.
@@ -1119,7 +1130,7 @@
             </button>
           </div>
         </div>
-        <div class="viz-sub">Sites at <strong>≥97.5% of their Title II target</strong> — automated remediation is essentially done, so the next step is human review (keyboard navigation, screen-reader flow, focus order, meaningful alt text). Respects the active filters above. Sorted by page count so the smallest manual-testing jobs surface first.</div>
+        <div class="viz-sub">WordPress sites at a <strong>confirmed ≥98% of their Title II target</strong>, including WP-Sites, WP-Courses, and WP-DigitalScholarship. Estimates, failed scans, and unavailable scores are excluded. The next step is human review; this threshold is not proof of compliance. Respects the active filters above. Sorted by page count so the smallest manual-testing jobs surface first.</div>
         <div class="ready-stats" id="ready-stats"></div>
         <div class="ready-list" id="ready-list"></div>
       </div>
@@ -1166,9 +1177,12 @@
         </tbody>
       </table>
     </div>
-    <footer>Data refreshed weekly from the Siteimprove API via GitHub Actions.</footer>
+    <footer>Daily Siteimprove collection is scheduled for 2 a.m. America/Detroit via GitHub Actions. Collection time is not scan time.</footer>
   </main>
 
+  <script src="progress-core.js"></script>
+  <script src="progress-client.js"></script>
+  <script src="progress-widget.js"></script>
   <script>
     const POLL_INTERVAL_MS = 10000;
     let pollHandle = null;
@@ -1310,11 +1324,11 @@
         const tags = Array.isArray(s.tags) ? s.tags : [];
         out.push({
           ...s,
-          lvl_a: a,
-          lvl_aa: aa,
-          lvl_aaa: aaa,
-          lvl_aria: aria,
-          lvl_bp: bp,
+          lvl_a: s.issues_available === false ? null : a,
+          lvl_aa: s.issues_available === false ? null : aa,
+          lvl_aaa: s.issues_available === false ? null : aaa,
+          lvl_aria: s.issues_available === false ? null : aria,
+          lvl_bp: s.issues_available === false ? null : bp,
           tags,
           platform: platformFor(tags),
           status: hasErr ? "error" : (s.pages || s.pages_with_issues ? "ok" : "no-data"),
@@ -1367,6 +1381,7 @@
     // Sum of occurrences across the levels the user has chosen.
     // Empty selection = all *visible* levels (A + AA + ARIA + BP, AAA excluded).
     function selectedOccurrences(s) {
+      if (s.issues_available === false) return null;
       if (state.levelFilters.size === 0) {
         return (s.lvl_a || 0) + (s.lvl_aa || 0) + (s.lvl_aria || 0) + (s.lvl_bp || 0);
       }
@@ -1772,10 +1787,11 @@
     }
 
     function renderCharts(filteredSites) {
-      renderBars("chart-top-titleii", topByTitleII(filteredSites, "#00274C"), "Title II occurrences (A+AA+ARIA)", { showTarget: true, caption: "15 sites furthest from Title II target — target % and A+AA+ARIA occurrences" });
-      renderDonut("chart-levels", aggregateLevels(filteredSites), { caption: "Issue occurrences by WCAG level" });
+      const availableIssues = filteredSites.filter(s => s.issues_available !== false);
+      renderBars("chart-top-titleii", topByTitleII(availableIssues, "#00274C"), "Title II occurrences (A+AA+ARIA)", { showTarget: true, caption: "15 sites furthest from Title II target — target % and A+AA+ARIA occurrences" });
+      renderDonut("chart-levels", aggregateLevels(availableIssues), { caption: "Issue occurrences by WCAG level (available metrics)" });
       renderDonut("chart-status", aggregateStatus(filteredSites), { caption: "Sites by data status" });
-      renderBars("chart-top-total", topBySelected(filteredSites, "#2a3441"), "Selected-level occurrences", { caption: "Top 15 sites by occurrences for the selected levels" });
+      renderBars("chart-top-total", topBySelected(availableIssues, "#2a3441"), "Selected-level occurrences", { caption: "Top 15 sites by occurrences for the selected levels" });
 
       // Update chart titles to reflect the active level filter.
       const lensLabel = activeLevelsLabel();
@@ -1793,6 +1809,11 @@
       const total = filteredSites.length;
       const ok = filteredSites.filter(s => s.status === "ok").length;
       const errors = filteredSites.filter(s => s.status === "error").length;
+      const issueCoverage = filteredSites.filter(s => s.issues_available !== false).length;
+      const pdfCoverage = filteredSites.filter(s => s.pdfs_available !== false).length;
+      const missing = document.getElementById("notice-missing-metrics");
+      missing.hidden = issueCoverage === filteredSites.length && pdfCoverage === filteredSites.length;
+      missing.textContent = `Incomplete metric coverage: ${filteredSites.length - issueCoverage} site(s) have unavailable issue counts; ${filteredSites.length - pdfCoverage} have unavailable PDF counts. Totals and charts include available metrics only, not verified zeros for missing data.`;
       const totalAA = filteredSites.reduce((acc, s) => acc + s.lvl_aa, 0);
       const totalA = filteredSites.reduce((acc, s) => acc + s.lvl_a, 0);
       const lensTotal = filteredSites.reduce((acc, s) => acc + selectedOccurrences(s), 0);
@@ -1847,17 +1868,17 @@
           cat: "occ", title: "Issue occurrences",
           blurb: "Aggregated counts by WCAG level. AAA + ARIA + BP appear in the per-site table.",
           cards: [
-            { label: "Total A occurrences",  value: totalA.toLocaleString() },
-            { label: "Total AA occurrences", value: totalAA.toLocaleString() },
-            { label: lensLabel,              value: lensTotal.toLocaleString() },
+            { label: "Total A occurrences",  value: fmtNumber(issueCoverage ? totalA : null) },
+            { label: "Total AA occurrences", value: fmtNumber(issueCoverage ? totalAA : null) },
+            { label: lensLabel,              value: fmtNumber(issueCoverage ? lensTotal : null) },
           ],
         },
         {
           cat: "pdf", title: "PDFs",
           blurb: "PDF documents flagged by the accessibility module.",
           cards: [
-            { label: "Total PDFs",     value: totalPdfs.toLocaleString() },
-            { label: "PDFs w/ issues", value: totalPdfsWithIssues.toLocaleString(), danger: totalPdfsWithIssues > 0 },
+            { label: "Total PDFs",     value: fmtNumber(pdfCoverage ? totalPdfs : null) },
+            { label: "PDFs w/ issues", value: fmtNumber(pdfCoverage ? totalPdfsWithIssues : null), danger: totalPdfsWithIssues > 0 },
           ],
         },
         {
@@ -2118,17 +2139,15 @@
     }
 
     // ============================================================
-    // Ready for manual testing — sites at >=97.5% of Title II target.
-    // Automated remediation is effectively done for these; the next
-    // step is human review.
+    // This handoff is a WordPress program threshold, not a compliance claim.
     // ============================================================
-    const READY_THRESHOLD = 97.5;
+    const READY_THRESHOLD = 98;
 
     function readySites(filteredSites) {
       return filteredSites
         .filter(s =>
-          s.status === "ok" &&
-          typeof s.target_percentage === "number" &&
+          ProgressCore.wordpress(s) &&
+          ProgressCore.reliable(s) &&
           s.target_percentage >= READY_THRESHOLD
         )
         // Smallest manual-testing jobs first (page count ASC); ties break
@@ -2157,7 +2176,7 @@
         </div>`).join("");
 
       if (!ready.length) {
-        listEl.innerHTML = '<div class="rules-empty">No sites at ≥97.5% of target in the current filter.</div>';
+        listEl.innerHTML = '<div class="rules-empty">No WordPress sites with confirmed ≥98% of target and usable scans in the current filter.</div>';
         return;
       }
 
@@ -2212,6 +2231,9 @@
       renderRules();
       renderReady(filtered);
       renderTable(filtered);
+      ProgressWidget.render(fetchData, {
+        platforms: [...state.platformFilters], tags: [...state.tagFilters], search: state.search,
+      });
       if (typeof syncClearButton === "function") syncClearButton();
     }
 
@@ -2319,10 +2341,10 @@
         ["Last scan",                    s => s.last_crawl || ""],
         ["Pages with issues",            s => s.pages_with_issues ?? ""],
         ["Issue types",                  s => s.issue_types ?? ""],
-        ["A occurrences",                s => s.lvl_a ?? 0],
-        ["AA occurrences",               s => s.lvl_aa ?? 0],
-        ["ARIA occurrences",             s => s.lvl_aria ?? 0],
-        ["BP occurrences",               s => s.lvl_bp ?? 0],
+        ["A occurrences",                s => s.lvl_a ?? ""],
+        ["AA occurrences",               s => s.lvl_aa ?? ""],
+        ["ARIA occurrences",             s => s.lvl_aria ?? ""],
+        ["BP occurrences",               s => s.lvl_bp ?? ""],
         [`Total occurrences${lensSuffix}`, s => selectedOccurrences(s)],
         ["PDFs",                         s => s.pdf_count ?? ""],
         ["PDFs with issues",             s => s.pdfs_with_issues ?? ""],
@@ -2463,7 +2485,11 @@
 
     async function fetchEncrypted(name) {
       const res = await fetch(`data/${name}.enc.json`, { cache: "no-cache" });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const error = new Error(`HTTP ${res.status}`);
+        error.status = res.status;
+        throw error;
+      }
       return res.json();
     }
 
@@ -2476,16 +2502,16 @@
     }
 
     async function decryptPayload(key, payload) {
-      const plain = await crypto.subtle.decrypt(
-        { name: "AES-GCM", iv: b64ToBytes(payload.iv) }, key, b64ToBytes(payload.ct));
-      return JSON.parse(new TextDecoder().decode(plain));
+      return ProgressClient.decrypt(key, payload);
     }
 
     async function fetchData(name) {
+      if (!/^(?:history\/)?[A-Za-z0-9_-]+$/.test(name)) throw new Error("Invalid data resource");
       if (!encrypted) {
-        const res = await fetch(`data/${name}.json`, { cache: "no-cache" });
+        const compressed = name.startsWith("history/") && name !== "history/index";
+        const res = await fetch(`data/${name}${compressed ? ".json.gz" : ".json"}`, { cache: "no-cache" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
+        return ProgressClient.decode(await res.arrayBuffer(), compressed ? "gzip" : "");
       }
       return decryptPayload(dataKey, await fetchEncrypted(name));
     }
@@ -2519,9 +2545,13 @@
       let payload;
       try {
         payload = await fetchEncrypted("sites");
-      } catch (_) {
-        encrypted = false;
-        unlockPage();
+      } catch (error) {
+        if (error.status === 404 && ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname)) {
+          encrypted = false;
+          unlockPage();
+        } else {
+          document.getElementById("gate-error").textContent = `Unable to load encrypted dashboard: ${error.message}`;
+        }
         return;
       }
 
