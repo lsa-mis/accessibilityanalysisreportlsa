@@ -16,6 +16,7 @@
 
   let entries = [], mapping = {}, fromE = null, toE = null, before = null, after = null, comparison = null;
   let sort = "site", direction = 1, generation = 0, period = "month", tab = "overview", siteFilter = "all", showAllSites = false;
+  let focusSummary = false;
   let trendMetric = "mean", picker = null, viewMonth = null, pickerOpener = null, exportTab = "summary";
   const platforms = new Set(), tags = new Set();
   let department = "", search = "";
@@ -125,9 +126,24 @@
     const firstGood = entries.find(comparable);
     if (fromE && !comparable(fromE)) {
       banner.hidden = false;
-      banner.innerHTML = `<strong>${escape(longDate(fromE.date))} can’t be compared yet.</strong> Snapshots before ${escape(longDate(firstGood?.date))} were imported from older history without the scan quality details needed for a fair comparison. They still appear in the trend, but not as progress.
-        ${firstGood && firstGood !== toE ? ` <button type="button" class="btn btn-primary" id="use-first-comparable">Compare from ${escape(longDate(firstGood.date))} instead</button>` : ""}`;
-    } else banner.hidden = true;
+      // Only rebuild when the date changes, so focus and screen readers aren't disturbed on every render.
+      const key = `${fromE.date}|${toE?.date}`;
+      if (banner.dataset.key !== key) {
+        banner.dataset.key = key;
+        const canSwitch = firstGood && firstGood !== toE && firstGood.date < toE.date;
+        banner.innerHTML = `
+          <svg class="notice-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+          <div class="notice-body">
+            <h2 id="not-comparable-title">This start date can’t be compared yet</h2>
+            <p>${escape(longDate(fromE.date))} comes from older history that was imported without scan quality details. Comparing it would give misleading changes, so the numbers below are left blank.</p>
+            ${firstGood ? `<p>Comparable snapshots start on <strong>${escape(longDate(firstGood.date))}</strong>. Older dates still appear in the trend.</p>` : "<p>No comparable snapshots have been saved yet.</p>"}
+            <div class="pill-row">
+              ${canSwitch ? `<button type="button" class="btn btn-primary" id="use-first-comparable">Compare from ${escape(longDate(firstGood.date))} instead</button>` : ""}
+              <button type="button" class="btn" id="choose-other-start">Choose another start date</button>
+            </div>
+          </div>`;
+      }
+    } else { banner.hidden = true; banner.dataset.key = ""; }
   }
 
   // ------------------------------------------------------------ calendar
@@ -272,7 +288,9 @@
     comparison = core.compare(before, after, mapping, filters());
     const c = comparison;
     el("report").hidden = false;
-    el("live-status").textContent = `Comparing ${longDate(fromE.date)} to ${longDate(toE.date)}, ${filterText()}: ${c.matched} matched sites.`;
+    el("live-status").textContent = comparable(fromE)
+      ? `Comparing ${longDate(fromE.date)} to ${longDate(toE.date)}, ${filterText()}: ${c.matched} matched sites.`
+      : `${longDate(fromE.date)} can’t be compared yet. Comparable snapshots start on ${longDate(entries.find(comparable)?.date)}.`;
     el("comparison-context").textContent = `Snapshots pulled ${before.generated_at} and ${after.generated_at} (Detroit dates ${before.reporting_date} and ${after.reporting_date}). Showing ${filterText()}. Today’s department list is used for both dates.`;
     const at = atCounts(c.rows), occ = c.headline_occurrences;
     const occPct = occ.change === null || !occ.before ? null : occ.change / occ.before * 100;
@@ -328,6 +346,7 @@
     renderSites();
     renderTrend();
     renderPicker();
+    if (focusSummary) { focusSummary = false; el("summary-heading").focus(); }
   }
 
   function renderDepartments() {
@@ -615,8 +634,11 @@
     document.querySelector(".site-subnav__inner").addEventListener("click", e => { const b = e.target.closest(".tab[data-tab]"); if (b) setTab(b.dataset.tab); });
     window.addEventListener("hashchange", () => setTab(location.hash.slice(1)));
     el("not-comparable").addEventListener("click", e => {
+      if (e.target.closest("#choose-other-start")) { openPicker("from"); return; }
       if (!e.target.closest("#use-first-comparable")) return;
-      fromE = entries.find(comparable); period = "custom"; loadComparison();
+      fromE = entries.find(comparable); period = "custom"; focusSummary = true;
+      el("date-note").textContent = `Now comparing from ${longDate(fromE.date)}, the first snapshot that can be compared.`;
+      loadComparison();
     });
     el("trend-body").addEventListener("click", e => {
       const b = e.target.closest("button[data-start-index]");
