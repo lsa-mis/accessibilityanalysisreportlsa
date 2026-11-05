@@ -138,8 +138,30 @@ class FetchTests(unittest.TestCase):
         response.status_code = status
         return requests.HTTPError(response=response)
 
+    def test_never_scanned_site_400_is_unavailable_not_a_failure(self):
+        # Siteimprove answers 400 for sites it has never scanned (0 pages, no status).
+        with patch.object(fetch, "get", side_effect=self.response_error(400)):
+            self.assertEqual(fetch.fetch_site_target(None, 1), {"_error": "target 400"})
+            self.assertEqual(fetch.fetch_crawl_status(None, 1), {})
+        with patch.object(fetch, "paginate", side_effect=self.response_error(400)):
+            self.assertIsNone(fetch.fetch_site_issues(None, 1), "unavailable issues must be None, never zero")
+            self.assertIsNone(fetch.fetch_site_pdfs(None, 1))
+
+    def test_auth_rate_limit_and_server_errors_still_fail(self):
+        for code in (401, 429, 500, 503):
+            with patch.object(fetch, "get", side_effect=self.response_error(code)):
+                with self.assertRaises(requests.HTTPError):
+                    fetch.fetch_site_target(None, 1)
+                with self.assertRaises(requests.HTTPError):
+                    fetch.fetch_crawl_status(None, 1)
+            with patch.object(fetch, "paginate", side_effect=self.response_error(code)):
+                with self.assertRaises(requests.HTTPError):
+                    fetch.fetch_site_issues(None, 1)
+                with self.assertRaises(requests.HTTPError):
+                    fetch.fetch_site_pdfs(None, 1)
+
     def test_issue_error_is_never_zero(self):
-        for code in (403, 404):
+        for code in (400, 403, 404):
             with patch.object(fetch, "paginate", side_effect=self.response_error(code)):
                 self.assertIsNone(fetch.fetch_site_issues(None, 1))
         with patch.object(fetch, "paginate", side_effect=self.response_error(503)):
