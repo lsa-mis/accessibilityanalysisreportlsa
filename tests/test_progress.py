@@ -195,6 +195,34 @@ class FetchTests(unittest.TestCase):
             self.assertFalse(data["sites"][0]["pdfs_available"])
 
 
+    def test_rule_rollup_records_sites_on_global_rows_only(self):
+        def issue(rule_id, occurrences, pages):
+            return {"rule_id": rule_id, "conformance": "AA", "occurrences": occurrences, "pages": pages,
+                    "help": {"title": f"Rule {rule_id}"}}
+        per_site_issues = [
+            ({"id": 1}, [issue(10, 3, 2), issue(20, 5, 4)]),
+            ({"id": 2}, [issue(10, 7, 1), issue(30, 2, 2)]),
+        ]
+        rollup = fetch.build_rule_rollup(per_site_issues, {2: ["tag:LSA"]})
+        rules = {row["rule_id"]: row for row in rollup["rules"]}
+        self.assertEqual(rules[10]["sites"], [[2, 7, 1], [1, 3, 2]])
+        self.assertEqual(rules[20]["sites"], [[1, 5, 4]])
+        for row in rollup["rules"]:
+            self.assertEqual(sum(site[1] for site in row["sites"]), row["total_occurrences"])
+            self.assertEqual(len(row["sites"]), row["sites_affected"])
+            occurrences = [site[1] for site in row["sites"]]
+            self.assertEqual(occurrences, sorted(occurrences, reverse=True))
+            self.assertNotIn("_per_site", row)
+        self.assertEqual(set(rollup["by_tag"]), {"tag:LSA"})
+        expected_keys = {"rule_id", "title", "description", "conformance", "level", "difficulty",
+                         "sites_affected", "total_occurrences", "max_pages"}
+        for row in rollup["by_tag"]["tag:LSA"]:
+            self.assertEqual(set(row), expected_keys)
+        tag_rules = {row["rule_id"]: row for row in rollup["by_tag"]["tag:LSA"]}
+        self.assertEqual(tag_rules[10]["total_occurrences"], 7)
+        self.assertEqual(tag_rules[10]["sites_affected"], 1)
+
+
 class PublicationTests(unittest.TestCase):
     def test_encrypted_history_and_shared_salt(self):
         with tempfile.TemporaryDirectory() as temporary:

@@ -6,8 +6,16 @@ Data pipeline, live dashboards, and workflow automations for LSA's web-accessibi
 
 ```
 index.html            Narrative accessibility report (not published for now; the Pages root redirects to data.html)
-data.html             Live dashboard — searchable, filterable per-site view
-progress.html         Leadership/department dated comparisons and exports
+data.html             Live snapshot page (markup only): Overview, Common problems,
+                      Ready for manual testing and All sites tabs
+dashboard.js          Live snapshot logic: password gate, filters, tabs, site table, exports
+dashboard.css         Shared page components (cards, tabs content, problem views)
+site-shell.css        Shared look for both pages: colour tokens (WCAG AAA checked), header, tabs, buttons
+site-search.js        Ctrl+K / Cmd+K site search used on both pages
+site-panel.js         Accessible side panel (site details, share/export)
+problems-core.js      Common problems maths: per-site rule counts, audiences, training brief
+rule-guidance.js      DRAFT who-fixes-it / how-to-fix guidance per Siteimprove rule, for team review
+progress.html         Progress over time page: Overview, Departments and Sites tabs, calendar date picker
 progress-core.js      Shared comparison, eligibility, and metric definitions
 progress-client.js    Shared encrypted-data reader and progress-page password gate
 progress-page.js      Progress page controls, tables, and exports
@@ -17,7 +25,8 @@ favicon.svg           Shared favicon for both pages
 data/
   sites.json          Per-site snapshot written by the fetch (consumed by both pages + Asana sync):
                       scores, target % (estimated when Siteimprove has none), pages scanned, scan status
-  rules.json          Cross-site rule rollups (global + per-tag)
+  rules.json          Cross-site rule rollups (global + per-tag). Global rows also list
+                      "sites": [[site_id, occurrences, pages], ...] for the Common problems tab
   site-tags.csv       Admin site labels exported from the Siteimprove UI
   site-departments.csv Maintained primary-department assignments
   departments.json    Validated mapping generated from the department CSV
@@ -137,7 +146,9 @@ Refresh, Pages deployment, and chained Asana writes are guarded to `main`. Do no
 
 ## Dated progress reporting
 
-The dashboard links to `progress.html` for leadership and department reporting, not editor task management. Choose any two saved dates or use previous-day/week/month shortcuts. The default compares the latest saved date with one month earlier, using the nearest available observation **on or before** that baseline. Missing dates are not interpolated. Multiple observations on one day are retained; the date selector uses the latest valid observation on that date.
+Both pages share one header (search, Live snapshot | Progress over time) with their own tabs directly below it. The live snapshot's **Common problems** tab groups Siteimprove rules by who fixes them (content editors, designers, web developers, PDF authors), lists the sites with the most cases, and copies a training brief; its guidance text in `rule-guidance.js` is a draft for the team to edit. Site lists per problem need a `rules.json` written by the updated fetch; older files fall back to totals with a note.
+
+The dashboard links to `progress.html` for leadership and department reporting, not editor task management. Choose any two saved dates with the calendar (only comparable snapshots can be picked; older imports are shown struck through) or use the last week/month/3 months/since-tracking-began shortcuts. The default compares the latest saved date with one month earlier, using the nearest available observation **on or before** that baseline. Missing dates are not interpolated. Multiple observations on one day are retained; the date selector uses the latest valid observation on that date.
 
 The summary widget follows platform, label, and search filters; the live dashboard's status/scan filters do not redefine historical cohorts. The separate portfolio-history trend is explicitly unfiltered and shows changing coverage.
 Platform/label filters use the later observation's labels for the matched cohort;
@@ -192,7 +203,7 @@ Focused checks, requiring the existing Python dependencies plus `cryptography` u
 
 ```bash
 python3 -m unittest discover -s tests -p 'test_*.py'
-node --test tests/progress-core.test.js
+node --test tests/*.test.js
 ```
 
 Optional Chromium integration checks use Playwright installed outside the
@@ -215,7 +226,9 @@ Run `python3 -m http.server 8000 --bind 127.0.0.1` and open `/progress.html` or 
 
 The collection runs in an isolated output directory. Publication uses a fresh temporary Git worktree on latest `main`, merges immutable history, rebuilds the index, and pushes one commit; rejected pushes replay against the newest `main` without discarding concurrent history. Failures publish attempt metadata separately without changing last-good snapshots. Asana chains only successful main-branch refreshes.
 
-Pages publishes the progress page, scripts, and **encrypted** latest/history/mapping/status resources, never plaintext dashboard JSON, CSV, or gzip archives. All resources share the deployment's salt/key. Historical payloads stay gzip-compressed inside encryption and are decompressed in the browser; a modern browser supporting Web Crypto and `DecompressionStream` is required. Only selected snapshot details are loaded, not the complete archive.
+The dashboard is published at <https://lsa-mis.github.io/accessibilityanalysisreportlsa/dashboard/> (live snapshot; progress at `dashboard/progress.html`). The site root and the old `data.html` / `progress.html` addresses redirect there, keeping query strings and `#tab` links.
+
+Pages publishes both pages, their scripts and stylesheets (the explicit `cp` list in `.github/workflows/pages.yml` must include any new asset), and **encrypted** latest/history/mapping/status resources, never plaintext dashboard JSON, CSV, or gzip archives. All resources share the deployment's salt/key. Historical payloads stay gzip-compressed inside encryption and are decompressed in the browser; a modern browser supporting Web Crypto and `DecompressionStream` is required. Only selected snapshot details are loaded, not the complete archive.
 
 The existing shared password permits portfolio-wide access; audience/department filters are not access controls. Repository access permissions are unchanged.
 

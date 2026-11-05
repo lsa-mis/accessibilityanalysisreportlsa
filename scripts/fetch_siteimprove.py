@@ -6,7 +6,10 @@ two JSON snapshots consumed by index.html and data.html:
   data/sites.json — per-site overview with scores, target % (estimated when
                     Siteimprove has no target yet), pages scanned, scan
                     status, A/AA/AAA breakdowns
-  data/rules.json — cross-site rollup of failing accessibility rules
+  data/rules.json — cross-site rollup of failing accessibility rules; each
+                    global rule row also lists the sites that have it as
+                    "sites": [[site_id, occurrences, pages], ...], sorted by
+                    occurrences descending (by_tag rows stay count-only)
 
 Auth: HTTP Basic. Username = SITEIMPROVE_EMAIL, password = SITEIMPROVE_API_KEY.
 """
@@ -707,6 +710,8 @@ def _new_rule_bucket() -> dict[str, Any]:
         "sites_affected": set(),
         "total_occurrences": 0,
         "max_pages": 0,
+        # site_id -> [occurrences, pages]; private, removed in _finalize_rule_rows.
+        "_per_site": {},
     }
 
 
@@ -721,16 +726,31 @@ def _accumulate_rule(bucket: dict[str, Any], issue: dict[str, Any], site_id: Any
     bucket["difficulty"] = bucket["difficulty"] or coerce_int(issue.get("difficulty"))
     if site_id is not None:
         bucket["sites_affected"].add(site_id)
-    bucket["total_occurrences"] += coerce_int(issue.get("occurrences")) or 0
+    occurrences = coerce_int(issue.get("occurrences")) or 0
+    bucket["total_occurrences"] += occurrences
     pages = coerce_int(issue.get("pages")) or 0
     if pages > bucket["max_pages"]:
         bucket["max_pages"] = pages
+    if site_id is not None:
+        entry = bucket["_per_site"].setdefault(site_id, [0, 0])
+        entry[0] += occurrences
+        entry[1] = max(entry[1], pages)
 
 
-def _finalize_rule_rows(by_rule: dict[int, dict[str, Any]]) -> list[dict[str, Any]]:
+def _finalize_rule_rows(
+    by_rule: dict[int, dict[str, Any]], include_sites: bool = False,
+) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for bucket in by_rule.values():
+        per_site = bucket.pop("_per_site")
         bucket["sites_affected"] = len(bucket["sites_affected"])
+        if include_sites:
+            bucket["sites"] = [
+                [site_id, occurrences, pages]
+                for site_id, (occurrences, pages) in sorted(
+                    per_site.items(), key=lambda item: (-item[1][0], -item[1][1], str(item[0])),
+                )
+            ]
         rows.append(bucket)
     rows.sort(key=lambda r: -r["total_occurrences"])
     return rows
@@ -745,8 +765,9 @@ def build_rule_rollup(
 
     Returns:
       {
-        "rules":   [ ...global rule rollup, sorted by total_occurrences DESC ],
-        "by_tag":  { "<tag label>": [ ...same shape rollup for sites carrying that tag ] },
+        "rules":   [ ...global rule rollup, sorted by total_occurrences DESC;
+                     each row carries "sites": [[site_id, occurrences, pages], ...] ],
+        "by_tag":  { "<tag label>": [ ...count-only rollup (no "sites") for sites carrying that tag ] },
       }
 
     site_tags maps site_id -> list of raw tag strings (e.g. ['tag:LSA', 'tag:AEM']).
@@ -767,7 +788,7 @@ def build_rule_rollup(
                 _accumulate_rule(tag_by_rule[tag][rule_id], issue, site_id)
 
     return {
-        "rules":  _finalize_rule_rows(global_by_rule),
+        "rules":  _finalize_rule_rows(global_by_rule, include_sites=True),
         "by_tag": {tag: _finalize_rule_rows(rules) for tag, rules in tag_by_rule.items()},
     }
 
