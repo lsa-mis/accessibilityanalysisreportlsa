@@ -233,20 +233,29 @@ function pillButton(value, label, pressed, extra) {
   return `<button type="button" class="chip" data-value="${escapeHtml(value)}" aria-pressed="${pressed}">${escapeHtml(label)}${extra || ""}</button>`;
 }
 
+// On the Missing data tab the filter counts cover only sites with missing
+// data, so "All" means all missing-data sites there; elsewhere, every site.
+function filterScope() {
+  return state.tab === "missing" ? state.sites.filter(s => missingReasons(s).length) : state.sites;
+}
+
 function renderFilterPills() {
+  const scope = filterScope();
   const platforms = new Map();
-  for (const s of state.sites) platforms.set(s.platform, (platforms.get(s.platform) || 0) + 1);
+  for (const s of scope) platforms.set(s.platform, (platforms.get(s.platform) || 0) + 1);
+  for (const p of state.platformFilters) if (!platforms.has(p)) platforms.set(p, 0);
   const platformOrder = [...platforms.keys()].sort((a, b) => platforms.get(b) - platforms.get(a));
-  $("filter-platform").innerHTML = pillButton("", "All", state.platformFilters.size === 0) +
+  $("filter-platform").innerHTML = pillButton("", "All", state.platformFilters.size === 0, ` <span class="tnum">(${scope.length.toLocaleString("en-US")})</span>`) +
     platformOrder.map(p => pillButton(p, p, state.platformFilters.has(p), ` <span class="tnum">(${platforms.get(p)})</span>`)).join("");
 
   const scans = [["ok", "Worked"], ["failed", "Failed"], ["stale", "Not checked recently"], ["running", "In progress"], ["no-status", "Unknown"]]
-    .filter(([v]) => state.sites.some(s => s.scan === v));
+    .filter(([v]) => scope.some(s => s.scan === v) || state.scanFilters.has(v));
   $("filter-scan").innerHTML = pillButton("", "All", state.scanFilters.size === 0) +
-    scans.map(([v, l]) => pillButton(v, l, state.scanFilters.has(v))).join("");
+    scans.map(([v, l]) => pillButton(v, l, state.scanFilters.has(v), ` <span class="tnum">(${scope.filter(s => s.scan === v).length})</span>`)).join("");
 
   const tags = new Map();
-  for (const s of state.sites) for (const t of s.tags || []) tags.set(t, (tags.get(t) || 0) + 1);
+  for (const s of scope) for (const t of s.tags || []) tags.set(t, (tags.get(t) || 0) + 1);
+  for (const t of state.tagFilters) if (!tags.has(t)) tags.set(t, 0);
   const tagOrder = [...tags.keys()].filter(t => !EXCLUDED_TAG_NAMES.has(prettyTag(t).toLowerCase()))
     .sort((a, b) => tags.get(b) - tags.get(a) || a.localeCompare(b));
   $("filter-tags").innerHTML = pillButton("", "All", state.tagFilters.size === 0) +
@@ -310,7 +319,9 @@ function filterDescription() {
 const TABS = ["overview", "problems", "ready", "sites", "missing"];
 function setTab(tab, focus) {
   if (!TABS.includes(tab)) tab = "overview";
+  const scopeChanged = (state.tab === "missing") !== (tab === "missing");
   state.tab = tab;
+  if (scopeChanged && state.sites.length) renderFilterPills();
   for (const t of TABS) {
     $(`panel-${t}`).hidden = t !== tab;
     const b = document.querySelector(`.tab[data-tab="${t}"]`);
