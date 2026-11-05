@@ -48,12 +48,12 @@
       <button type="button" class="tab" data-tab="problems" aria-current="false">Common problems <span class="count tnum" id="tab-count-problems"></span></button>
       <button type="button" class="tab" data-tab="ready" aria-current="false">Ready for manual testing <span class="count tnum" id="tab-count-ready"></span></button>
       <button type="button" class="tab" data-tab="sites" aria-current="false">All sites <span class="count tnum" id="tab-count-sites"></span></button>
+      <button type="button" class="tab" data-tab="missing" aria-current="false">Missing data <span class="count tnum" id="tab-count-missing"></span></button>
     </div>
   </nav>
 
   <main id="main" class="site-main" tabindex="-1">
     <div id="notice-stale" class="notice" hidden>No scores were collected in the latest pull. The numbers below may be incomplete until the next refresh.</div>
-    <div id="notice-missing-metrics" class="notice" role="status" hidden></div>
     <div id="notice-live" class="notice notice-live" hidden>A data refresh is running right now. This page updates by itself every few seconds.</div>
 
     <!-- Filters apply to every tab -->
@@ -122,6 +122,7 @@
       <section aria-labelledby="kpi-heading">
         <h2 id="kpi-heading" class="sr-only">Key numbers for the filtered sites</h2>
         <div class="grid-auto" id="summary-cards"></div>
+        <p id="notice-missing-metrics" class="subtle-note" hidden></p>
       </section>
 
       <div class="grid-panels">
@@ -195,6 +196,36 @@
             <caption class="sr-only">Sites ready for manual testing</caption>
             <thead><tr><th scope="col">Site</th><th scope="col" class="num">Score</th><th scope="col" class="num">Pages checked</th><th scope="col">Last checked</th></tr></thead>
             <tbody id="ready-list"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- MISSING DATA -->
+    <div id="panel-missing" class="tab-panel" tabindex="-1" aria-label="Missing data" hidden>
+      <section class="card stack" aria-labelledby="missing-heading">
+        <div class="space-between">
+          <div>
+            <h2 id="missing-heading">Sites with missing data</h2>
+            <p class="card-sub">Siteimprove has no data, or only part of it, for these sites. Missing numbers are left out of totals and averages and show as “—”, never as zero.</p>
+          </div>
+          <button type="button" class="btn no-print" id="export-missing">Export list</button>
+        </div>
+        <div class="filter-row no-print" id="missing-filters" role="group" aria-label="Show sites by reason"></div>
+        <details class="missing-help">
+          <summary>What to do about each reason</summary>
+          <ul>
+            <li><strong>Never scanned by Siteimprove:</strong> the site is listed but has no pages. Ask the Siteimprove admin to start a scan, or remove the site if it is no longer used.</li>
+            <li><strong>Last check failed:</strong> Siteimprove could not reach or read the site. Check that the address works and isn’t behind a login.</li>
+            <li><strong>Check in progress:</strong> Siteimprove is scanning the site now. It should have data after the next nightly refresh.</li>
+            <li><strong>No score yet, Issue counts or PDF counts not collected:</strong> usually follows from one of the reasons above.</li>
+          </ul>
+        </details>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Sites with missing data, scrolls sideways">
+          <table class="data-table" id="missing-table">
+            <caption class="sr-only" id="missing-caption">Sites with missing data</caption>
+            <thead><tr><th scope="col">Site</th><th scope="col">Platform</th><th scope="col">What’s missing</th><th scope="col">Last check</th><th scope="col" class="num">Pages checked</th></tr></thead>
+            <tbody id="missing-list"></tbody>
           </table>
         </div>
       </section>

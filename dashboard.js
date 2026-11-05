@@ -22,6 +22,7 @@ const state = {
   problemSort: "sites",
   problemSelected: null,
   problemShowAll: false,
+  missingFilter: "all",
   moreFilters: false,
 };
 
@@ -304,7 +305,7 @@ function filterDescription() {
 }
 
 // ---------------------------------------------------------------- tabs
-const TABS = ["overview", "problems", "ready", "sites"];
+const TABS = ["overview", "problems", "ready", "sites", "missing"];
 function setTab(tab, focus) {
   if (!TABS.includes(tab)) tab = "overview";
   state.tab = tab;
@@ -361,10 +362,11 @@ function renderSummary(filtered) {
   $("summary-cards").innerHTML = cards.map(([t, v, sub]) =>
     `<div class="card kpi"><h3>${escapeHtml(t)}</h3><span class="kpi-value tnum">${escapeHtml(v)}</span><span class="muted">${escapeHtml(sub)}</span></div>`).join("");
 
-  const missingIssues = filtered.length - issueSites.length, missingPdf = filtered.length - pdfSites.length;
+  // A quiet pointer to the Missing data tab instead of a warning banner.
+  const missing = filtered.filter(s => missingReasons(s).length).length;
   const note = $("notice-missing-metrics");
-  note.hidden = !(missingIssues || missingPdf);
-  note.textContent = note.hidden ? "" : `Issue counts were not collected for ${missingIssues} site(s) and PDF counts for ${missingPdf} site(s). They are left out of totals, never counted as zero.`;
+  note.hidden = !missing;
+  note.innerHTML = missing ? `${fmtNumber(missing)} site${missing === 1 ? " has" : "s have"} missing or incomplete data. Missing numbers are left out of these totals, never counted as zero. <button type="button" class="link-btn" data-go-tab="missing">See which sites</button>` : "";
 }
 
 function renderFar(filtered) {
@@ -524,6 +526,58 @@ function renderProblems(rows, filteredCount) {
 }
 
 // ---------------------------------------------------------------- ready tab
+// ---------------------------------------------------------------- missing data
+const MISSING = {
+  never: "Never scanned by Siteimprove",
+  failed: "Last check failed",
+  running: "Check in progress",
+  score: "No score yet",
+  issues: "Issue counts not collected",
+  pdfs: "PDF counts not collected",
+};
+function missingReasons(s) {
+  const out = [];
+  const never = !s.pages && (s.scan === "no-status" || s.scan === "");
+  if (never) out.push("never");
+  if (s.scan === "failed") out.push("failed");
+  if (s.scan === "running") out.push("running");
+  if (!hasTarget(s)) out.push("score");
+  if (s.issues_available === false) out.push("issues");
+  if (s.pdfs_available === false) out.push("pdfs");
+  return out;
+}
+
+function renderMissing(filtered) {
+  const rows = filtered.map(s => ({ s, reasons: missingReasons(s) })).filter(r => r.reasons.length);
+  const counts = {};
+  for (const r of rows) for (const k of r.reasons) counts[k] = (counts[k] || 0) + 1;
+  const keys = Object.keys(MISSING).filter(k => counts[k]);
+  if (state.missingFilter !== "all" && !counts[state.missingFilter]) state.missingFilter = "all";
+  $("missing-filters").innerHTML = `<button type="button" class="chip" data-missing="all" aria-pressed="${state.missingFilter === "all"}">All <span class="tnum">(${rows.length})</span></button>` +
+    keys.map(k => `<button type="button" class="chip" data-missing="${k}" aria-pressed="${state.missingFilter === k}">${MISSING[k]} <span class="tnum">(${counts[k]})</span></button>`).join("");
+  const shown = rows.filter(r => state.missingFilter === "all" || r.reasons.includes(state.missingFilter))
+    .sort((a, b) => b.reasons.length - a.reasons.length || (a.s.site_name || a.s.url || "").localeCompare(b.s.site_name || b.s.url || ""));
+  $("missing-list").innerHTML = shown.length ? shown.map(({ s, reasons }) =>
+    `<tr><td><button type="button" class="name-btn" data-site="${escapeHtml(s.id)}">${escapeHtml(s.site_name || s.url || "(unnamed)")}</button><span class="site-url">${escapeHtml(s.url || "")}</span></td>
+      <td>${escapeHtml(s.platform)}</td>
+      <td><span class="pill-row">${reasons.map(k => `<span class="pill ${k === "never" || k === "failed" ? "pill-bad" : "pill-flat"}">${MISSING[k]}</span>`).join("")}</span></td>
+      <td>${escapeHtml(SCAN_WORDS[s.scan] || "Unknown")}${s.last_crawl ? `<span class="site-url">${escapeHtml(longDate(s.last_crawl))}</span>` : ""}</td>
+      <td class="num tnum">${s.pages ? fmtNumber(s.pages) : "—"}</td></tr>`).join("")
+    : `<tr><td colspan="5" class="empty">No sites with missing data match these filters.</td></tr>`;
+  $("missing-caption").textContent = `Sites with missing data${state.missingFilter === "all" ? "" : ": " + MISSING[state.missingFilter]}, ${filterDescription()}`;
+  $("tab-count-missing").textContent = `(${rows.length.toLocaleString("en-US")})`;
+  return rows;
+}
+
+function exportMissingCSV() {
+  const rows = applyFilters().map(s => ({ s, reasons: missingReasons(s) })).filter(r => r.reasons.length);
+  download(`lsa-missing-data-${stamp()}-${rows.length}sites.csv`, [
+    csvRow(["Site name", "URL", "Site ID", "Platform", "What's missing", "Last check", "Last checked", "Pages checked", "Errors recorded"]),
+    ...rows.map(({ s, reasons }) => csvRow([s.site_name || "", s.url || "", s.id ?? "", s.platform, reasons.map(k => MISSING[k]).join("; "),
+      SCAN_WORDS[s.scan] || "", s.last_crawl || "", s.pages ?? "", (s.errors || []).join("; ")])),
+  ]);
+}
+
 function renderReady(filtered) {
   const ready = readySites(filtered);
   $("ready-count").textContent = fmtNumber(ready.length);
@@ -698,6 +752,7 @@ function renderAll() {
   renderTopProblems(rows);
   renderProblems(rows, filtered.length);
   renderReady(filtered);
+  renderMissing(filtered);
   renderTable(filtered);
   renderActiveFilters(filtered.length);
   const readyN = readySites(filtered).length;
@@ -784,6 +839,10 @@ function wire() {
       }
       return;
     }
+    const go = e.target.closest("[data-go-tab]");
+    if (go) { setTab(go.dataset.goTab, true); return; }
+    const reason = e.target.closest("[data-missing]");
+    if (reason) { state.missingFilter = reason.dataset.missing; renderAll(); return; }
     if (e.target.closest("[data-clear-filters]")) clearAllFilters();
   });
   $("aud-cards").addEventListener("click", (e) => {
@@ -821,6 +880,7 @@ function wire() {
   $("show-all-rows").addEventListener("click", () => { state.showAllRows = true; renderAll(); });
   $("export-csv").addEventListener("click", exportCSV);
   $("export-ready").addEventListener("click", exportReadyCSV);
+  $("export-missing").addEventListener("click", exportMissingCSV);
   $("search").addEventListener("input", (e) => { state.search = e.target.value; state.showAllRows = false; renderAll(); });
 
   SiteSearch.init({
@@ -835,6 +895,7 @@ function wire() {
     actions: () => [
       { label: "Show common problems", run: () => setTab("problems", true) },
       { label: "Show sites ready for manual testing", run: () => setTab("ready", true) },
+      { label: "Show sites with missing data", run: () => setTab("missing", true) },
       { label: "Show all sites", run: () => setTab("sites", true) },
       { label: "Show WordPress sites", run: () => { state.platformFilters.clear(); state.platformFilters.add("WordPress"); renderFilterPills(); renderAll(); } },
       { label: "Show sites that need work (below 95%)", run: () => { state.targetGroup = "below"; renderAll(); setTab("sites", true); } },
