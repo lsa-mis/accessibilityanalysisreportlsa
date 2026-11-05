@@ -128,7 +128,8 @@ def atomic_json(path, payload):
 def append_snapshot(snapshot, directory, source, historical=False):
     payload = normalize(snapshot, source, historical)
     raw = json.dumps(payload, separators=(",", ":"), allow_nan=False).encode()
-    digest = hashlib.sha256(raw).hexdigest()[:16]
+    identity = {key: value for key, value in payload.items() if key != "source"}
+    digest = hashlib.sha256(json.dumps(identity, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()).hexdigest()[:16]
     stamp = datetime.fromisoformat(payload["generated_at"]).strftime("%Y%m%dT%H%M%SZ")
     name = f"{stamp}-{digest}.json.gz"
     directory.mkdir(parents=True, exist_ok=True)
