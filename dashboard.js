@@ -1,4 +1,4 @@
-// Live snapshot page (data.html) for the LSA Website Accessibility Dashboard.
+// Live snapshot page (data.html) for the LSA Web Accessibility Data Dashboard.
 // Classic script on purpose: tests reach `state`, `decorate`, `readySites`
 // and `selectedOccurrences` as globals.
 const POLL_INTERVAL_MS = 10000;

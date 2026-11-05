@@ -58,13 +58,13 @@ jobs:
           <html lang="en">
           <head>
             <meta charset="utf-8">
-            <title>LSA Website Accessibility Dashboard</title>
+            <title>LSA Web Accessibility Data Dashboard</title>
             <meta http-equiv="refresh" content="0; url=$2">
             <link rel="canonical" href="$2">
             <script>location.replace("$2" + location.search + location.hash);</script>
           </head>
           <body>
-            <p><a href="$2">Go to the LSA Website Accessibility Dashboard</a></p>
+            <p><a href="$2">Go to the LSA Web Accessibility Data Dashboard</a></p>
           </body>
           </html>
           EOF
