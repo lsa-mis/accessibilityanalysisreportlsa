@@ -116,15 +116,9 @@
         </section>
 
         <section class="card stack" aria-labelledby="trend-heading">
-          <div class="space-between">
-            <div>
-              <h2 id="trend-heading">Trend</h2>
-              <p class="card-sub">Each point is a saved snapshot of all sites. Click a point, use the buttons below, or open the data table to change the start date. Gaps mean no snapshot was saved; nothing is filled in.</p>
-            </div>
-            <div class="seg no-print" id="trend-metric" role="group" aria-label="Trend measure">
-              <button type="button" data-metric="mean" aria-pressed="true">Average score</button>
-              <button type="button" data-metric="eligible" aria-pressed="false">Sites with a reliable score</button>
-            </div>
+          <div>
+            <h2 id="trend-heading">Trend: average score</h2>
+            <p class="card-sub">Each point is the average score of all sites in a saved snapshot that can be compared. Click a point, use the buttons below, or open the data table to change the start date. Gaps mean no snapshot was saved; nothing is filled in.</p>
           </div>
           <div class="trend">
             <div class="trend-y tnum muted" aria-hidden="true"><span id="trend-max"></span><span id="trend-min"></span></div>
@@ -136,7 +130,6 @@
           <div class="trend-legend muted">
             <span><span class="sw sw-from"></span>Start date (square)</span>
             <span><span class="sw sw-to"></span>End date (large circle)</span>
-            <span><span class="sw sw-na"></span>Not comparable (hollow)</span>
             <span><span class="sw sw-gap"></span>No snapshots (striped)</span>
           </div>
           <div class="pill-row no-print">
@@ -146,8 +139,8 @@
           </div>
           <div id="trend-table-wrap" class="table-scroll trend-table" tabindex="0" role="region" aria-label="Trend data as a table" hidden>
             <table class="data-table">
-              <caption class="sr-only">Average score and sites with a reliable score for each saved snapshot, newest first</caption>
-              <thead><tr><th scope="col">Date</th><th scope="col" class="num">Average score</th><th scope="col" class="num">Sites with a reliable score</th><th scope="col">Source</th><th scope="col"><span class="sr-only">Action</span></th></tr></thead>
+              <caption class="sr-only">Average score for each comparable snapshot, newest first</caption>
+              <thead><tr><th scope="col">Date</th><th scope="col" class="num">Average score</th><th scope="col">Source</th><th scope="col"><span class="sr-only">Action</span></th></tr></thead>
               <tbody id="trend-body"></tbody>
             </table>
           </div>

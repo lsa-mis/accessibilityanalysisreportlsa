@@ -93,3 +93,5 @@ button.cal-day:hover { background: var(--good-bg); }
 .notice-body p { margin: 0; font-size: 16px; line-height: 1.6; color: var(--ink-2); }
 .notice-body .pill-row { margin-top: 4px; }
 #summary-heading:focus { outline: 3px solid var(--navy); outline-offset: 4px; }
+
+.trend-empty { margin: 0; padding: 40px 16px; text-align: center; color: var(--muted); }

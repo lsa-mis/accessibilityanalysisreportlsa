@@ -17,7 +17,7 @@
   let entries = [], mapping = {}, fromE = null, toE = null, before = null, after = null, comparison = null;
   let sort = "site", direction = 1, generation = 0, period = "month", tab = "overview", siteFilter = "all", showAllSites = false;
   let focusSummary = false;
-  let trendMetric = "mean", picker = null, viewMonth = null, pickerOpener = null, exportTab = "summary";
+  let picker = null, viewMonth = null, pickerOpener = null, exportTab = "summary";
   const platforms = new Set(), tags = new Set();
   let department = "", search = "";
   const cache = new Map();
@@ -103,14 +103,16 @@
     el("span-label").textContent = fromE && toE ? `${dayNum(toE.date) - dayNum(fromE.date)} days apart` : "";
     for (const b of document.querySelectorAll("#shortcuts button")) b.setAttribute("aria-pressed", String(b.dataset.period === period));
 
+    // Platform counts: sites in this comparison that match every other filter
+    // (labels, department, search), so each number is what choosing it shows.
     const counts = new Map();
-    for (const s of [...(before?.sites || []), ...(after?.sites || [])].filter(core.visible)) {
-      const p = core.platform(s);
-      counts.set(p, (counts.get(p) || 0) + 1);
-    }
-    const order = [...counts.keys()].sort((a, b) => counts.get(b) - counts.get(a));
-    el("filter-platform").innerHTML = `<button type="button" class="chip" data-platform="" aria-pressed="${!platforms.size}">All</button>` +
-      order.map(p => `<button type="button" class="chip" data-platform="${escape(p)}" aria-pressed="${platforms.has(p)}">${escape(p)}</button>`).join("");
+    const rows = before && after ? core.compare(before, after, mapping, { ...filters(), platforms: [] }).rows : [];
+    for (const row of rows) counts.set(row.platform, (counts.get(row.platform) || 0) + 1);
+    for (const p of platforms) if (!counts.has(p)) counts.set(p, 0);
+    const order = [...counts.keys()].filter(p => counts.get(p) > 0 || platforms.has(p)).sort((a, b) => counts.get(b) - counts.get(a) || a.localeCompare(b));
+    const n = v => `<span class="tnum">(${v.toLocaleString("en-US")})</span>`;
+    el("filter-platform").innerHTML = `<button type="button" class="chip" data-platform="" aria-pressed="${!platforms.size}">All ${n(rows.length)}</button>` +
+      order.map(p => `<button type="button" class="chip" data-platform="${escape(p)}" aria-pressed="${platforms.has(p)}">${escape(p)} ${n(counts.get(p))}</button>`).join("");
     if (el("search").value !== search) el("search").value = search;
 
     const active = [];
@@ -226,17 +228,28 @@
 
   // ------------------------------------------------------------ trend
   function renderTrend() {
-    const value = e => trendMetric === "mean" ? (comparable(e) ? e.mean_target : null) : (comparable(e) ? e.eligible_count : null);
-    const vals = entries.map(value).filter(v => v !== null && v !== undefined);
+    // Only snapshots that can be compared are drawn. Older imports without scan
+    // quality details are left out of the chart and the table entirely.
+    const pts = entries.filter(comparable);
+    const value = e => e.mean_target;
+    if (!pts.length) {
+      el("trend-plot").innerHTML = `<p class="trend-empty">No comparable snapshots yet. The trend starts with the first nightly refresh that records scan quality details.</p>`;
+      el("trend-plot").setAttribute("aria-label", "Trend: no comparable snapshots yet");
+      el("trend-max").textContent = el("trend-min").textContent = "";
+      el("trend-x").innerHTML = "";
+      el("trend-body").innerHTML = `<tr><td colspan="4" class="empty">No comparable snapshots yet.</td></tr>`;
+      return;
+    }
+    const vals = pts.map(value).filter(v => v !== null && v !== undefined);
     let lo = vals.length ? Math.min(...vals) : 0, hi = vals.length ? Math.max(...vals) : 1;
     const pad = (hi - lo) * 0.15 || 1; lo -= pad; hi += pad;
-    const d0 = dayNum(entries[0].date), dN = dayNum(entries.at(-1).date) || d0 + 1;
+    const d0 = dayNum(pts[0].date), dN = dayNum(pts.at(-1).date);
     const span = Math.max(1, dN - d0);
-    const x = e => (dayNum(e.date) - d0) / span * 100;
+    const x = e => pts.length === 1 ? 50 : (dayNum(e.date) - d0) / span * 100;
     const y = v => Math.max(5, Math.min(95, 100 - (v - lo) / (hi - lo) * 100));
-    const show = v => trendMetric === "mean" ? pct(v) : fmt(v);
+    const show = v => pct(v);
     let path = "", prev = null;
-    entries.forEach(e => {
+    pts.forEach(e => {
       const v = value(e);
       if (v === null || v === undefined) { prev = null; return; }
       const gap = prev && dayNum(e.date) - dayNum(prev.date) > 10;
@@ -244,36 +257,38 @@
       prev = e;
     });
     const bands = [];
-    const firstGood = entries.findIndex(comparable);
-    if (firstGood > 0) bands.push([0, x(entries[firstGood]), "Older imports, not comparable"]);
-    for (let i = 1; i < entries.length; i++) if (dayNum(entries[i].date) - dayNum(entries[i - 1].date) > 10) bands.push([x(entries[i - 1]), x(entries[i]) - x(entries[i - 1]), "No snapshots"]);
-    const fx = fromE ? x(fromE) : 0, tx = toE ? x(toE) : 0;
-    el("trend-plot").setAttribute("aria-label", `${trendMetric === "mean" ? "Average score" : "Sites with a reliable score"} for each saved snapshot, ${vals.length ? `ranging from ${show(Math.min(...vals))} to ${show(Math.max(...vals))}` : "with no comparable values yet"}. The data table below lists every snapshot and lets you start the comparison on any of them.`);
+    for (let i = 1; i < pts.length; i++) if (dayNum(pts[i].date) - dayNum(pts[i - 1].date) > 10) bands.push([x(pts[i - 1]), x(pts[i]) - x(pts[i - 1])]);
+    const fx = fromE && comparable(fromE) ? x(fromE) : 0, tx = toE ? x(toE) : 0;
+    el("trend-plot").setAttribute("aria-label", `Average score for ${pts.length} comparable snapshot${pts.length === 1 ? "" : "s"} from ${longDate(pts[0].date)} to ${longDate(pts.at(-1).date)}${vals.length ? `, ranging from ${show(Math.min(...vals))} to ${show(Math.max(...vals))}` : ""}. The data table below lists every snapshot and lets you start the comparison on any of them.`);
     el("trend-plot").innerHTML =
-      bands.map(([l, w, t]) => `<div class="trend-band" style="left:${l.toFixed(2)}%;width:${w.toFixed(2)}%"><span>${t}</span></div>`).join("") +
+      bands.map(([l, w]) => `<div class="trend-band" style="left:${l.toFixed(2)}%;width:${w.toFixed(2)}%"><span>No snapshots</span></div>`).join("") +
       `<div class="trend-sel" aria-hidden="true" style="left:${fx.toFixed(2)}%;width:${Math.max(0, tx - fx).toFixed(2)}%"></div>` +
       `<svg viewBox="0 0 1000 240" preserveAspectRatio="none" aria-hidden="true"><path d="${path}" fill="none" stroke="#00508F" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>` +
-      entries.map((e, i) => {
+      pts.map(e => {
         const v = value(e), isFrom = e === fromE, isTo = e === toE;
-        const cls = "pt" + (isFrom ? " from" : isTo ? " to" : v === null || v === undefined ? " na" : "");
-        const label = `${longDate(e.date)}, ${v === null || v === undefined ? "not comparable" : show(v)}${isFrom ? ", current start date" : isTo ? ", current end date" : comparable(e) && toE && e.date < toE.date ? ", set as start date" : ""}`;
+        const cls = "pt" + (isFrom ? " from" : isTo ? " to" : "");
+        const label = `${longDate(e.date)}, ${show(v)}${isFrom ? ", current start date" : isTo ? ", current end date" : toE && e.date < toE.date ? ", set as start date" : ""}`;
         // Dots are a mouse shortcut; the table below offers the same "start here" action with full-size buttons.
-        return `<span class="${cls}" style="left:${x(e).toFixed(2)}%;top:${(v === null || v === undefined ? 92 : y(v)).toFixed(2)}%" data-index="${i}" title="${escape(label)}"></span>`;
+        return `<span class="${cls}" style="left:${x(e).toFixed(2)}%;top:${y(v).toFixed(2)}%" data-index="${entries.indexOf(e)}" title="${escape(label)}"></span>`;
       }).join("");
     el("trend-max").textContent = vals.length ? show(hi) : "";
     el("trend-min").textContent = vals.length ? show(lo) : "";
+    // Short ranges get date labels; longer ranges get month labels.
     const ticks = [];
-    const start = new Date(entries[0].date + "T00:00:00Z"); start.setUTCDate(1);
-    for (let d = new Date(start); dayNum(d.toISOString().slice(0, 10)) <= dN; d.setUTCMonth(d.getUTCMonth() + 1)) {
-      const iso = d.toISOString().slice(0, 10), px = (dayNum(iso) - d0) / span * 100;
-      if (px >= -1) ticks.push(`<span style="left:${Math.max(4, Math.min(96, px)).toFixed(2)}%">${SHORT[d.getUTCMonth()]} ${d.getUTCFullYear()}</span>`);
+    if (span <= 62) {
+      const step = Math.max(1, Math.ceil(pts.length / 7));
+      pts.forEach((e, i) => { if (i % step === 0 || i === pts.length - 1) ticks.push([x(e), `${SHORT[Number(e.date.slice(5, 7)) - 1]} ${Number(e.date.slice(8, 10))}`]); });
+    } else {
+      const start = new Date(pts[0].date + "T00:00:00Z"); start.setUTCDate(1); start.setUTCMonth(start.getUTCMonth() + 1);
+      for (let d = new Date(start); dayNum(d.toISOString().slice(0, 10)) <= dN; d.setUTCMonth(d.getUTCMonth() + 1)) {
+        ticks.push([(dayNum(d.toISOString().slice(0, 10)) - d0) / span * 100, `${SHORT[d.getUTCMonth()]} ${d.getUTCFullYear()}`]);
+      }
     }
-    el("trend-x").innerHTML = ticks.join("");
-    for (const b of document.querySelectorAll("#trend-metric button")) b.setAttribute("aria-pressed", String(b.dataset.metric === trendMetric));
-    el("trend-body").innerHTML = [...entries].reverse().map(e => {
-      const notes = [e === fromE ? "Start date" : "", e === toE ? "End date" : "", comparable(e) ? (e.historical ? "Imported snapshot" : "Nightly snapshot") : "Older import, not comparable"].filter(Boolean).join("; ");
-      const canStart = comparable(e) && toE && e.date < toE.date && e !== fromE;
-      return `<tr><td>${escape(longDate(e.date))}</td><td class="num tnum">${comparable(e) ? pct(e.mean_target) : "—"}</td><td class="num tnum">${comparable(e) ? `${fmt(e.eligible_count)} of ${fmt(e.site_count)}` : "—"}</td><td>${escape(notes)}</td>
+    el("trend-x").innerHTML = ticks.map(([px, label]) => `<span style="left:${Math.max(4, Math.min(96, px)).toFixed(2)}%">${label}</span>`).join("");
+    el("trend-body").innerHTML = [...pts].reverse().map(e => {
+      const notes = [e === fromE ? "Start date" : "", e === toE ? "End date" : "", e.historical ? "Imported snapshot" : "Nightly snapshot"].filter(Boolean).join("; ");
+      const canStart = toE && e.date < toE.date && e !== fromE;
+      return `<tr><td>${escape(longDate(e.date))}</td><td class="num tnum">${pct(e.mean_target)}</td><td>${escape(notes)}</td>
         <td>${canStart ? `<button type="button" class="btn" data-start-index="${entries.indexOf(e)}" aria-label="Start the comparison on ${escape(longDate(e.date))}">Start here</button>` : ""}</td></tr>`;
     }).join("");
   }
@@ -623,6 +638,8 @@
       if (!p) platforms.clear(); else if (platforms.has(p)) platforms.delete(p); else platforms.add(p);
       showAllSites = false;
       render();
+      const again = el("filter-platform").querySelector(`button[data-platform="${CSS.escape(p)}"]`);
+      if (again) again.focus();
     });
     el("search").addEventListener("input", e => { search = e.target.value; showAllSites = false; render(); });
     el("active-filter-chips").addEventListener("click", e => {
@@ -654,7 +671,6 @@
       if (!comparable(entry) || entry.date >= toE.date) return;
       fromE = entry; period = "custom"; el("date-note").textContent = ""; loadComparison();
     });
-    el("trend-metric").addEventListener("click", e => { const b = e.target.closest("button[data-metric]"); if (b) { trendMetric = b.dataset.metric; renderTrend(); } });
     el("step-earlier").addEventListener("click", () => {
       const options = entries.filter(x => comparable(x) && x.date < fromE.date);
       if (options.length) { fromE = options.at(-1); period = "custom"; loadComparison(); }

@@ -137,17 +137,19 @@ const GROUPS = {
   none: { label: "No score yet", range: "", pill: "pill-flat", bar: "#9AA4B0" },
 };
 
-function matchesBaseFilters(s, ignoreTarget) {
+// `skip` leaves one filter group out, so that group's chips can count what
+// each choice would show given every other active filter.
+function matchesBaseFilters(s, ignoreTarget, skip) {
   const levels = state.levelFilters;
-  if (levels.size > 0) {
+  if (skip !== "level" && levels.size > 0) {
     const hit = (levels.has("A") && s.lvl_a > 0) || (levels.has("AA") && s.lvl_aa > 0) ||
       (levels.has("ARIA") && s.lvl_aria > 0) || (levels.has("BP") && s.lvl_bp > 0);
     if (!hit) return false;
   }
   if (state.statusFilters.size > 0 && !state.statusFilters.has(s.status)) return false;
-  if (state.scanFilters.size > 0 && !state.scanFilters.has(s.scan)) return false;
-  if (state.platformFilters.size > 0 && !state.platformFilters.has(s.platform)) return false;
-  if (state.tagFilters.size > 0 && ![...state.tagFilters].some(t => (s.tags || []).includes(t))) return false;
+  if (skip !== "scan" && state.scanFilters.size > 0 && !state.scanFilters.has(s.scan)) return false;
+  if (skip !== "platform" && state.platformFilters.size > 0 && !state.platformFilters.has(s.platform)) return false;
+  if (skip !== "tags" && state.tagFilters.size > 0 && ![...state.tagFilters].some(t => (s.tags || []).includes(t))) return false;
   if (!ignoreTarget && state.targetGroup && targetGroupOf(s) !== state.targetGroup) return false;
   const search = state.search.trim().toLowerCase();
   if (search && !`${s.site_name || ""} ${s.url || ""}`.toLowerCase().includes(search)) return false;
@@ -233,36 +235,50 @@ function pillButton(value, label, pressed, extra) {
   return `<button type="button" class="chip" data-value="${escapeHtml(value)}" aria-pressed="${pressed}">${escapeHtml(label)}${extra || ""}</button>`;
 }
 
-// On the Missing data tab the filter counts cover only sites with missing
-// data, so "All" means all missing-data sites there; elsewhere, every site.
+// Filter counts follow the tab: Ready for manual testing counts only ready
+// sites, Missing data only sites with missing data, every other tab all
+// sites. Each group's counts also respect the other active filters, so the
+// number on a chip is exactly what selecting it would show on this tab.
 function filterScope() {
-  return state.tab === "missing" ? state.sites.filter(s => missingReasons(s).length) : state.sites;
+  if (state.tab === "missing") return state.sites.filter(s => missingReasons(s).length);
+  if (state.tab === "ready") return state.sites.filter(s => ProgressCore.ready(s));
+  return state.sites;
+}
+
+function chipGroup(id, options, selected, base) {
+  const count = (v) => `<span class="tnum">(${v.toLocaleString("en-US")})</span>`;
+  // Hide choices with nothing to show here, but never hide one that is selected.
+  const shown = options.filter(o => o.n > 0 || selected.has(o.value));
+  $(id).innerHTML = pillButton("", "All", selected.size === 0, " " + count(base.length)) +
+    shown.map(o => pillButton(o.value, o.label, selected.has(o.value), " " + count(o.n))).join("");
 }
 
 function renderFilterPills() {
   const scope = filterScope();
-  const platforms = new Map();
-  for (const s of scope) platforms.set(s.platform, (platforms.get(s.platform) || 0) + 1);
-  for (const p of state.platformFilters) if (!platforms.has(p)) platforms.set(p, 0);
-  const platformOrder = [...platforms.keys()].sort((a, b) => platforms.get(b) - platforms.get(a));
-  $("filter-platform").innerHTML = pillButton("", "All", state.platformFilters.size === 0, ` <span class="tnum">(${scope.length.toLocaleString("en-US")})</span>`) +
-    platformOrder.map(p => pillButton(p, p, state.platformFilters.has(p), ` <span class="tnum">(${platforms.get(p)})</span>`)).join("");
+  const facet = (skip) => scope.filter(s => matchesBaseFilters(s, false, skip));
+  const tally = (sites, keyOf) => {
+    const m = new Map();
+    for (const site of sites) for (const k of [].concat(keyOf(site))) m.set(k, (m.get(k) || 0) + 1);
+    return m;
+  };
 
-  const scans = [["ok", "Worked"], ["failed", "Failed"], ["stale", "Not checked recently"], ["running", "In progress"], ["no-status", "Unknown"]]
-    .filter(([v]) => scope.some(s => s.scan === v) || state.scanFilters.has(v));
-  $("filter-scan").innerHTML = pillButton("", "All", state.scanFilters.size === 0) +
-    scans.map(([v, l]) => pillButton(v, l, state.scanFilters.has(v), ` <span class="tnum">(${scope.filter(s => s.scan === v).length})</span>`)).join("");
+  const pBase = facet("platform"), pCounts = tally(pBase, x => x.platform);
+  const allPlatforms = [...new Set(state.sites.map(x => x.platform))]
+    .sort((a, b) => (pCounts.get(b) || 0) - (pCounts.get(a) || 0) || a.localeCompare(b));
+  chipGroup("filter-platform", allPlatforms.map(p => ({ value: p, label: p, n: pCounts.get(p) || 0 })), state.platformFilters, pBase);
 
-  const tags = new Map();
-  for (const s of scope) for (const t of s.tags || []) tags.set(t, (tags.get(t) || 0) + 1);
-  for (const t of state.tagFilters) if (!tags.has(t)) tags.set(t, 0);
-  const tagOrder = [...tags.keys()].filter(t => !EXCLUDED_TAG_NAMES.has(prettyTag(t).toLowerCase()))
-    .sort((a, b) => tags.get(b) - tags.get(a) || a.localeCompare(b));
-  $("filter-tags").innerHTML = pillButton("", "All", state.tagFilters.size === 0) +
-    tagOrder.map(t => pillButton(t, prettyTag(t), state.tagFilters.has(t), ` <span class="tnum">(${tags.get(t)})</span>`)).join("");
+  const sBase = facet("scan"), sCounts = tally(sBase, x => x.scan);
+  chipGroup("filter-scan", [["ok", "Worked"], ["failed", "Failed"], ["stale", "Not checked recently"], ["running", "In progress"], ["no-status", "Unknown"]]
+    .map(([v, l]) => ({ value: v, label: l, n: sCounts.get(v) || 0 })), state.scanFilters, sBase);
 
-  $("filter-level").innerHTML = pillButton("", "All", state.levelFilters.size === 0) +
-    ["A", "AA", "ARIA", "BP"].map(l => pillButton(l, LEVEL_NAMES[l], state.levelFilters.has(l))).join("");
+  const tBase = facet("tags"), tCounts = tally(tBase, x => x.tags || []);
+  const allTags = [...new Set(state.sites.flatMap(x => x.tags || []))].filter(t => !EXCLUDED_TAG_NAMES.has(prettyTag(t).toLowerCase()))
+    .sort((a, b) => (tCounts.get(b) || 0) - (tCounts.get(a) || 0) || a.localeCompare(b));
+  chipGroup("filter-tags", allTags.map(t => ({ value: t, label: prettyTag(t), n: tCounts.get(t) || 0 })), state.tagFilters, tBase);
+
+  const lBase = facet("level");
+  const field = { A: "lvl_a", AA: "lvl_aa", ARIA: "lvl_aria", BP: "lvl_bp" };
+  chipGroup("filter-level", ["A", "AA", "ARIA", "BP"].map(l => ({ value: l, label: LEVEL_NAMES[l], n: lBase.filter(x => x[field[l]] > 0).length })), state.levelFilters, lBase);
 }
 
 function wireFilterGroup(id, set) {
@@ -274,8 +290,10 @@ function wireFilterGroup(id, set) {
     else if (set.has(v)) set.delete(v);
     else set.add(v);
     state.showAllRows = false;
-    renderFilterPills();
     renderAll();
+    // The chips are redrawn with new counts; keep keyboard focus on the one pressed.
+    const again = $(id).querySelector(`button[data-value="${CSS.escape(v)}"]`) || $(id).querySelector('button[data-value=""]');
+    if (again) again.focus();
   });
 }
 
@@ -319,9 +337,9 @@ function filterDescription() {
 const TABS = ["overview", "problems", "ready", "sites", "missing"];
 function setTab(tab, focus) {
   if (!TABS.includes(tab)) tab = "overview";
-  const scopeChanged = (state.tab === "missing") !== (tab === "missing");
+  const changed = state.tab !== tab;
   state.tab = tab;
-  if (scopeChanged && state.sites.length) renderFilterPills();
+  if (changed && state.sites.length) renderFilterPills();
   for (const t of TABS) {
     $(`panel-${t}`).hidden = t !== tab;
     const b = document.querySelector(`.tab[data-tab="${t}"]`);
@@ -758,6 +776,7 @@ function openSite(id) {
 
 // ---------------------------------------------------------------- render
 function renderAll() {
+  renderFilterPills();
   const filtered = applyFilters();
   const base = state.sites.filter(s => matchesBaseFilters(s, true));
   renderHero(base);
