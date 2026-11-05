@@ -40,8 +40,8 @@ test("legacy endpoint provenance does not become false remediation", () => {
   assert.equal(c.headline_occurrences.change, null);
   assert.equal(c.headline_occurrences.count, 0);
 });
-test("98% boundaries and WordPress groups; no first-observation crossing", () => {
-  for (const tag of ["WP", "WP-Sites", "WP-Courses", "WP-DigitalScholarship"]) {
+test("ready line: 98% boundaries for WordPress and other platforms; no first-observation crossing", () => {
+  for (const tag of ["WP", "WP-Sites", "WP-Courses", "WP-DigitalScholarship", "RSE", "Omeka", "Custom Sites"]) {
     const b = { ...site(1, 97.99), tags: [`tag:${tag}`] };
     const a = { ...site(1, 98), tags: [`tag:${tag}`] };
     assert.equal(compare([b], [a]).newly_ready, 1);
@@ -49,7 +49,17 @@ test("98% boundaries and WordPress groups; no first-observation crossing", () =>
     assert.equal(compare([a], [{ ...a, target_percentage: 98.01 }]).newly_ready, 0);
   }
   assert.equal(compare([], [site(1, 99)]).newly_ready, null);
-  assert.equal(compare([{ ...site(1), tags: ["tag:AEM"] }], [{ ...site(1, 98), tags: ["tag:AEM"] }]).newly_ready, null);
+});
+test("ready line: AEM sites cross at 93%", () => {
+  const aem = (target) => ({ ...site(1, target), tags: ["tag:LSA", "tag:AEM"] });
+  assert.equal(core.readyThreshold(aem(90)), 93);
+  assert.equal(core.readyThreshold(site(1)), 98);
+  assert.equal(compare([aem(92.99)], [aem(93)]).newly_ready, 1);
+  assert.equal(compare([aem(93)], [aem(92.9)]).regressed, 1);
+  assert.equal(compare([aem(95)], [aem(98)]).newly_ready, 0, "already past the AEM line");
+  assert.equal(core.ready(aem(93)), true);
+  assert.equal(core.ready(aem(92.99)), false);
+  assert.equal(core.ready({ ...aem(95), target_estimated: true }), false);
 });
 test("manual handoff excludes estimates, failures, missing targets and 97.5", () => {
   for (const changes of [{ target_estimated: true }, { scan_status: "failed" }, { target_percentage: null }, { errors: ["failure"] }]) {
@@ -58,7 +68,9 @@ test("manual handoff excludes estimates, failures, missing targets and 97.5", ()
   assert.equal(core.reliable(site(1, 98)), true);
   assert.equal(core.wordpress({ ...site(1), tags: ["tag:RSE", "tag:WP-Courses"] }), true);
   assert.equal(core.wordpress({ ...site(1), tags: ["tag:AEM"] }), false);
-  assert.equal(core.reliable(site(1, 97.5)) && site(1, 97.5).target_percentage >= 98, false);
+  assert.equal(core.ready(site(1, 97.5)), false);
+  assert.equal(core.ready(site(1, 98)), true);
+  assert.equal(core.ready({ ...site(1, 98), scan_status: "failed" }), false);
 });
 test("department assignment uses latest mapping for both dates", () => {
   const c = compare([site(1)], [site(1, 98)], { by_id: { 1: "History" } }, { department: "History" });

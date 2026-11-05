@@ -50,7 +50,7 @@
       const pp = r.target.change === null ? null : Number(r.target.change.toFixed(2));
       const occ = r.headline_occurrences, occPct = occ.change === null || !occ.before ? null : Number((occ.change / occ.before * 100).toFixed(1));
       target.innerHTML = [
-        pill(net, true, `${net} more WordPress sites at 98% or higher`, `${Math.abs(net || 0)} fewer WordPress sites at 98% or higher`, "Same number of WordPress sites at 98% or higher"),
+        pill(net, true, `${net} more site${net === 1 ? "" : "s"} ready for manual testing`, `${Math.abs(net || 0)} fewer site${net === -1 ? "" : "s"} ready for manual testing`, "Same number of sites ready for manual testing"),
         pill(pp, true, `Average score up ${Math.abs(pp || 0)} points`, `Average score down ${Math.abs(pp || 0)} points`, "Average score unchanged"),
         pill(occPct, false, `${Math.abs(occPct || 0)}% more issues found`, `${Math.abs(occPct || 0)}% fewer issues found`, "Same number of issues found"),
         `<span class="muted">Compares ${r.matched.toLocaleString("en-US")} sites that have data for both dates.${occPct === null ? " Issue counts can’t be compared for these dates." : ""}${warning ? " " + esc(warning) : ""}</span>`,

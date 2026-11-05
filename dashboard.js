@@ -178,11 +178,13 @@ function headlineIssues(s) {
   return (s.lvl_a || 0) + (s.lvl_aa || 0) + (s.lvl_aria || 0);
 }
 
-// WordPress program threshold for manual-testing handoff; not a compliance claim.
-const READY_THRESHOLD = 98;
+// Manual-testing handoff (a program threshold, not a compliance claim): the
+// shared rule in ProgressCore — AEM sites at a confirmed 93%+, every other
+// platform at 98%+.
+const readyLine = (s) => ProgressCore.readyThreshold(s);
 function readySites(filteredSites) {
   return filteredSites
-    .filter(s => ProgressCore.wordpress(s) && ProgressCore.reliable(s) && s.target_percentage >= READY_THRESHOLD)
+    .filter(s => ProgressCore.ready(s))
     .sort((a, b) => (a.pages || 0) - (b.pages || 0) || (b.target_percentage || 0) - (a.target_percentage || 0));
 }
 const isReady = (s) => readySites([s]).length === 1;
@@ -584,15 +586,18 @@ function renderReady(filtered) {
   $("ready-pages").textContent = fmtNumber(ready.reduce((n, s) => n + (s.pages || 0), 0));
   $("ready-list").innerHTML = ready.length ? ready.map(s =>
     `<tr class="ready-row"><td><button type="button" class="name-btn" data-site="${escapeHtml(s.id)}">${escapeHtml(s.site_name || s.url)}</button><span class="site-url">${escapeHtml(s.url || "")}</span></td>
-      <td class="num tnum">${fmtPct(s.target_percentage)}</td><td class="num tnum">${fmtNumber(s.pages)}</td><td>${escapeHtml(longDate(s.last_crawl))}</td></tr>`).join("")
-    : `<tr><td colspan="4" class="empty">No WordPress sites at 98% or higher match these filters.</td></tr>`;
+      <td>${escapeHtml(s.platform)}</td><td class="num tnum">${fmtPct(s.target_percentage)} <span class="muted">(line ${readyLine(s)}%)</span></td><td class="num tnum">${fmtNumber(s.pages)}</td><td>${escapeHtml(longDate(s.last_crawl))}</td></tr>`).join("")
+    : `<tr><td colspan="5" class="empty">No sites have reached their ready line with these filters.</td></tr>`;
+  const byPlatform = {};
+  for (const s of ready) byPlatform[s.platform] = (byPlatform[s.platform] || 0) + 1;
+  $("ready-breakdown").textContent = ready.length ? "By platform: " + Object.entries(byPlatform).sort((a, b) => b[1] - a[1]).map(([p, n]) => `${p} ${n.toLocaleString("en-US")}`).join(", ") + "." : "";
 }
 
 function exportReadyCSV() {
   const ready = readySites(applyFilters());
   download(`lsa-ready-for-manual-testing-${stamp()}-${ready.length}sites.csv`, [
-    csvRow(["Site name", "URL", "Site ID", "Score (Title II target %)", "Pages checked", "Last checked", "Labels"]),
-    ...ready.map(s => csvRow([s.site_name || "", s.url || "", s.id ?? "", s.target_percentage ?? "", s.pages ?? "", s.last_crawl || "", (s.tags || []).map(prettyTag).join(", ")])),
+    csvRow(["Site name", "URL", "Site ID", "Platform", "Score (Title II target %)", "Ready line %", "Pages checked", "Last checked", "Labels"]),
+    ...ready.map(s => csvRow([s.site_name || "", s.url || "", s.id ?? "", s.platform, s.target_percentage ?? "", readyLine(s), s.pages ?? "", s.last_crawl || "", (s.tags || []).map(prettyTag).join(", ")])),
   ]);
 }
 

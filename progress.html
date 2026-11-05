@@ -156,12 +156,12 @@
         <div class="grid-panels">
           <section class="card stack" aria-labelledby="wp-heading">
             <div>
-              <h2 id="wp-heading">WordPress 98% line</h2>
-              <p class="card-sub">WordPress sites with a confirmed score on both dates that crossed 98%.</p>
+              <h2 id="wp-heading">Ready for manual testing</h2>
+              <p class="card-sub">Sites with a confirmed score on both dates that crossed their ready line: 93% for LSA AEM sites, 98% for every other platform.</p>
             </div>
             <div class="cross-grid">
-              <button type="button" class="cross-btn cross-btn--up" data-site-filter="up"><span>↑ Reached 98%</span><strong class="tnum" id="wp-up">—</strong><span class="link-text">View these sites</span></button>
-              <button type="button" class="cross-btn cross-btn--down" data-site-filter="down"><span>↓ Dropped below 98%</span><strong class="tnum" id="wp-down">—</strong><span class="link-text">View these sites</span></button>
+              <button type="button" class="cross-btn cross-btn--up" data-site-filter="up"><span>↑ Became ready</span><strong class="tnum" id="wp-up">—</strong><span class="link-text">View these sites</span></button>
+              <button type="button" class="cross-btn cross-btn--down" data-site-filter="down"><span>↓ No longer ready</span><strong class="tnum" id="wp-down">—</strong><span class="link-text">View these sites</span></button>
             </div>
             <p class="muted" id="wp-note" style="margin:0;font-size:14px"></p>
           </section>
@@ -197,7 +197,7 @@
           <div class="table-scroll" tabindex="0" role="region" aria-label="Department comparison, scrolls sideways">
             <table class="data-table">
               <caption class="sr-only">Department comparison for the selected dates and filters</caption>
-              <thead><tr><th scope="col">Department</th><th scope="col" class="num">Matched sites</th><th scope="col">Sites at 98% (before → now)</th><th scope="col">Average score</th><th scope="col">Issues (occurrences)</th><th scope="col" class="num">Needs reliable data</th></tr></thead>
+              <thead><tr><th scope="col">Department</th><th scope="col" class="num">Matched sites</th><th scope="col">Ready for manual testing (before → now)</th><th scope="col">Average score</th><th scope="col">Issues (occurrences)</th><th scope="col" class="num">Needs reliable data</th></tr></thead>
               <tbody id="departments-body"></tbody>
             </table>
           </div>
@@ -238,7 +238,7 @@
       <summary>How these numbers work, and terms used</summary>
       <ul id="definitions">
         <li><strong>Matched sites</strong> have a confirmed Siteimprove score on both dates. Every change on this page uses only them, so new or missing sites never look like progress.</li>
-        <li><strong>Score</strong> is Siteimprove’s Title II target (Level A, Level AA and ARIA checks). 98% and above is the WordPress line for manual testing. It shows progress, not proof of compliance or of manual testing.</li>
+        <li><strong>Score</strong> is Siteimprove’s Title II target (Level A, Level AA and ARIA checks). A site is ready for manual testing at 93% or higher if it is an LSA AEM site, or 98% or higher on every other platform. It shows progress, not proof of compliance or of manual testing.</li>
         <li><strong>Issues (occurrences)</strong> count every time a Level A, Level AA or ARIA check fails on a page. A drop is a net change in what was detected, not a count of verified fixes; changes in scanned pages move it too.</li>
         <li><strong>Points</strong> means percentage points: the plain difference between two percentages (96.2% to 96.5% is +0.3 points).</li>
         <li><strong>Needs reliable data</strong> covers estimated scores, failed checks and older imports without quality details. They are listed, never counted as zero.</li>
