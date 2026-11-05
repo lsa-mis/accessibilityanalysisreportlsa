@@ -121,3 +121,9 @@
   .tab-panel[hidden] { display: flex !important; }
   .hero { color: #000; background: #fff; border: 1px solid #000; }
 }
+
+/* Missing data: a quiet line on the overview, the detail lives in its own tab. */
+.subtle-note { margin: 10px 0 0; font-size: 14px; color: var(--muted); display: flex; flex-wrap: wrap; align-items: center; gap: 0 6px; }
+.subtle-note .link-btn { padding: 10px 2px; font-size: 14px; }
+.missing-help { border: 1px solid var(--line); border-radius: 10px; padding: 6px 14px; }
+.missing-help ul { margin: 6px 0 10px; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; max-width: 80ch; }
