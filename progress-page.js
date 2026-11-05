@@ -45,7 +45,9 @@
     const value = site => site?.eligible && site.issues_reliable ? ["A", "AA", "ARIA"].reduce((n, level) => n + site.by_level[level][metric], 0) : null;
     return core.pair(value(old), value(current), row.matched ? 1 : 0);
   }
-  const ready = s => !!s && core.wordpress(s) && s.eligible && s.target_percentage >= 98;
+  // Ready for manual testing: each site's own line (93% LSA AEM, 98% others), from ProgressCore.
+  const line = s => core.readyThreshold(s);
+  const ready = s => !!s && s.eligible && s.target_percentage >= line(s);
   function classify(row) {
     if (!row.before) return "new";
     if (!row.after) return "gone";
@@ -53,16 +55,16 @@
     return "matched";
   }
   function crossing(row) {
-    if (!row.matched || !core.wordpress(row.before) || !core.wordpress(row.after)) return "";
-    const b = row.before.target_percentage, a = row.after.target_percentage;
-    return b < 98 && a >= 98 ? "up" : b >= 98 && a < 98 ? "down" : "";
+    if (!row.matched) return "";
+    const was = row.before.target_percentage >= line(row.before), now = row.after.target_percentage >= line(row.after);
+    return !was && now ? "up" : was && !now ? "down" : "";
   }
   const SITE_FILTERS = [
     ["all", "All", () => true],
     ["improved", "Improved", r => r.matched && (metricRow(r, "target").change || 0) > 0.05],
     ["slipped", "Slipped", r => r.matched && (metricRow(r, "target").change || 0) < -0.05],
-    ["up", "Reached 98%", r => crossing(r) === "up"],
-    ["down", "Dropped below 98%", r => crossing(r) === "down"],
+    ["up", "Became ready", r => crossing(r) === "up"],
+    ["down", "No longer ready", r => crossing(r) === "down"],
     ["needs", "Needs reliable data", r => classify(r) === "needs"],
     ["new", "New", r => classify(r) === "new"],
     ["gone", "Not seen", r => classify(r) === "gone"],
@@ -279,7 +281,7 @@
   // ------------------------------------------------------------ report
   function atCounts(rows) {
     const m = rows.filter(r => r.matched);
-    return { before: m.filter(r => r.before.target_percentage >= 98).length, after: m.filter(r => r.after.target_percentage >= 98).length };
+    return { before: m.filter(r => r.before.target_percentage >= line(r.before)).length, after: m.filter(r => r.after.target_percentage >= line(r.after)).length };
   }
 
   function render() {
@@ -297,17 +299,17 @@
     const pp = c.target.change;
     const setAside = c.added + c.removed + c.gaps;
     el("headline").textContent = c.matched
-      ? `From ${longDate(fromE.date)} to ${longDate(toE.date)}, ${at.after === at.before ? "the same number of sites were at" : `${fmt(Math.abs(at.after - at.before))} ${at.after > at.before ? "more" : "fewer"} site${Math.abs(at.after - at.before) === 1 ? "" : "s"} reached`} 98% or higher (${fmt(at.before)} to ${fmt(at.after)}). The average score moved ${signed(pp, 2)} points${occPct === null ? ". Issue counts can’t be compared for these dates." : `, and detected issues ${occPct <= 0 ? "fell" : "rose"} ${fmt(Math.abs(occPct), 1)}%.`}`
+      ? `From ${longDate(fromE.date)} to ${longDate(toE.date)}, sites ready for manual testing went from ${fmt(at.before)} to ${fmt(at.after)} (${at.after === at.before ? "no change" : signed(at.after - at.before)}; ready means 93%+ for LSA AEM sites, 98%+ for others). The average score moved ${signed(pp, 2)} points${occPct === null ? ". Issue counts can’t be compared for these dates." : `, and detected issues ${occPct <= 0 ? "fell" : "rose"} ${fmt(Math.abs(occPct), 1)}%.`}`
       : `No sites have reliable data on both ${longDate(fromE.date)} and ${longDate(toE.date)}, so changes can’t be shown. Try a later start date.`;
     const card = (title, now, from, delta, note) => `<div class="card kpi"><h3>${escape(title)}</h3>
       <div class="pill-row" style="align-items:baseline"><span class="kpi-value tnum">${escape(now)}</span><span class="muted tnum">from ${escape(from)}</span></div>${delta}<span class="muted" style="font-size:14px">${escape(note)}</span></div>`;
     el("metrics").innerHTML = c.matched ? [
-      card("Sites at 98% or higher", fmt(at.after), fmt(at.before), pill(at.after - at.before, true, `${signed(at.after - at.before)} sites`), `Of ${fmt(c.matched)} matched sites.`),
+      card("Sites ready for manual testing", fmt(at.after), fmt(at.before), pill(at.after - at.before, true, `${signed(at.after - at.before)} sites`), `Of ${fmt(c.matched)} matched sites. Ready means 93%+ for LSA AEM sites, 98%+ for others.`),
       card("Average score", pct(c.target.after), pct(c.target.before), pill(pp === null ? null : Number(pp.toFixed(2)), true, `${signed(pp, 2)} points`), `Mean of the same ${fmt(c.matched)} sites on both dates.`),
       card("Issues (occurrences)", fmt(occ.after), fmt(occ.before), pill(occPct === null ? null : Number(occPct.toFixed(1)), false, `${signed(occPct, 1)}% detected`), occ.count ? `Level A, AA and ARIA, for ${fmt(occ.count)} sites with comparable issue data. Not a count of verified fixes.` : "No sites have comparable issue data for these dates."),
       card("Sites in this comparison", fmt(c.matched), `${fmt(c.matched + setAside)} total`, `<span class="pill pill-flat">${fmt(setAside)} set aside</span>`, "New, missing or unreliable sites are left out of the changes. See “What’s counted”."),
     ].join("") : [
-      card("Sites at 98% or higher", "—", "—", `<span class="pill pill-flat">Not comparable</span>`, "No sites have reliable data on both dates."),
+      card("Sites ready for manual testing", "—", "—", `<span class="pill pill-flat">Not comparable</span>`, "No sites have reliable data on both dates."),
       card("Average score", "—", "—", `<span class="pill pill-flat">Not comparable</span>`, "Unknown values are never shown as zero."),
       card("Issues (occurrences)", "—", "—", `<span class="pill pill-flat">Not comparable</span>`, "Choose a later start date to see changes."),
       card("Sites in this comparison", "0", `${fmt(setAside)} total`, `<span class="pill pill-flat">All set aside</span>`, "See “What’s counted” for reasons."),
@@ -315,9 +317,9 @@
 
     el("wp-up").textContent = fmt(c.newly_ready);
     el("wp-down").textContent = fmt(c.regressed);
-    el("wp-note").textContent = c.wordpress_matched
-      ? `Out of ${fmt(c.wordpress_matched)} matched WordPress sites (labels WP, WP-Sites, WP-Courses and WP-DigitalScholarship; each site counted once). A site seen for the first time above 98% does not count as crossing.`
-      : "Needs confirmed WordPress scores on both dates.";
+    el("wp-note").textContent = c.ready_matched
+      ? `Out of ${fmt(c.ready_matched)} matched sites. Each site is measured against its own line: 93% for LSA AEM sites, 98% for every other platform. A site seen for the first time above its line does not count as crossing.`
+      : "Needs confirmed scores on both dates.";
 
     const total = c.matched + setAside || 1;
     const cov = [
@@ -480,10 +482,10 @@
       `Showing ${filterText()}. Today’s department list is used for both dates.`,
       `Snapshots pulled ${before.generated_at} and ${after.generated_at}.`,
       "",
-      c.matched ? `- Sites at 98% or higher: ${at.before} to ${at.after} (${signed(at.after - at.before)}) of ${c.matched} matched sites.` : "- No sites have reliable data on both dates; changes are not available.",
+      c.matched ? `- Sites ready for manual testing (93%+ LSA AEM, 98%+ others): ${at.before} to ${at.after} (${signed(at.after - at.before)}) of ${c.matched} matched sites.` : "- No sites have reliable data on both dates; changes are not available.",
       c.matched ? `- Average score: ${pct(c.target.before)} to ${pct(c.target.after)} (${signed(c.target.change, 2)} percentage points).` : "",
       occ.count ? `- Detected Level A, AA and ARIA issues: ${fmt(occ.before)} to ${fmt(occ.after)} (${signed(occPct, 1)}%). Net detected change, not verified fixes.` : "- Issue counts can’t be compared for these dates.",
-      c.wordpress_matched ? `- WordPress sites reaching 98%: ${fmt(c.newly_ready)}; dropping below: ${fmt(c.regressed)}.` : "",
+      c.ready_matched ? `- Sites that became ready: ${fmt(c.newly_ready)}; no longer ready: ${fmt(c.regressed)}.` : "",
       `- Set aside: ${c.added} new, ${c.removed} no longer observed, ${c.gaps} needing reliable data.`,
       "",
       el("quality-note").hidden ? "" : el("quality-note").textContent,
@@ -580,7 +582,7 @@
           { label: "Compare with last month", run: () => choosePeriod("month") },
           { label: "Show departments", run: () => setTab("departments", true) },
           { label: "Show sites that slipped", run: () => { siteFilter = "slipped"; render(); setTab("sites", true); } },
-          { label: "Show WordPress sites that reached 98%", run: () => { siteFilter = "up"; render(); setTab("sites", true); } },
+          { label: "Show sites that became ready for manual testing", run: () => { siteFilter = "up"; render(); setTab("sites", true); } },
           { label: "Share or export this comparison", run: openExport },
           { label: "Clear search and filters", run: () => { platforms.clear(); tags.clear(); department = ""; search = ""; siteFilter = "all"; render(); } },
           { label: "Go to the live snapshot", run: () => { location.href = "data.html"; } },

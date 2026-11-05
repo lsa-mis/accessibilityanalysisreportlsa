@@ -183,7 +183,7 @@
         <div class="space-between">
           <div>
             <h2 id="ready-heading">Ready for manual testing</h2>
-            <p class="card-sub">WordPress sites with a confirmed score of 98% or higher. Automated checks can’t catch everything, so these are next for hands-on testing. Smallest sites first.</p>
+            <p class="card-sub">Sites with a confirmed score at or above their ready line: <strong>93% for LSA AEM sites</strong> and <strong>98% for every other platform</strong>. Automated checks can’t catch everything, so these are next for hands-on testing. Smallest sites first.</p>
           </div>
           <button type="button" class="btn no-print" id="export-ready">Export list</button>
         </div>
@@ -191,10 +191,11 @@
           <div><span class="kpi-value tnum" id="ready-count">—</span><span class="muted">sites</span></div>
           <div><span class="kpi-value tnum" id="ready-pages">—</span><span class="muted">pages to test</span></div>
         </div>
+        <p class="muted" id="ready-breakdown" style="margin:0;font-size:14px"></p>
         <div class="table-scroll" tabindex="0" role="region" aria-label="Sites ready for manual testing, scrolls sideways">
           <table class="data-table">
             <caption class="sr-only">Sites ready for manual testing</caption>
-            <thead><tr><th scope="col">Site</th><th scope="col" class="num">Score</th><th scope="col" class="num">Pages checked</th><th scope="col">Last checked</th></tr></thead>
+            <thead><tr><th scope="col">Site</th><th scope="col">Platform</th><th scope="col" class="num">Score</th><th scope="col" class="num">Pages checked</th><th scope="col">Last checked</th></tr></thead>
             <tbody id="ready-list"></tbody>
           </table>
         </div>
@@ -263,7 +264,7 @@
         <li><strong>Score</strong> is Siteimprove’s Title II target: how many Level A, Level AA and ARIA checks a site passes. 100% meets the goal. It shows progress, not legal compliance.</li>
         <li><strong>Overall score</strong> is Siteimprove’s DCI score. It also counts optional checks, so it is usually lower.</li>
         <li><strong>Issues (occurrences)</strong> counts every time a required check fails on a page.</li>
-        <li><strong>Ready for manual testing</strong>: a WordPress site with a confirmed score of 98% or higher and a working last check.</li>
+        <li><strong>Ready for manual testing</strong>: a site with a confirmed score of at least 93% for LSA AEM sites, or 98% for every other platform, and a working last check. Estimated scores never count.</li>
         <li><strong>Level A</strong> and <strong>Level AA</strong> are the WCAG (Web Content Accessibility Guidelines) levels Title II requires. <strong>ARIA</strong> is code that tells screen readers what custom controls do. <strong>Best practices</strong> are optional suggestions.</li>
         <li>Missing data is shown as “—” and is never counted as zero. Test and development sites are always hidden.</li>
       </ul>

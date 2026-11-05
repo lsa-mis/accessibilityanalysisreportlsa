@@ -22,6 +22,11 @@
     ]) if (tags.some(t => keys.includes(t))) return name;
     return "Uncategorized";
   }
+  // Manual-testing handoff line (a program threshold, not a compliance claim):
+  // LSA AEM sites are ready at a confirmed 93%, every other platform at 98%.
+  const READY_THRESHOLDS = { AEM: 93, default: 98 };
+  const readyThreshold = s => READY_THRESHOLDS[platform(s)] ?? READY_THRESHOLDS.default;
+  const ready = s => reliable(s) && s.target_percentage >= readyThreshold(s);
   function urlKey(value) {
     try {
       const u = new URL(value);
@@ -59,7 +64,6 @@
     const matched = rows.filter(r => r.matched);
     const issueRows = matched.filter(r => r.before.issues_reliable && r.after.issues_reliable);
     const pdfRows = matched.filter(r => r.before.pdfs_reliable && r.after.pdfs_reliable);
-    const wordpressRows = matched.filter(r => wordpress(r.before) && wordpress(r.after));
     const mean = side => matched.length ? matched.reduce((n, r) => n + r[side].target_percentage, 0) / matched.length : null;
     const result = {
       rows, matched: matched.length, total_before: rows.filter(r => r.before).length,
@@ -67,9 +71,11 @@
       added: rows.filter(r => !r.before).length, removed: rows.filter(r => !r.after).length,
       gaps: rows.filter(r => r.before && r.after && !r.matched).length,
       target: pair(mean("before"), mean("after"), matched.length),
-      wordpress_matched: wordpressRows.length,
-      newly_ready: wordpressRows.length ? wordpressRows.filter(r => r.before.target_percentage < 98 && r.after.target_percentage >= 98).length : null,
-      regressed: wordpressRows.length ? wordpressRows.filter(r => r.before.target_percentage >= 98 && r.after.target_percentage < 98).length : null,
+      // Crossings of each site's own ready line (93% AEM, 98% others), using
+      // confirmed targets on both dates; a first observation is never a crossing.
+      ready_matched: matched.length,
+      newly_ready: matched.length ? matched.filter(r => r.before.target_percentage < readyThreshold(r.before) && r.after.target_percentage >= readyThreshold(r.after)).length : null,
+      regressed: matched.length ? matched.filter(r => r.before.target_percentage >= readyThreshold(r.before) && r.after.target_percentage < readyThreshold(r.after)).length : null,
     };
     for (const [name, levels] of [["headline", ["A", "AA", "ARIA"]], ["aaa", ["AAA"]], ["bp", ["BP"]]]) {
       for (const metric of ["issues", "occurrences"]) {
@@ -110,7 +116,7 @@
     if (typeof value === "string" && /^[\s]*[=+\-@]/.test(text)) text = "'" + text;
     return `"${text.replace(/"/g, '""')}"`;
   }
-  const api = { numeric, labels, wordpress, visible, reliable, platform, department, compare, daily, baseline, csvCell, pair };
+  const api = { numeric, labels, wordpress, visible, reliable, platform, readyThreshold, ready, READY_THRESHOLDS, department, compare, daily, baseline, csvCell, pair };
   root.ProgressCore = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(globalThis);

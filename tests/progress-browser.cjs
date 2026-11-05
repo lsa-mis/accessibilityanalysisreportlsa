@@ -35,7 +35,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8765";
     await page.locator(".ready-row").first().waitFor({ state: "attached" });
     const ready = await page.evaluate(() => ({
       count: readySites(state.sites).length,
-      valid: readySites(state.sites).every(s => ProgressCore.wordpress(s) && ProgressCore.reliable(s) && s.target_percentage >= 98),
+      valid: readySites(state.sites).every(s => ProgressCore.reliable(s) && s.target_percentage >= (ProgressCore.platform(s) === "AEM" ? 93 : 98)),
     }));
     assert.equal(ready.valid, true);
     assert.equal(ready.count > 0, true);
