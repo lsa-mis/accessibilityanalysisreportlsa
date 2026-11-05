@@ -53,9 +53,18 @@
 .ready-stats { gap: 28px; }
 
 /* Lists in panels */
-.far-row { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 2fr) 70px; gap: 12px; align-items: center; }
-.far-row .name-btn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.far-value { text-align: right; font-weight: 700; }
+/* Furthest from the goal: rank, full readable name, context, then the score. */
+#far-list { gap: 0; }
+.far-row { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; padding: 12px 0; border-top: 1px solid var(--line); }
+.far-row:first-child { border-top: 0; padding-top: 4px; }
+.far-rank { font-weight: 800; color: var(--muted); font-size: 15px; padding-top: 8px; text-align: center; }
+.far-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.far-main .name-btn { padding: 4px 0; min-height: 44px; font-size: 16px; overflow-wrap: anywhere; line-height: 1.35; }
+.far-meta { font-size: 14px; color: var(--muted); }
+.far-bar { margin-top: 6px; height: 10px; }
+.far-score { display: flex; flex-direction: column; align-items: flex-end; text-align: right; padding-top: 6px; white-space: nowrap; }
+.far-score strong { font-size: 20px; color: var(--bad); line-height: 1.2; }
+.far-score span { font-size: 13px; color: var(--muted); }
 .levels { gap: 12px; }
 .level-head { display: flex; justify-content: space-between; gap: 8px; font-size: 15px; margin-bottom: 4px; }
 .problem-row {
