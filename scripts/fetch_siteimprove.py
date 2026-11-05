@@ -27,7 +27,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 
 import requests
 from site_urls import is_junk_url
@@ -38,6 +38,12 @@ REQUEST_TIMEOUT = int(os.environ.get("SITEIMPROVE_TIMEOUT", "120"))
 MAX_RETRIES = 5
 RETRY_BACKOFF_SECONDS = 5
 MAX_WORKERS = int(os.environ.get("SITEIMPROVE_MAX_WORKERS", "8"))
+# Per-site responses meaning "no data for this site": 403/404 when a module
+# isn't licensed or the resource doesn't exist, and 400 for sites Siteimprove
+# has never scanned (0 pages, no status), which have no target, issues, PDFs
+# or crawl record yet. These are recorded as unavailable, never as zero.
+# Rate limits (429), server errors (5xx) and auth failures still fail the run.
+UNAVAILABLE_STATUSES = (400, 403, 404)
 
 LEVEL_KEYS = ("A", "AA", "AAA", "ARIA", "BP")
 
@@ -342,7 +348,7 @@ def fetch_site_target(session: requests.Session, site_id: int) -> dict[str, Any]
     try:
         return get(session, f"{API_ROOT}/sites/{site_id}/a11y/overview/site_target/overview")
     except requests.HTTPError as exc:
-        if exc.response.status_code not in (403, 404):
+        if exc.response.status_code not in UNAVAILABLE_STATUSES:
             raise
         return {"_error": f"target {exc.response.status_code}"}
 
@@ -351,7 +357,7 @@ def fetch_site_issues(session: requests.Session, site_id: int) -> list[dict[str,
     try:
         return paginate(session, f"/sites/{site_id}/a11y/issue_kinds/confirmed/issues")
     except requests.HTTPError as exc:
-        if exc.response.status_code not in (403, 404):
+        if exc.response.status_code not in UNAVAILABLE_STATUSES:
             raise
         print(f"  issues fetch failed: {exc.response.status_code}", file=sys.stderr)
         return None
@@ -386,7 +392,7 @@ def fetch_crawl_status(session: requests.Session, site_id: int) -> dict[str, Any
     try:
         return get(session, f"{API_ROOT}/sites/{site_id}/content/crawl")
     except requests.HTTPError as exc:
-        if exc.response.status_code not in (403, 404):
+        if exc.response.status_code not in UNAVAILABLE_STATUSES:
             raise
         print(f"  crawl status unavailable: HTTP {exc.response.status_code}", file=sys.stderr)
         return {}
@@ -440,7 +446,7 @@ def fetch_site_pdfs(session: requests.Session, site_id: int) -> list[dict[str, A
     try:
         return paginate(session, f"/sites/{site_id}/a11y/validation/pdfs")
     except requests.HTTPError as exc:
-        if exc.response.status_code not in (403, 404):
+        if exc.response.status_code not in UNAVAILABLE_STATUSES:
             raise
         print(f"  PDF data unavailable: HTTP {exc.response.status_code}", file=sys.stderr)
         return None
@@ -876,9 +882,12 @@ def main() -> None:
             except Exception as exc:  # noqa: BLE001 — resilience over precision
                 bad = futures[future]
                 failed_sites += 1
+                detail = type(exc).__name__
+                response = getattr(exc, "response", None)
+                if response is not None:
+                    detail += f" {response.status_code} on {urlparse(response.url or '').path or '?'}"
                 print(f"  ! skipping site {bad.get('id')} "
-                      f"({bad.get('site_name') or bad.get('url')}): "
-                      f"{type(exc).__name__}", file=sys.stderr)
+                      f"({bad.get('site_name') or bad.get('url')}): {detail}", file=sys.stderr)
                 continue
             per_site_issues.append((site, issues or []))
             rollup = aggregate_site_issues(issues or [])
