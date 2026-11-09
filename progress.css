@@ -47,7 +47,6 @@ button.cal-day:hover { background: var(--good-bg); }
   background: repeating-linear-gradient(135deg, #E3E6EA 0, #E3E6EA 6px, #F8F9FA 6px, #F8F9FA 12px);
 }
 .trend-band span { font-size: 13px; color: var(--ink-2); background: #FFFFFF; border: 1px solid var(--line); padding: 2px 6px; border-radius: 4px; text-align: center; }
-.trend-sel { position: absolute; top: 0; bottom: 0; background: rgba(255,203,5,.14); border-left: 2px dashed var(--accent-orange); border-right: 2px solid var(--navy); }
 .pt { position: absolute; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; border: 2px solid #FFFFFF; background: var(--link); box-shadow: 0 0 0 1px var(--link); cursor: pointer; padding: 0; }
 .pt:hover { transform: scale(1.4); }
 .pt.na { background: #FFFFFF; border: 2px solid var(--line-strong); box-shadow: none; }
@@ -95,3 +94,12 @@ button.cal-day:hover { background: var(--good-bg); }
 #summary-heading:focus { outline: 3px solid var(--navy); outline-offset: 4px; }
 
 .trend-empty { margin: 0; padding: 40px 16px; text-align: center; color: var(--muted); }
+#shortcuts button:disabled { opacity: .55; cursor: not-allowed; background: none; }
+.trend-summary { margin: 0; font-size: 16px; font-weight: 600; color: var(--navy); }
+.trend-summary:empty { display: none; }
+.pt-label { position: absolute; transform: translate(-50%, calc(-100% - 16px)); font-size: 14px; font-weight: 700; color: var(--navy); background: #FFFFFF; border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; white-space: nowrap; pointer-events: none; }
+.pt-label.l { transform: translate(-4px, calc(-100% - 16px)); }
+.pt-label.r { transform: translate(calc(-100% + 4px), calc(-100% - 16px)); }
+.pt-label.below { transform: translate(-50%, 16px); }
+.pt-label.l.below { transform: translate(-4px, 16px); }
+.pt-label.r.below { transform: translate(calc(-100% + 4px), 16px); }

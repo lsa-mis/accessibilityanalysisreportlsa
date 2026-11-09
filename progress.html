@@ -80,6 +80,7 @@
       </div>
       <div id="date-picker" class="date-picker no-print" role="dialog" aria-labelledby="calendar-title" hidden></div>
       <p id="date-note" class="muted" style="margin:0;font-size:14px"></p>
+      <p id="shortcut-note" class="muted no-print" style="margin:0;font-size:14px" hidden></p>
       <div class="filter-row no-print" role="group" aria-labelledby="platform-label">
         <span class="filter-label" id="platform-label">Platform</span>
         <div class="filter-row" id="filter-platform"></div>
@@ -118,8 +119,9 @@
         <section class="card stack" aria-labelledby="trend-heading">
           <div>
             <h2 id="trend-heading">Trend: average score</h2>
-            <p class="card-sub">Average score per snapshot. Click a point or use the table to change the start date.</p>
+            <p class="card-sub">Average score for each snapshot between the start and end dates. Use Earlier start or the table to widen the range.</p>
           </div>
+          <p id="trend-summary" class="trend-summary"></p>
           <div class="trend">
             <div class="trend-y tnum muted" aria-hidden="true"><span id="trend-max"></span><span id="trend-min"></span></div>
             <div class="trend-main">

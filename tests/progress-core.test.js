@@ -99,6 +99,12 @@ test("daily selection preserves actual latest same-date observation", () => {
   ];
   assert.equal(core.daily(entries)[0].path, "b");
 });
+test("only snapshots from the tracking start date on are offered", () => {
+  const e = date => ({ date, generated_at: date + "T07:00:00Z", path: date });
+  assert.equal(core.TRACKING_START, "2026-11-04");
+  assert.deepEqual(core.since([e("2026-10-26"), e("2026-11-01"), e("2026-11-04"), e("2026-11-05")]).map(x => x.date), ["2026-11-04", "2026-11-05"]);
+  assert.deepEqual(core.since([e("2026-11-01")]), []);
+});
 test("CSV escaping prevents formulas but preserves numeric reductions", () => {
   assert.equal(core.csvCell('=HYPERLINK("x")'), `"\'=HYPERLINK(""x"")"`);
   assert.equal(core.csvCell(-300), '"-300"');

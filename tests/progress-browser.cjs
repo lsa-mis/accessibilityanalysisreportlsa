@@ -21,7 +21,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8765";
     assert.equal(await page.locator("#date-picker button.cal-day").count() >= 1, true);
     await page.keyboard.press("Escape");
     assert.equal(await page.locator("#date-picker").isVisible(), false);
-    await page.getByRole("button", { name: "Last week", exact: true }).click();
+    await page.getByRole("button", { name: "Since tracking began", exact: true }).click();
     await page.locator("#report").waitFor({ state: "visible" });
     assert.match(await page.locator("#date-note").innerText(), /snapshot|Reliable data/);
     await page.getByRole("button", { name: "Sites", exact: true }).click();
