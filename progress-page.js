@@ -6,7 +6,12 @@
   const el = id => document.getElementById(id);
   const escape = value => String(value ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const fmt = (v, digits = 0) => v === null || v === undefined || Number.isNaN(v) ? "—" : Number(v).toLocaleString("en-US", { maximumFractionDigits: digits, minimumFractionDigits: digits });
-  const pct = v => v === null || v === undefined ? "—" : fmt(v, 1) + "%";
+  const pct = (v, digits = 1) => v === null || v === undefined ? "—" : fmt(v, digits) + "%";
+  // Fewest decimals (1 to 3) at which scores that differ also read differently.
+  const scoreDigits = values => {
+    const distinct = new Set(values).size;
+    return [1, 2].find(d => new Set(values.map(v => fmt(v, d))).size === distinct) || 3;
+  };
   const signed = (v, digits = 0) => v === null || v === undefined ? "—" : (v > 0 ? "+" : v < 0 ? "−" : "±") + fmt(Math.abs(v), digits);
   const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -101,7 +106,15 @@
     el("from-btn").setAttribute("aria-expanded", String(picker === "from"));
     el("to-btn").setAttribute("aria-expanded", String(picker === "to"));
     el("span-label").textContent = fromE && toE ? `${dayNum(toE.date) - dayNum(fromE.date)} days apart` : "";
-    for (const b of document.querySelectorAll("#shortcuts button")) b.setAttribute("aria-pressed", String(b.dataset.period === period));
+    // A shortcut is only offered when there is a snapshot that far back from the end date.
+    const missing = [];
+    for (const b of document.querySelectorAll("#shortcuts button")) {
+      b.disabled = !!toE && !periodStart(b.dataset.period);
+      if (b.disabled) missing.push(b.textContent.trim());
+      b.setAttribute("aria-pressed", String(!b.disabled && b.dataset.period === period));
+    }
+    el("shortcut-note").hidden = !missing.length;
+    el("shortcut-note").textContent = missing.length ? `${missing.join(", ").replace(/, ([^,]*)$/, " and $1")} ${missing.length === 1 ? "turns" : "turn"} on once there is a snapshot that far back. Tracking starts ${longDate(entries[0].date)}.` : "";
 
     // Platform counts: sites in this comparison that match every other filter
     // (labels, department, search), so each number is what choosing it shows.
@@ -194,7 +207,7 @@
         <p style="margin:0;font-weight:600">${picker === "from" ? "Only dates before the end date with a saved, comparable snapshot can be picked." : "Only dates after the start date with a saved, comparable snapshot can be picked."}</p>
         <ul class="cal-key">
           <li><span class="cal-day" style="border:2px solid var(--link);color:var(--navy);background:#fff" aria-hidden="true">12</span>Snapshot available</li>
-          <li><span class="cal-day old" aria-hidden="true">12</span>Older import, not comparable</li>
+          ${entries.some(e => !comparable(e)) ? `<li><span class="cal-day old" aria-hidden="true">12</span>Older import, not comparable</li>` : ""}
           <li><span class="cal-day off" aria-hidden="true">12</span>No snapshot</li>
           <li><span class="cal-day in-range" style="border:2px solid var(--link)" aria-hidden="true">12</span>Inside the current comparison</li>
         </ul>
@@ -227,26 +240,38 @@
 
   // ------------------------------------------------------------ trend
   function renderTrend() {
-    // Only snapshots that can be compared are drawn. Older imports without scan
-    // quality details are left out of the chart and the table entirely.
-    const pts = entries.filter(comparable);
+    // Only snapshots that can be compared are used. The chart draws the ones between
+    // the selected start and end dates; the table lists all of them so any can be the start.
+    const all = entries.filter(comparable);
+    const pts = fromE && toE ? all.filter(e => e.date >= fromE.date && e.date <= toE.date) : all;
     const value = e => e.mean_target;
+    el("step-earlier").disabled = !fromE || !all.some(e => e.date < fromE.date);
+    el("step-later").disabled = !fromE || !toE || !all.some(e => e.date > fromE.date && e.date < toE.date);
     if (!pts.length) {
       el("trend-plot").innerHTML = `<p class="trend-empty">No comparable snapshots yet. The trend starts with the first nightly refresh that records scan quality details.</p>`;
       el("trend-plot").setAttribute("aria-label", "Trend: no comparable snapshots yet");
       el("trend-max").textContent = el("trend-min").textContent = "";
       el("trend-x").innerHTML = "";
+      el("trend-summary").textContent = "";
       el("trend-body").innerHTML = `<tr><td colspan="4" class="empty">No comparable snapshots yet.</td></tr>`;
       return;
     }
     const vals = pts.map(value).filter(v => v !== null && v !== undefined);
     let lo = vals.length ? Math.min(...vals) : 0, hi = vals.length ? Math.max(...vals) : 1;
-    const pad = (hi - lo) * 0.15 || 1; lo -= pad; hi += pad;
+    // The scores fill between a quarter of the plot's height (changes of a few
+    // hundredths of a point: a gentle slope, not a cliff and not a flat line) and
+    // 70% of it (changes of a full point or more). Identical scores draw flat.
+    const range = hi - lo;
+    const height = range ? range / (0.25 + 0.45 * Math.min(1, range)) : 1;
+    const mid = (hi + lo) / 2; lo = mid - height / 2; hi = mid + height / 2;
+    if (hi > 100) { lo -= hi - 100; hi = 100; }
     const d0 = dayNum(pts[0].date), dN = dayNum(pts.at(-1).date);
     const span = Math.max(1, dN - d0);
     const x = e => pts.length === 1 ? 50 : (dayNum(e.date) - d0) / span * 100;
     const y = v => Math.max(5, Math.min(95, 100 - (v - lo) / (hi - lo) * 100));
-    const show = v => pct(v);
+    // Scores that sit close together get extra decimals, so they aren't all shown as the same number.
+    const digits = scoreDigits(vals), show = v => pct(v, digits);
+    const tableDigits = scoreDigits(all.map(value).filter(v => v !== null && v !== undefined));
     let path = "", prev = null;
     pts.forEach(e => {
       const v = value(e);
@@ -257,12 +282,17 @@
     });
     const bands = [];
     for (let i = 1; i < pts.length; i++) if (dayNum(pts[i].date) - dayNum(pts[i - 1].date) > 10) bands.push([x(pts[i - 1]), x(pts[i]) - x(pts[i - 1])]);
-    const fx = fromE && comparable(fromE) ? x(fromE) : 0, tx = toE ? x(toE) : 0;
-    el("trend-plot").setAttribute("aria-label", `Average score for ${pts.length} comparable snapshot${pts.length === 1 ? "" : "s"} from ${longDate(pts[0].date)} to ${longDate(pts.at(-1).date)}${vals.length ? `, ranging from ${show(Math.min(...vals))} to ${show(Math.max(...vals))}` : ""}. The data table below lists every snapshot and lets you start the comparison on any of them.`);
+    el("trend-plot").setAttribute("aria-label", `Average score for the ${pts.length} snapshot${pts.length === 1 ? "" : "s"} in the selected comparison, from ${longDate(pts[0].date)} to ${longDate(pts.at(-1).date)}${vals.length ? `, ranging from ${show(Math.min(...vals))} to ${show(Math.max(...vals))}` : ""}. The data table below lists every snapshot and lets you start the comparison on any of them.`);
     el("trend-plot").innerHTML =
       bands.map(([l, w]) => `<div class="trend-band" style="left:${l.toFixed(2)}%;width:${w.toFixed(2)}%"><span>No snapshots</span></div>`).join("") +
-      `<div class="trend-sel" aria-hidden="true" style="left:${fx.toFixed(2)}%;width:${Math.max(0, tx - fx).toFixed(2)}%"></div>` +
       `<svg viewBox="0 0 1000 240" preserveAspectRatio="none" aria-hidden="true"><path d="${path}" fill="none" stroke="#00508F" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>` +
+      // The score is printed beside each point (start and end only when the chart is crowded).
+      pts.map(e => {
+        const v = value(e);
+        if (v === null || v === undefined || (pts.length > 8 && e !== fromE && e !== toE)) return "";
+        const side = x(e) < 10 ? " l" : x(e) > 90 ? " r" : "", below = y(v) < 20 ? " below" : "";
+        return `<span class="pt-label tnum${side}${below}" aria-hidden="true" style="left:${x(e).toFixed(2)}%;top:${y(v).toFixed(2)}%">${show(v)}</span>`;
+      }).join("") +
       pts.map(e => {
         const v = value(e), isFrom = e === fromE, isTo = e === toE;
         const cls = "pt" + (isFrom ? " from" : isTo ? " to" : "");
@@ -270,6 +300,14 @@
         // Dots are a mouse shortcut; the table below offers the same "start here" action with full-size buttons.
         return `<span class="${cls}" style="left:${x(e).toFixed(2)}%;top:${y(v).toFixed(2)}%" data-index="${entries.indexOf(e)}" title="${escape(label)}"></span>`;
       }).join("");
+    // One plain sentence saying what the line shows.
+    const a = value(pts[0]), b = value(pts.at(-1));
+    if (pts.length < 2 || a === null || a === undefined || b === null || b === undefined) el("trend-summary").textContent = "";
+    else {
+      const change = b - a, changeDigits = Math.max(2, digits);
+      const moved = Number(Math.abs(change).toFixed(changeDigits)) !== 0;
+      el("trend-summary").textContent = `${moved ? `The average score ${change > 0 ? "rose" : "fell"} by ${fmt(Math.abs(change), changeDigits)} percentage points` : "The average score did not change"}: ${show(a)} on ${longDate(pts[0].date)}, ${show(b)} on ${longDate(pts.at(-1).date)}.${moved && range < 1 ? " The chart is zoomed in so this small change is visible." : ""}`;
+    }
     el("trend-max").textContent = vals.length ? show(hi) : "";
     el("trend-min").textContent = vals.length ? show(lo) : "";
     // Short ranges get date labels; longer ranges get month labels.
@@ -284,10 +322,10 @@
       }
     }
     el("trend-x").innerHTML = ticks.map(([px, label]) => `<span style="left:${Math.max(4, Math.min(96, px)).toFixed(2)}%">${label}</span>`).join("");
-    el("trend-body").innerHTML = [...pts].reverse().map(e => {
+    el("trend-body").innerHTML = [...all].reverse().map(e => {
       const notes = [e === fromE ? "Start date" : "", e === toE ? "End date" : "", e.historical ? "Imported snapshot" : "Nightly snapshot"].filter(Boolean).join("; ");
       const canStart = toE && e.date < toE.date && e !== fromE;
-      return `<tr><td>${escape(longDate(e.date))}</td><td class="num tnum">${pct(e.mean_target)}</td><td>${escape(notes)}</td>
+      return `<tr><td>${escape(longDate(e.date))}</td><td class="num tnum">${pct(e.mean_target, tableDigits)}</td><td>${escape(notes)}</td>
         <td>${canStart ? `<button type="button" class="btn" data-start-index="${entries.indexOf(e)}" aria-label="Start the comparison on ${escape(longDate(e.date))}">Start here</button>` : ""}</td></tr>`;
     }).join("");
   }
@@ -465,18 +503,22 @@
     search = query.get("search") || "";
   }
 
+  // The snapshot a shortcut would start from, or null when none is saved that far back.
+  function periodStart(p) {
+    if (p === "start") return entries.find(comparable) || entries[0];
+    const days = { week: 7, month: null, quarter: 91 }[p];
+    if (days === null) return core.baseline(entries, toE, "month");
+    const requested = new Date((dayNum(toE.date) - days) * 86400000).toISOString().slice(0, 10);
+    return entries.filter(e => e.date <= requested).at(-1) || null;
+  }
   function choosePeriod(p) {
+    // A shortcut with no snapshot that far back is disabled; anything else that asks for it gets the full range.
+    if (!periodStart(p)) p = "start";
     period = p;
-    if (p === "start") fromE = entries.find(comparable) || entries[0];
-    else {
+    fromE = periodStart(p);
+    if (p !== "start") {
       const days = { week: 7, month: null, quarter: 91 }[p];
       const requested = days === null ? null : new Date((dayNum(toE.date) - days) * 86400000).toISOString().slice(0, 10);
-      fromE = days === null ? core.baseline(entries, toE, "month") : entries.filter(e => e.date <= requested).at(-1) || null;
-      if (!fromE) {
-        el("date-note").textContent = `No snapshot from ${p === "week" ? "a week" : p === "month" ? "a month" : "three months"} earlier. Choose another start date.`;
-        fromE = entries[0];
-        return loadComparison();
-      }
       const target = days === null ? null : requested;
       const first = entries.find(comparable);
       if (!comparable(fromE) && first && first.date < toE.date) {
@@ -573,7 +615,7 @@
     try {
       const [index, departments, status] = await Promise.all([client.load("history/index"), client.load("departments"), client.load("refresh-status")]);
       if (index.schema_version !== 1) throw new Error("Unsupported history schema.");
-      entries = core.daily(index.entries); mapping = departments;
+      entries = core.since(core.daily(index.entries)); mapping = departments;
       if (!entries.length) { el("load-status").textContent = "No snapshots have been saved yet."; return; }
       toE = entries.at(-1);
       el("latest-date").textContent = longDate(toE.date);

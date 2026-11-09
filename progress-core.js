@@ -99,6 +99,11 @@
     for (const e of [...entries].sort((a, b) => a.generated_at.localeCompare(b.generated_at))) dates.set(e.date, e);
     return [...dates.values()].sort((a, b) => a.date.localeCompare(b.date));
   }
+  // The Progress page only offers snapshots from this date on. Earlier files stay in the archive.
+  const TRACKING_START = "2026-11-04";
+  function since(entries, date = TRACKING_START) {
+    return entries.filter(e => e.date >= date);
+  }
   function baseline(entries, latest, period) {
     const d = new Date(latest.date + "T12:00:00Z");
     if (period === "month") {
@@ -116,7 +121,7 @@
     if (typeof value === "string" && /^[\s]*[=+\-@]/.test(text)) text = "'" + text;
     return `"${text.replace(/"/g, '""')}"`;
   }
-  const api = { numeric, labels, wordpress, visible, reliable, platform, readyThreshold, ready, READY_THRESHOLDS, department, compare, daily, baseline, csvCell, pair };
+  const api = { numeric, labels, wordpress, visible, reliable, platform, readyThreshold, ready, READY_THRESHOLDS, department, compare, daily, since, TRACKING_START, baseline, csvCell, pair };
   root.ProgressCore = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(globalThis);
