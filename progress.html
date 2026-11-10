@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="progress.css">
   <script src="progress-core.js" defer></script>
   <script src="progress-client.js" defer></script>
+  <script src="rule-guidance.js" defer></script>
   <script src="site-panel.js" defer></script>
   <script src="site-search.js" defer></script>
   <script src="progress-page.js" defer></script>
@@ -53,6 +54,7 @@
       <button type="button" class="tab" data-tab="overview" aria-current="page">Overview</button>
       <button type="button" class="tab" data-tab="departments" aria-current="false">Departments</button>
       <button type="button" class="tab" data-tab="sites" aria-current="false">Sites</button>
+      <button type="button" class="tab" data-tab="issues" aria-current="false">Issues</button>
     </div>
   </nav>
 
@@ -227,6 +229,38 @@
           <button type="button" class="btn no-print" id="sites-show-all" hidden style="align-self:flex-start"></button>
         </section>
       </div>
+
+      <!-- ISSUES -->
+      <div id="panel-issues" class="tab-panel" tabindex="-1" aria-label="Issues" hidden>
+        <section class="card stack" aria-labelledby="issues-heading">
+          <div class="space-between">
+            <div>
+              <h2 id="issues-heading" tabindex="-1">Changes by issue <span class="muted tnum" id="issues-count"></span></h2>
+              <p class="card-sub">How many times each issue was found on the two dates, counted on the same sites both times.</p>
+            </div>
+            <button type="button" class="btn no-print" id="export-issues-csv">Export issues CSV</button>
+          </div>
+          <div id="issues-unavailable" class="notice stack" hidden></div>
+          <div id="issues-content" class="stack">
+            <div class="filter-row no-print" id="issue-filters" role="group" aria-label="Show issues"></div>
+            <p id="issues-note" class="muted" style="margin:0;font-size:14px"></p>
+            <div class="table-scroll" tabindex="0" role="region" aria-label="Issue comparison, scrolls sideways">
+              <table class="data-table" id="issues-table">
+                <caption class="sr-only" id="issues-caption">Issue comparison</caption>
+                <thead><tr>
+                  <th scope="col" data-issue-sort="name"><button type="button" class="sort-btn">Issue</button></th>
+                  <th scope="col">Level</th>
+                  <th scope="col" class="num">Occurrences before</th>
+                  <th scope="col" class="num" data-issue-sort="after"><button type="button" class="sort-btn">Occurrences now</button></th>
+                  <th scope="col" data-issue-sort="change"><button type="button" class="sort-btn">Change</button></th>
+                  <th scope="col" class="num">Sites with it (before → now)</th>
+                </tr></thead>
+                <tbody id="issues-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
 
     <details class="card glossary">
@@ -235,6 +269,7 @@
         <li><strong>Matched sites:</strong> a confirmed score on both dates. All changes use only these.</li>
         <li><strong>Score:</strong> Siteimprove’s Title II target (Level A, AA and ARIA). Ready for manual testing at 93%+ (LSA AEM) or 98%+ (others). Not proof of compliance.</li>
         <li><strong>Issues (occurrences):</strong> each time a required check fails on a page. A drop is a net change, not verified fixes.</li>
+        <li><strong>Changes by issue:</strong> occurrences of each Siteimprove check, named as on the Common problems tab. Uses matched sites whose per-issue counts were saved on both dates (November 5, 2026 onward).</li>
         <li><strong>Points:</strong> percentage points (96.2% to 96.5% is +0.3).</li>
         <li><strong>Needs reliable data:</strong> estimated scores, failed checks or older imports. Never counted as zero.</li>
         <li><strong>Reliable data</strong> starts with snapshots from October 26, 2026, which record scan quality details.</li>

@@ -21,7 +21,8 @@
 
   let entries = [], mapping = {}, fromE = null, toE = null, before = null, after = null, comparison = null;
   let sort = "site", direction = 1, generation = 0, period = "month", tab = "overview", siteFilter = "all", showAllSites = false;
-  let focusSummary = false;
+  let focusSummary = false, focusIssues = false;
+  let issues = null, issueSort = "change", issueDirection = 1, issueFilter = "common";
   let picker = null, viewMonth = null, pickerOpener = null, exportTab = "summary";
   const platforms = new Set(), tags = new Set();
   let department = "", search = "";
@@ -76,6 +77,17 @@
     ["matched", "Matched", r => r.matched],
   ];
 
+  // Issues tab. The default set matches the live snapshot's Common problems tab (everything but Level AAA).
+  const ISSUE_FILTERS = [
+    ["common", "Required and best practice", level => level !== "AAA"],
+    ["required", "Required (A, AA, ARIA)", level => ["A", "AA", "ARIA"].includes(level)],
+    ["bp", "Best practice", level => level === "BP"],
+    ["aaa", "Level AAA", level => level === "AAA"],
+  ];
+  const LEVEL_NAMES = { A: "Level A", AA: "Level AA", ARIA: "ARIA", AAA: "Level AAA", BP: "Best practice" };
+  // The plain-language title used on the Common problems tab, else Siteimprove's own title.
+  const issueName = rule => globalThis.RuleGuidance?.rules?.[rule.id]?.plain || rule.title;
+
   function pill(value, goodWhenUp, text) {
     if (value === null || value === undefined) return `<span class="pill pill-flat">Not comparable</span>`;
     const v = Number(value);
@@ -85,7 +97,7 @@
   }
 
   // ------------------------------------------------------------ tabs
-  const TABS = ["overview", "departments", "sites"];
+  const TABS = ["overview", "departments", "sites", "issues"];
   function setTab(name, focus) {
     tab = TABS.includes(name) ? name : "overview";
     for (const t of TABS) {
@@ -398,9 +410,11 @@
 
     renderDepartments();
     renderSites();
+    renderIssues();
     renderTrend();
     renderPicker();
     if (focusSummary) { focusSummary = false; el("summary-heading").focus(); }
+    if (focusIssues) { focusIssues = false; el("issues-heading").focus(); }
   }
 
   function renderDepartments() {
@@ -468,10 +482,64 @@
     el("sites-show-all").textContent = `Show all ${fmt(rows.length)} sites`;
   }
 
+  // ------------------------------------------------------------ issues
+  function sortedIssues(rules) {
+    return [...rules].sort((a, b) => {
+      const byName = issueName(a).localeCompare(issueName(b));
+      return issueSort === "name" ? issueDirection * byName : issueDirection * (a[issueSort] - b[issueSort]) || byName;
+    });
+  }
+  function renderIssues() {
+    issues = core.issueChanges(comparison, before, after);
+    const ok = issues.count > 0;
+    el("issues-unavailable").hidden = ok;
+    el("issues-content").hidden = el("export-issues-csv").hidden = !ok;
+    if (!ok) {
+      // Per-issue counts are saved with snapshots from the first entry flagged rule_counts on.
+      const first = entries.find(e => e.rule_counts);
+      const missing = [[fromE, before], [toE, after]].filter(([, s]) => !s.rules).map(([e]) => longDate(e.date));
+      const canSwitch = first && after.rules && first !== fromE && first.date < toE.date;
+      el("issues-count").textContent = "";
+      el("issues-unavailable").innerHTML = `<p style="margin:0">${escape(
+        missing.length ? `Counts for each issue were not saved on ${missing.join(" or ")}. ${first ? `They are saved with every snapshot from ${longDate(first.date)} on.` : "They start with the next nightly snapshot."}`
+          : comparison.matched ? "No matched site has counts for each issue on both dates." : "No sites have reliable data on both dates.")}</p>
+        ${canSwitch ? `<div class="pill-row no-print"><button type="button" class="btn btn-primary" id="issues-use-first">Compare from ${escape(longDate(first.date))} instead</button></div>` : ""}`;
+      return;
+    }
+    el("issues-unavailable").innerHTML = "";
+    const current = ISSUE_FILTERS.find(f => f[0] === issueFilter) || ISSUE_FILTERS[0];
+    el("issue-filters").innerHTML = ISSUE_FILTERS.map(([key, label, accepts]) =>
+      `<button type="button" class="chip" data-issue-filter="${key}" aria-pressed="${key === current[0]}">${escape(label)} <span class="tnum">(${issues.rules.filter(r => accepts(r.level)).length})</span></button>`).join("");
+    const rows = sortedIssues(issues.rules.filter(r => current[2](r.level)));
+    const down = rows.filter(r => r.change < 0).length, up = rows.filter(r => r.change > 0).length;
+    el("issues-count").textContent = `(${fmt(rows.length)})`;
+    el("issues-note").textContent = `Counted on ${fmt(issues.count)} matched sites with counts for each issue on both dates. ${fmt(down)} went down, ${fmt(up)} went up, ${fmt(rows.length - down - up)} did not change. A drop is a net change, not verified fixes.`;
+    el("issues-caption").textContent = `Issue comparison, ${current[1]}, ${longDate(fromE.date)} to ${longDate(toE.date)}, ${filterText()}`;
+    for (const header of document.querySelectorAll("th[data-issue-sort]")) {
+      const active = header.dataset.issueSort === issueSort;
+      if (active) header.setAttribute("aria-sort", issueDirection === 1 ? "ascending" : "descending");
+      else header.removeAttribute("aria-sort");
+      const b = header.querySelector("button");
+      b.querySelector(".arrow")?.remove();
+      b.insertAdjacentHTML("beforeend", active
+        ? `<span class="arrow" aria-hidden="true">${issueDirection === 1 ? " ▲" : " ▼"}</span>`
+        : `<span class="arrow sort-hint" aria-hidden="true"> ↕</span>`);
+    }
+    el("issues-body").innerHTML = rows.length ? rows.map(r => {
+      const name = issueName(r), share = r.before ? r.change / r.before * 100 : null;
+      return `<tr>
+        <th scope="row">${escape(name)}${name !== r.title ? `<span class="site-url">Siteimprove: ${escape(r.title)}</span>` : ""}</th>
+        <td>${escape(LEVEL_NAMES[r.level] || "—")}</td>
+        <td class="num tnum">${fmt(r.before)}</td><td class="num tnum">${fmt(r.after)}</td>
+        <td>${pill(r.change, false, signed(r.change))}${share === null || !r.change ? "" : ` <span class="muted tnum" style="font-size:13px;white-space:nowrap">${signed(share, 1)}%</span>`}</td>
+        <td class="num tnum">${fmt(r.sites_before)} → ${fmt(r.sites_after)}</td></tr>`;
+    }).join("") : `<tr><td colspan="6" class="empty">No issues at this level on these sites.</td></tr>`;
+  }
+
   // ------------------------------------------------------------ loading
   async function loadComparison() {
     const token = ++generation;
-    before = after = comparison = null;
+    before = after = comparison = issues = null;
     el("report").hidden = true;
     el("report-error").hidden = true;
     el("load-status").textContent = "Loading the selected snapshots…";
@@ -566,14 +634,28 @@
     }
     return rows.map(row => row.map(core.csvCell).join(","));
   }
-  function exportCSV() {
-    if (!comparison) return;
-    const url = URL.createObjectURL(new Blob(["﻿" + csvLines().join("\r\n")], { type: "text/csv;charset=utf-8" }));
+  function issueCsvLines() {
+    const rows = [
+      ["Report context", `LSA accessibility progress by issue: ${longDate(fromE.date)} to ${longDate(toE.date)}`],
+      ["Report context", `Showing ${filterText()}. Snapshots pulled ${before.generated_at} and ${after.generated_at}.`],
+      ["Report context", `Counted on ${issues.count} matched sites with counts for each issue on both dates. Net detected change, not verified fixes.`],
+      [],
+      ["Issue", "Siteimprove check", "Siteimprove rule ID", "Level", "Occurrences before", "Occurrences now", "Change", "Sites with it before", "Sites with it now"],
+    ];
+    for (const r of sortedIssues(issues.rules)) {
+      rows.push([issueName(r), r.title, r.id, LEVEL_NAMES[r.level] || "", r.before, r.after, r.change, r.sites_before, r.sites_after]);
+    }
+    return rows.map(row => row.map(core.csvCell).join(","));
+  }
+  function download(lines, kind) {
+    const url = URL.createObjectURL(new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" }));
     const anchor = document.createElement("a");
-    anchor.href = url; anchor.download = `lsa-progress-${before.reporting_date}-to-${after.reporting_date}.csv`;
+    anchor.href = url; anchor.download = `lsa-progress-${kind}${before.reporting_date}-to-${after.reporting_date}.csv`;
     document.body.appendChild(anchor); anchor.click(); anchor.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
+  function exportCSV() { if (comparison) download(csvLines(), ""); }
+  function exportIssuesCSV() { if (issues?.count) download(issueCsvLines(), "issues-"); }
   function openExport() {
     if (!comparison) return;
     SitePanel.open({
@@ -641,6 +723,7 @@
           { label: "Compare with last week", run: () => choosePeriod("week") },
           { label: "Compare with last month", run: () => choosePeriod("month") },
           { label: "Show departments", run: () => setTab("departments", true) },
+          { label: "Show changes by issue", run: () => setTab("issues", true) },
           { label: "Show sites that slipped", run: () => { siteFilter = "slipped"; render(); setTab("sites", true); } },
           { label: "Show sites that became ready for manual testing", run: () => { siteFilter = "up"; render(); setTab("sites", true); } },
           { label: "Share or export this comparison", run: openExport },
@@ -743,6 +826,25 @@
       if (comparison) renderSites();
     }));
     el("sites-show-all").addEventListener("click", () => { showAllSites = true; renderSites(); });
+    document.querySelectorAll("th[data-issue-sort]").forEach(header => header.querySelector("button").addEventListener("click", () => {
+      issueDirection = issueSort === header.dataset.issueSort ? -issueDirection : 1;
+      issueSort = header.dataset.issueSort;
+      if (comparison) renderIssues();
+    }));
+    el("issue-filters").addEventListener("click", e => {
+      const b = e.target.closest("button[data-issue-filter]");
+      if (!b) return;
+      issueFilter = b.dataset.issueFilter;
+      renderIssues();
+      el("issue-filters").querySelector(`button[data-issue-filter="${issueFilter}"]`).focus();
+    });
+    el("issues-unavailable").addEventListener("click", e => {
+      if (!e.target.closest("#issues-use-first")) return;
+      fromE = entries.find(x => x.rule_counts); period = "custom"; focusIssues = true;
+      el("date-note").textContent = `Now comparing from ${longDate(fromE.date)}, the first snapshot with counts for each issue.`;
+      loadComparison();
+    });
+    el("export-issues-csv").addEventListener("click", exportIssuesCSV);
     el("export-csv").addEventListener("click", exportCSV);
     el("open-export").addEventListener("click", openExport);
     let printDetails = [];

@@ -93,6 +93,11 @@ button.cal-day:hover { background: var(--good-bg); }
 .notice-body .pill-row { margin-top: 4px; }
 #summary-heading:focus { outline: 3px solid var(--navy); outline-offset: 4px; }
 
+/* Issues tab: keep the issue title readable; the table scrolls sideways on narrow screens. */
+#issues-table tbody th { min-width: 260px; }
+#issues-table tbody th .site-url { font-weight: 400; }
+#issues-table tbody td:nth-child(2) { white-space: nowrap; }
+
 .trend-empty { margin: 0; padding: 40px 16px; text-align: center; color: var(--muted); }
 #shortcuts button:disabled { opacity: .55; cursor: not-allowed; background: none; }
 .trend-summary { margin: 0; font-size: 16px; font-weight: 600; color: var(--navy); }

@@ -108,6 +108,64 @@ class HistoryTests(unittest.TestCase):
             self.assertEqual(len(index["entries"]), 2)
             self.assertEqual(json.loads(gzip.decompress(raw))["schema_version"], 1)
 
+    def rules(self, timestamp="2026-11-05T07:15:00+00:00", **changes):
+        # One rule per level, 10 occurrences each on site 1: adds up to observation().
+        rows = [{"rule_id": 50 + i, "title": f" Rule for {level} \n", "level": level, "sites": [[1, 10, 3]]}
+                for i, level in enumerate(history.LEVELS)]
+        return {"generated_at": timestamp, "rules": rows, **changes}
+
+    def test_rule_counts_are_archived_per_site(self):
+        data = history.normalize(observation(), "fixture", rules=self.rules())
+        self.assertEqual(data["sites"][0]["rule_occurrences"], {"50": 10, "51": 10, "52": 10, "53": 10, "54": 10})
+        self.assertEqual(data["rules"]["50"], {"title": "Rule for A", "level": "A"})
+        without = history.normalize(observation(), "fixture")
+        self.assertNotIn("rules", without)
+        self.assertNotIn("rule_occurrences", without["sites"][0])
+
+    def test_rule_counts_stay_unavailable_unless_verified(self):
+        wrong_total = self.rules()
+        wrong_total["rules"][0]["sites"] = [[1, 9, 3]]
+        totals_only = self.rules()
+        for rule in totals_only["rules"]:
+            del rule["sites"]
+        malformed = self.rules()
+        malformed["rules"][0]["sites"] = [[1, None, 3]]
+        for rules in [wrong_total, totals_only, malformed, self.rules("2026-11-05T09:00:00+00:00"), {}]:
+            data = history.normalize(observation(), "fixture", rules=rules)
+            self.assertNotIn("rules", data)
+            self.assertNotIn("rule_occurrences", data["sites"][0])
+        unverified = observation()
+        del unverified["sites"][0]["issues_available"]
+        self.assertNotIn("rule_occurrences", history.normalize(unverified, "fixture", rules=self.rules())["sites"][0])
+        # A site with verified counts and no failing rule has an empty map, not a missing one.
+        clean = observation()
+        for level in clean["sites"][0]["by_level"].values():
+            level.update(issues=0, occurrences=0)
+        empty = self.rules()
+        for rule in empty["rules"]:
+            rule["sites"] = []
+        self.assertEqual(history.normalize(clean, "fixture", rules=empty)["sites"][0]["rule_occurrences"], {})
+
+    def test_rule_count_backfill_replaces_the_observation_once(self):
+        def git(command, **_):
+            return "commit\n" if command[1] == "log" else json.dumps(self.rules()).encode()
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            first = history.append_snapshot(observation(), directory, "fixture")
+            other = history.append_snapshot(observation("2026-11-06T07:15:00+00:00"), directory, "fixture")
+            original = json.loads(gzip.decompress(first.read_bytes()))
+            with patch.object(history.subprocess, "check_output", side_effect=git):
+                self.assertEqual(history.backfill_rule_counts(directory), 1)
+                self.assertEqual(history.backfill_rule_counts(directory), 0)
+            self.assertFalse(first.exists())
+            self.assertTrue(other.exists(), "an observation without matching rule data is left alone")
+            index = json.loads((directory / "index.json").read_text())
+            self.assertEqual([entry["rule_counts"] for entry in index["entries"]], [True, False])
+            enriched = json.loads(gzip.decompress((directory / Path(index["entries"][0]["path"]).name).read_bytes()))
+            self.assertEqual(enriched.pop("rules")["54"]["level"], "BP")
+            self.assertEqual(len(enriched["sites"][0].pop("rule_occurrences")), 5)
+            self.assertEqual(enriched, original)
+
     def test_departments_and_ambiguity(self):
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "mapping.csv"
@@ -211,6 +269,8 @@ class FetchTests(unittest.TestCase):
                  patch.object(fetch, "fetch_crawl_status", return_value={}):
                 fetch.main()
             data = json.loads((Path(temporary) / "sites.json").read_text())
+            rules = json.loads((Path(temporary) / "rules.json").read_text())
+            self.assertEqual(rules["generated_at"], data["generated_at"], "the archive joins the two files on this timestamp")
             self.assertTrue(data["collection_complete"])
             self.assertTrue(data["sites"][0]["issues_available"])
             self.assertIsNone(data["sites"][0]["pdf_count"])

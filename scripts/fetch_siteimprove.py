@@ -855,9 +855,9 @@ def main() -> None:
     out_dir = Path(os.environ.get("SITEIMPROVE_OUTPUT_DIR") or Path(__file__).resolve().parent.parent / "data")
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    def write_snapshot() -> None:
+    def write_snapshot(generated_at: str) -> None:
         snapshot = {
-            "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "generated_at": generated_at,
             "started_at": collection_started,
             "collection_complete": True,
             "source_run": os.environ.get("GITHUB_RUN_ID", "local"),
@@ -959,6 +959,8 @@ def main() -> None:
         if row.get("id") is not None
     }
 
+    # One timestamp for both files: the history archive only takes per-rule
+    # counts from a rules.json stamped with the same generated_at as sites.json.
     generated_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
     rule_rollup = build_rule_rollup(per_site_issues, site_tags_map)
     rules_snapshot = {
@@ -969,7 +971,7 @@ def main() -> None:
     rules_temp = out_dir / "rules.json.tmp"
     rules_temp.write_text(json.dumps(rules_snapshot, indent=2) + "\n", encoding="utf-8")
     rules_temp.replace(out_dir / "rules.json")
-    write_snapshot()
+    write_snapshot(generated_at)
     print(
         f"Wrote {out_dir / 'sites.json'} and {out_dir / 'rules.json'} "
         f"(global rules: {len(rule_rollup['rules'])}, "
