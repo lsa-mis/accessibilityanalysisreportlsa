@@ -94,6 +94,26 @@
     }
     return result;
   }
+  // Occurrences of each Siteimprove rule (issue title) on the two dates. Counted only on
+  // matched sites with verified issue counts whose per-rule counts were archived on both
+  // dates (rule_occurrences), so a rule's change is never a change in which sites are counted.
+  function issueChanges(comparison, before, after) {
+    const rows = comparison.rows.filter(r => r.matched && r.before.issues_reliable && r.after.issues_reliable &&
+      r.before.rule_occurrences && r.after.rule_occurrences);
+    const totals = new Map();
+    for (const row of rows) for (const side of ["before", "after"]) {
+      for (const [id, n] of Object.entries(row[side].rule_occurrences)) {
+        if (!totals.has(id)) totals.set(id, { before: 0, after: 0, sites_before: 0, sites_after: 0 });
+        totals.get(id)[side] += n;
+        if (n > 0) totals.get(id)[`sites_${side}`] += 1;
+      }
+    }
+    const info = id => (after.rules || {})[id] || (before.rules || {})[id] || {};
+    return {
+      count: rows.length,
+      rules: [...totals].map(([id, t]) => ({ id, title: info(id).title || `Rule ${id}`, level: info(id).level || "", ...t, change: t.after - t.before })),
+    };
+  }
   function daily(entries) {
     const dates = new Map();
     for (const e of [...entries].sort((a, b) => a.generated_at.localeCompare(b.generated_at))) dates.set(e.date, e);
@@ -121,7 +141,7 @@
     if (typeof value === "string" && /^[\s]*[=+\-@]/.test(text)) text = "'" + text;
     return `"${text.replace(/"/g, '""')}"`;
   }
-  const api = { numeric, labels, wordpress, visible, reliable, platform, readyThreshold, ready, READY_THRESHOLDS, department, compare, daily, since, TRACKING_START, baseline, csvCell, pair };
+  const api = { numeric, labels, wordpress, visible, reliable, platform, readyThreshold, ready, READY_THRESHOLDS, department, compare, issueChanges, daily, since, TRACKING_START, baseline, csvCell, pair };
   root.ProgressCore = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(globalThis);

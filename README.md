@@ -15,7 +15,7 @@ site-search.js        Ctrl+K / Cmd+K site search used on both pages
 site-panel.js         Accessible side panel (site details, share/export)
 problems-core.js      Common problems maths: per-site rule counts, audiences, training brief
 rule-guidance.js      DRAFT who-fixes-it / how-to-fix guidance per Siteimprove rule, for team review
-progress.html         Progress over time page: Overview, Departments and Sites tabs, calendar date picker
+progress.html         Progress over time page: Overview, Departments, Sites and Issues tabs, calendar date picker
 progress-core.js      Shared comparison, eligibility, and metric definitions
 progress-client.js    Shared encrypted-data reader and progress-page password gate
 progress-page.js      Progress page controls, tables, and exports
@@ -30,7 +30,8 @@ data/
   site-tags.csv       Admin site labels exported from the Siteimprove UI
   site-departments.csv Maintained primary-department assignments
   departments.json    Validated mapping generated from the department CSV
-  history/            Compact immutable gzip observations and date/trend index
+  history/            Compact immutable gzip observations (per-site scores, counts and
+                      occurrences of each Siteimprove rule) and date/trend index
   refresh-status.json Last publication attempt (separate from last-good data)
 scripts/
   fetch_siteimprove.py   Pulls per-site accessibility data from the Siteimprove API
@@ -158,6 +159,7 @@ no-longer-observed sites use their earlier labels.
 
 - **Headline measures:** WCAG A + AA + ARIA, with AAA, best practices, and PDF measures separate.
 - **Occurrences:** detected instances. **Issue types:** failing rule/site pairs; summing them does not produce a portfolio-distinct rule count.
+- **Changes by issue (Issues tab):** occurrences of each Siteimprove rule on the two dates, shown under the plain-language title from `rule-guidance.js` (rule 53, Siteimprove's "Headings are not structured", reads "Heading levels are skipped") with Siteimprove's own title beneath. Only matched sites whose per-rule counts were archived on both dates are counted (`ProgressCore.issueChanges`), so the Level A + AA + ARIA rows add up to the headline occurrences. Level AAA is a separate filter, as on the Common problems tab. Per-rule counts exist from the November 5, 2026 observation on.
 - **Net change:** later minus earlier, with before/after counts displayed. A reduction is not proof of fixes: pages, scan scope, and newly discovered issues can change.
 - **Matched cohorts:** compare only sites with reliable metrics on both dates. Target and issue/PDF cohorts may differ; each reports its denominator. Added/first-observed and no-longer-observed sites are separate inventory changes, not remediation.
 - **Reliable targets:** numeric, not estimated, no recorded data errors, and a usable scan (`ok` or the existing `stale` status). Failed/running/unknown scans and missing scores stay in the data-gap group with reasons. The existing 14-day scan-staleness classification remains visible through scan metadata; collection time is never presented as scan time.
@@ -196,6 +198,16 @@ Archive a newly collected complete snapshot:
 ```bash
 python3 scripts/progress_history.py
 ```
+
+The archive step also reads the `rules.json` written by the same collection run (matched on `generated_at`) and stores each site's occurrences per rule as `rule_occurrences`, with rule titles and levels under `rules`. A site only gets per-rule counts when its issue counts are verified and the per-rule counts add up to its per-level totals; otherwise they stay unavailable and the run logs a warning.
+
+Observations archived before that step existed can be given their per-rule counts from the `rules.json` that the same run committed to Git:
+
+```bash
+python3 scripts/progress_history.py --backfill-rule-counts
+```
+
+An enriched observation replaces its file (the name carries a content digest); every value already archived stays as it was. Observations whose run recorded only portfolio totals per rule (before November 5, 2026) are left untouched.
 
 Both commands accept `--data-dir` for isolated output (that directory must contain the mapping CSV, and the normal archive command also needs `sites.json`). Department data can remain empty for local previews.
 

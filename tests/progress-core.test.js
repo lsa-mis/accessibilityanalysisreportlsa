@@ -85,6 +85,28 @@ test("platform/tag filters preserve OR semantics and exclusions", () => {
   assert.equal(compare(sites, sites, {}, { tags: ["tag:AEM"] }).matched, 1);
   assert.equal(compare(sites, sites, {}, { search: "/1" }).matched, 1);
 });
+test("issue changes count each rule on matched sites with rule counts on both dates", () => {
+  const withRules = (key, rules, changes = {}) => ({ ...site(key), rule_occurrences: rules, ...changes });
+  const before = {
+    rules: { 53: { title: "Old title", level: "BP" }, 64: { title: "Empty headings", level: "A" } },
+    sites: [withRules(1, { 53: 10, 64: 4 }), withRules(2, { 53: 5 }), withRules(3, { 53: 100 }), site(4), withRules(5, { 53: 7 }), withRules(6, { 53: 9 })],
+  };
+  const after = {
+    rules: { 53: { title: "Headings are not structured", level: "BP" }, 2: { title: "Image missing a text alternative", level: "A" } },
+    sites: [withRules(1, { 53: 6, 2: 3 }), withRules(2, {}), site(3), withRules(4, { 53: 50 }),
+      withRules(5, { 53: 1 }, { issues_reliable: false }), withRules(7, { 53: 20 })],
+  };
+  const changes = core.issueChanges(core.compare(before, after), before, after);
+  assert.equal(changes.count, 2, "sites 3 and 4 lack rule counts on one date, 5 is unverified, 6 and 7 are unmatched");
+  const rule = id => changes.rules.find(r => r.id === id);
+  assert.deepEqual(rule("53"), { id: "53", title: "Headings are not structured", level: "BP", before: 15, after: 6, sites_before: 2, sites_after: 1, change: -9 });
+  assert.deepEqual(rule("64"), { id: "64", title: "Empty headings", level: "A", before: 4, after: 0, sites_before: 1, sites_after: 0, change: -4 });
+  assert.equal(rule("2").change, 3);
+  const filtered = core.issueChanges(core.compare(before, after, {}, { search: "/2" }), before, after);
+  assert.deepEqual([filtered.count, filtered.rules.length, filtered.rules[0].change], [1, 1, -5]);
+  const none = core.issueChanges(core.compare({ sites: [site(1)] }, { sites: [site(1)] }), { sites: [site(1)] }, { sites: [site(1)] });
+  assert.deepEqual(none, { count: 0, rules: [] });
+});
 test("month shortcuts clamp month-end and leap dates, never go forward", () => {
   const e = date => ({ date, generated_at: date + "T07:00:00Z", path: date });
   assert.equal(core.baseline([e("2026-02-28"), e("2026-03-01")], e("2026-03-31"), "month").date, "2026-02-28");
