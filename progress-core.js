@@ -120,7 +120,7 @@
     return [...dates.values()].sort((a, b) => a.date.localeCompare(b.date));
   }
   // The Progress page only offers snapshots from this date on. Earlier files stay in the archive.
-  const TRACKING_START = "2026-11-04";
+  const TRACKING_START = "2026-11-05";
   function since(entries, date = TRACKING_START) {
     return entries.filter(e => e.date >= date);
   }
