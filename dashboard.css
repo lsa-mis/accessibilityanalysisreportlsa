@@ -111,6 +111,13 @@
 .detail-head h2:focus { outline: none; }
 .problem-detail h3, .side-panel h3 { margin: 0 0 8px; font-size: 16px; }
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+/* Share fill: the tint runs to --fill; the % is also in the box's text. */
+.stat-box--fill { background: linear-gradient(to right, #DCE7F3 var(--fill, 0%), var(--card) var(--fill, 0%)); }
+.stat-pct { font-size: 16px; font-weight: 700; }
+.share-table th[scope="row"] { text-align: left; font-weight: 700; }
+.share-cell { display: flex; align-items: center; gap: 8px; min-width: 120px; }
+.share-cell .bar { flex: 1; height: 10px; }
+.share-cell strong { min-width: 48px; text-align: right; }
 .stat-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
 .soft-box { background: var(--soft); border-radius: 12px; padding: 16px 18px; }

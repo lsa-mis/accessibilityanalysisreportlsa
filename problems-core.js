@@ -15,6 +15,42 @@
     return { audience: FALLBACK_AUDIENCE, fixedIn: "Not yet categorised", plain: rule.title || "Unnamed check", why: "", fix: [] };
   }
 
+  // Siteimprove's Title II target covers Level A, AA and ARIA. Best practices
+  // sit outside it, so a best-practice check is compared with every level.
+  const TARGET_LEVELS = ["A", "AA", "ARIA"];
+  const inScope = (level, scope) => scope === "all" ? level !== "AAA" : TARGET_LEVELS.includes(level);
+  const scopeOf = level => TARGET_LEVELS.includes(level) ? "target" : "all";
+
+  function pct(part, total) {
+    if (part === null || part === undefined || !total) return null;
+    return Math.min(100, Math.round(part / total * 1000) / 10);
+  }
+
+  // A site's own occurrences in scope (decorated lvl_* fields, else by_level).
+  function siteOccurrences(site, scope) {
+    if (!site || site.issues_available === false) return null;
+    const levels = scope === "all" ? [...TARGET_LEVELS, "BP"] : TARGET_LEVELS;
+    const field = { A: "lvl_a", AA: "lvl_aa", ARIA: "lvl_aria", BP: "lvl_bp" };
+    return levels.reduce((n, l) => n + (site[field[l]] ?? site.by_level?.[l]?.occurrences ?? 0), 0);
+  }
+
+  // This problem's share of everything in scope for the sites in view:
+  // occurrences, pages checked and sites. rows: aggregate() output for the
+  // same sites; sitesInView: the filtered site list.
+  function shares(row, rows, sitesInView) {
+    const scope = scopeOf(row.level);
+    const withData = (sitesInView || []).filter(s => s.issues_available !== false);
+    const occTotal = rows.filter(r => inScope(r.level, scope)).reduce((n, r) => n + r.occurrences, 0);
+    const pagesTotal = withData.reduce((n, s) => n + (typeof s.pages === "number" ? s.pages : 0), 0);
+    const part = (issue, total) => ({ issue, total, pct: pct(issue, total) });
+    return {
+      scope,
+      occurrences: part(row.occurrences, occTotal),
+      pages: row.hasSiteData ? part(row.pages, pagesTotal) : null,
+      sites: row.hasSiteData ? part(row.sitesAffected, withData.length) : null,
+    };
+  }
+
   function audienceName(key, guide) {
     if (key === FALLBACK_AUDIENCE) return "Not yet categorised";
     return (guide && guide.audiences && guide.audiences[key]) || key;
@@ -29,13 +65,15 @@
       if (rule.level === "AAA") continue;
       const g = guidanceFor(rule, guide);
       const hasSiteData = Array.isArray(rule.sites);
+      const scope = scopeOf(rule.level);
       let sites = [], occurrences, pages = null, every = null;
       if (hasSiteData) {
         for (const [id, occ, pg] of rule.sites) {
           const site = siteIndex.get(String(id));
           if (!site) continue;
           const total = typeof site.pages === "number" ? site.pages : null;
-          sites.push({ site, occurrences: occ || 0, pages: pg || 0, everywhere: !!(total && pg >= total * 0.8) });
+          sites.push({ site, occurrences: occ || 0, pages: pg || 0, everywhere: !!(total && pg >= total * 0.8),
+            siteShare: pct(occ || 0, siteOccurrences(site, scope)) });
         }
         sites.sort((a, b) => b.occurrences - a.occurrences);
         occurrences = sites.reduce((n, s) => n + s.occurrences, 0);
@@ -84,7 +122,7 @@
       .map(([label, count]) => ({ label, count }));
   }
 
-  function brief(row, guide, totalSites, context) {
+  function brief(row, guide, totalSites, context, share) {
     const g = row.guidance;
     const lines = [
       `Training brief: ${row.name}`,
@@ -94,18 +132,23 @@
         ? `Found on ${row.sitesAffected} of ${totalSites} sites, ${row.occurrences.toLocaleString("en-US")} times${row.every ? `; on almost every page of ${row.every} sites` : ""}.`
         : `Found on ${row.sitesAffected} sites, ${row.occurrences.toLocaleString("en-US")} times (all sites; per-site detail not yet available).`,
     ];
+    if (share && share.occurrences.pct !== null) {
+      const of = share.scope === "target" ? "target issues (Level A, AA and ARIA)" : "all issues";
+      lines.push(`Share: ${share.occurrences.pct}% of ${of}` +
+        (share.pages && share.pages.pct !== null ? ` and ${share.pages.pct}% of pages checked` : "") + " in these sites.");
+    }
     if (context) lines.push(`Scope: ${context}`);
     if (g.why) lines.push(`Why it matters: ${g.why}`);
     if ((g.fix || []).length) lines.push("How to fix:", ...g.fix.map(f => `- ${f}`));
     if (row.sites.length) {
       lines.push("Sites with the most cases:");
-      for (const s of row.sites.slice(0, 10)) lines.push(`- ${s.site.site_name || s.site.url}${s.site.url ? " (" + s.site.url + ")" : ""}: ${s.occurrences.toLocaleString("en-US")}`);
+      for (const s of row.sites.slice(0, 10)) lines.push(`- ${s.site.site_name || s.site.url}${s.site.url ? " (" + s.site.url + ")" : ""}: ${s.occurrences.toLocaleString("en-US")}${s.siteShare === null ? "" : ` (${s.siteShare}% of the site's ${share && share.scope === "all" ? "issues" : "target issues"})`}`);
     }
     lines.push("Counts are detected occurrences from Siteimprove, not verified fixes.");
     return lines.join("\n");
   }
 
-  const api = { aggregate, sortRows, audiences, groupCounts, brief, guidanceFor, audienceName, FALLBACK_AUDIENCE };
+  const api = { aggregate, sortRows, audiences, groupCounts, brief, guidanceFor, audienceName, shares, siteOccurrences, TARGET_LEVELS, FALLBACK_AUDIENCE };
   root.ProblemsCore = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);
