@@ -29,10 +29,11 @@
       if (!resources) resources = Promise.all([load("history/index"), load("departments"), load("refresh-status")]).catch(failure => { resources = null; throw failure; });
       const [index, mapping, status] = await resources;
       if (token !== generation) return;
-      const dates = ProgressCore.daily(index.entries), latest = dates.at(-1);
+      // Same date range as the Progress page: snapshots from TRACKING_START on.
+      const dates = ProgressCore.daily(ProgressCore.since(index.entries)), latest = dates.at(-1);
       if (!latest) throw new Error("No saved snapshots yet.");
-      // Compare with a month ago; if that snapshot isn't reliable (an older
-      // import without scan quality details), use the first reliable one.
+      // Compare with a month ago; if there's no reliable snapshot that far
+      // back, use the first one from the start of tracking.
       const reliable = e => !!e && e.eligible_count > 0;
       let earlier = ProgressCore.baseline(dates, latest, "month"), fallback = false;
       if (!reliable(earlier)) {
@@ -52,7 +53,7 @@
       const [before, after] = await Promise.all([get(earlier), get(latest)]);
       if (token !== generation) return;
       const r = ProgressCore.compare(before, after, mapping, filter);
-      if (heading) heading.textContent = `Change since ${longDate(earlier.date)}${fallback ? " (first reliable data)" : ""}`;
+      if (heading) heading.textContent = `Change since ${longDate(earlier.date)}${fallback ? " (start of tracking)" : ""}`;
       if (!r.matched) {
         target.innerHTML = `<span>No sites have reliable data on both dates yet.</span>${warning ? ` <span class="muted">${esc(warning)}</span>` : ""}`;
         return;

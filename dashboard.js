@@ -471,7 +471,8 @@ function renderTopProblems(rows) {
     </button></li>`).join("");
 }
 
-function renderProblems(rows, filteredCount) {
+function renderProblems(rows, filtered) {
+  const filteredCount = filtered.length;
   const guide = window.RuleGuidance;
   const note = $("problem-note");
   if (!rows) {
@@ -514,6 +515,22 @@ function renderProblems(rows, filteredCount) {
   const g = selected.guidance;
   const theme = g.fixedIn === "Site theme";
   const sites = selected.sites;
+  const sh = ProblemsCore.shares(selected, rows, filtered);
+  const target = sh.scope === "target";
+  const scopeLabel = target ? "target issues" : "issues";
+  const shareText = p => p === null ? "" : `${Number.isInteger(p) ? p : p.toFixed(1)}%`;
+  // Whole percent in the stat boxes, except small shares, which would round to a misleading 0%.
+  const shortShare = part => part.pct >= 1 ? `${Math.round(part.pct)}%` : part.pct > 0 ? shareText(part.pct) : part.issue > 0 ? "<0.1%" : "0%";
+  // A stat box whose background is tinted to its share; the % is always in the text too.
+  const fillBox = (label, value, part, note) => {
+    const p = part ? part.pct : null;
+    return `<div class="stat-box${p === null ? "" : " stat-box--fill"}"${p === null ? "" : ` style="--fill:${p}%"`}><span class="label">${label}</span>
+      <span class="value tnum">${value}${p === null ? "" : ` <span class="stat-pct">(${shortShare(part)})</span>`}</span>${note ? `<span class="muted">${note}</span>` : ""}</div>`;
+  };
+  const matrixRow = (label, part, totalNote) => part ? `<tr><th scope="row">${label}</th>
+      <td class="num tnum">${fmtNumber(part.issue)}</td>
+      <td class="num tnum">${fmtNumber(part.total)}${totalNote ? ` <span class="muted">${totalNote}</span>` : ""}</td>
+      <td>${part.pct === null ? `<span class="muted">Not available</span>` : `<span class="share-cell"><span class="bar" aria-hidden="true"><span style="width:${part.pct}%"></span></span><strong class="tnum">${part.pct === 0 && part.issue > 0 ? "<0.1%" : shareText(part.pct)}</strong></span>`}</td></tr>` : "";
   const shown = state.problemShowAll ? sites : sites.slice(0, 8);
   const byPlatform = ProblemsCore.groupCounts(sites, s => s.platform, 6);
   const byArea = ProblemsCore.groupCounts(sites, s => (s.tags || []).map(prettyTag).filter(t => !/^(wp|wp-.*|aem|lsa|custom sites|google-sites|omeka|cpanel|openshift|rails)$/i.test(t)), 6);
@@ -538,19 +555,31 @@ function renderProblems(rows, filteredCount) {
       </div>
     </div>
     <div class="stat-grid">
-      <div class="stat-box"><span class="label">Sites with it now</span><span class="value tnum">${fmtNumber(selected.sitesAffected)}</span>${perSite ? `<span class="muted">out of ${fmtNumber(filteredCount)} sites in view</span>` : ""}</div>
-      <div class="stat-box"><span class="label">Times found</span><span class="value tnum">${fmtNumber(selected.occurrences)}</span></div>
-      ${perSite ? `<div class="stat-box"><span class="label">Pages affected</span><span class="value tnum">${fmtNumber(selected.pages)}</span></div>
+      ${fillBox("Sites with it now", fmtNumber(selected.sitesAffected), sh.sites, sh.sites ? `of ${fmtNumber(sh.sites.total)} sites in view${sh.sites.total < filteredCount ? " with issue counts" : ""}` : "")}
+      ${fillBox("Times found", fmtNumber(selected.occurrences), sh.occurrences, sh.occurrences.pct === null ? "" : `of all ${scopeLabel} in view`)}
+      ${perSite ? `${fillBox("Pages affected", fmtNumber(selected.pages), sh.pages, sh.pages && sh.pages.total ? `of ${fmtNumber(sh.pages.total)} pages checked` : "")}
       <div class="stat-box"><span class="label">On almost every page</span><span class="value tnum">${fmtNumber(selected.every)}</span><span class="muted">sites, usually a theme fix</span></div>` : ""}
+    </div>
+    <div class="stack" style="gap:8px">
+      <h3>How much of the problem this is</h3>
+      <p class="muted" style="margin:0;font-size:14px">${target
+        ? "This issue next to every issue in Siteimprove’s Title II target (Level A, AA and ARIA) in the selected sites. The target score moves most with pages affected."
+        : "Best practices are not part of Siteimprove’s Title II target, so this check is compared with every issue (Level A, AA, ARIA and best practices) in the selected sites."}</p>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Share of all ${scopeLabel}, scrolls sideways">
+        <table class="data-table share-table"><caption class="sr-only">${escapeHtml(selected.name)} compared with all ${scopeLabel} in the selected sites</caption>
+          <thead><tr><th scope="col">Measure</th><th scope="col" class="num">This issue</th><th scope="col" class="num">All ${scopeLabel}</th><th scope="col">Share</th></tr></thead>
+          <tbody>${matrixRow("Times found", sh.occurrences, "")}${matrixRow("Pages affected", sh.pages, "pages checked")}${matrixRow("Sites", sh.sites, "sites in view")}</tbody></table></div>
+      ${perSite ? "" : `<p class="muted" style="margin:0;font-size:14px">Page and site shares start after the next nightly refresh, which records which sites have each problem.</p>`}
     </div>
     <div class="stack" style="gap:8px">
       <h3>Top sites with this problem</h3>
       <p class="muted" style="margin:0;font-size:14px">Sites with the most cases first. Good places to start, or to invite to a training session. Select a site for its details.</p>
       ${sites.length ? `<div class="table-scroll" tabindex="0" role="region" aria-label="Sites with the most cases, scrolls sideways">
         <table class="data-table"><caption class="sr-only">Sites with the most cases of ${escapeHtml(selected.name)}</caption>
-          <thead><tr><th scope="col">Site</th><th scope="col">Platform</th><th scope="col" class="num">Times found</th><th scope="col" class="num">Pages affected</th><th scope="col">On almost every page</th></tr></thead>
+          <thead><tr><th scope="col">Site</th><th scope="col">Platform</th><th scope="col" class="num">Times found</th><th scope="col" class="num">Share of site’s ${scopeLabel}</th><th scope="col" class="num">Pages affected</th><th scope="col">On almost every page</th></tr></thead>
           <tbody>${shown.map(x => `<tr><td><button type="button" class="name-btn" data-site="${escapeHtml(x.site.id)}">${escapeHtml(siteLabel(x.site))}</button>${readyTag(x.site)}</td>
             <td>${escapeHtml(x.site.platform)}</td><td class="num tnum">${fmtNumber(x.occurrences)}</td>
+            <td class="num tnum">${x.siteShare === null ? "—" : shareText(x.siteShare)}</td>
             <td class="num tnum">${fmtNumber(x.pages)} of ${fmtNumber(x.site.pages)}</td><td>${x.everywhere ? "Yes" : "No"}</td></tr>`).join("")}</tbody></table></div>
         ${!state.problemShowAll && sites.length > 8 ? `<button type="button" class="btn" id="problem-show-all" style="align-self:flex-start">Show all ${fmtNumber(sites.length)} sites</button>` : ""}`
       : `<p class="notice" style="margin:0">The list of top sites for each problem starts with the next nightly data refresh (2 a.m. Detroit time), the first one that records which sites have each problem.</p>`}
@@ -568,16 +597,17 @@ function renderProblems(rows, filteredCount) {
     </div>
 `;
   $("copy-brief").addEventListener("click", async () => {
-    const text = ProblemsCore.brief(selected, guide, filteredCount, filterDescription());
+    const text = ProblemsCore.brief(selected, guide, filteredCount, filterDescription(), sh);
     try { await navigator.clipboard.writeText(text); toast(`Training brief copied for “${selected.name}”.`); }
     catch (_) { toast("Copy is blocked in this browser. Select and copy the text from the CSV instead."); }
   });
   const dl = $("download-problem-sites");
   if (dl && sites.length) dl.addEventListener("click", () => {
     download(`lsa-problem-${selected.id}-${stamp()}-${sites.length}sites.csv`, [
-      csvRow([`Problem: ${selected.name}`, `Siteimprove check: ${selected.rule.title || ""}`, `Filters: ${filterDescription()}`]),
-      csvRow(["Site", "URL", "Platform", "Times found", "Pages affected", "Pages checked", "On almost every page", "Ready for manual testing"]),
-      ...sites.map(x => csvRow([x.site.site_name || "", x.site.url || "", x.site.platform, x.occurrences, x.pages, x.site.pages ?? "", x.everywhere ? "Yes" : "No", isReady(x.site) ? "Yes" : "No"])),
+      csvRow([`Problem: ${selected.name}`, `Siteimprove check: ${selected.rule.title || ""}`, `Filters: ${filterDescription()}`,
+        `Share of all ${scopeLabel}: ${shareText(sh.occurrences.pct) || "n/a"}`, `Share of pages checked: ${sh.pages ? shareText(sh.pages.pct) || "n/a" : "n/a"}`]),
+      csvRow(["Site", "URL", "Platform", "Times found", `Share of site's ${scopeLabel} (%)`, "Pages affected", "Pages checked", "On almost every page", "Ready for manual testing"]),
+      ...sites.map(x => csvRow([x.site.site_name || "", x.site.url || "", x.site.platform, x.occurrences, x.siteShare ?? "", x.pages, x.site.pages ?? "", x.everywhere ? "Yes" : "No", isReady(x.site) ? "Yes" : "No"])),
     ]);
   });
   const more = $("problem-show-all");
@@ -813,7 +843,7 @@ function renderAll() {
   renderLevels(filtered);
   const rows = problemRows(filtered);
   renderTopProblems(rows);
-  renderProblems(rows, filtered.length);
+  renderProblems(rows, filtered);
   renderReady(filtered);
   renderMissing(filtered);
   renderTable(filtered);
