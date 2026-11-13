@@ -659,8 +659,12 @@ function renderMissing(filtered) {
 }
 
 function exportMissingCSV() {
-  const rows = applyFilters().map(s => ({ s, reasons: missingReasons(s) })).filter(r => r.reasons.length);
-  download(`lsa-missing-data-${stamp()}-${rows.length}sites.csv`, [
+  const reason = state.missingFilter;
+  const rows = applyFilters().map(s => ({ s, reasons: missingReasons(s) }))
+    .filter(r => r.reasons.length && (reason === "all" || r.reasons.includes(reason)))
+    .sort((a, b) => b.reasons.length - a.reasons.length || siteLabel(a.s).localeCompare(siteLabel(b.s)));
+  const filtered = reason !== "all" || activeFilters().length;
+  download(`lsa-missing-data-${reason === "all" ? "" : reason + "-"}${stamp()}${filtered ? "-filtered" : ""}-${rows.length}sites.csv`, [
     csvRow(["Site name", "URL", "Site ID", "Platform", "What's missing", "Last check", "Last checked", "Pages checked", "Errors recorded"]),
     ...rows.map(({ s, reasons }) => csvRow([s.site_name || "", s.url || "", s.id ?? "", s.platform, reasons.map(k => MISSING[k]).join("; "),
       SCAN_WORDS[s.scan] || "", s.last_crawl || "", s.pages ?? "", (s.errors || []).join("; ")])),
@@ -682,7 +686,7 @@ function renderReady(filtered) {
 
 function exportReadyCSV() {
   const ready = readySites(applyFilters());
-  download(`lsa-ready-for-manual-testing-${stamp()}-${ready.length}sites.csv`, [
+  download(`lsa-ready-for-manual-testing-${stamp()}${activeFilters().length ? "-filtered" : ""}-${ready.length}sites.csv`, [
     csvRow(["Site name", "URL", "Site ID", "Platform", "Score (Title II target %)", "Ready line %", "Pages checked", "Last checked", "Labels"]),
     ...ready.map(s => csvRow([s.site_name || "", s.url || "", s.id ?? "", s.platform, s.target_percentage ?? "", readyLine(s), s.pages ?? "", s.last_crawl || "", (s.tags || []).map(prettyTag).join(", ")])),
   ]);
