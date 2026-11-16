@@ -42,6 +42,14 @@
   function pair(before, after, count) {
     return { before, after, change: before === null || after === null ? null : after - before, count };
   }
+  function selectedSites(snapshot, mapping = {}, filter = {}) {
+    return snapshot.sites.filter(s => visible(s) &&
+      (!filter.platform || platform(s) === filter.platform) &&
+      (!(filter.platforms || []).length || filter.platforms.includes(platform(s))) &&
+      (!filter.department || department(s, mapping) === filter.department) &&
+      (!(filter.tags || []).length || filter.tags.some(t => (s.tags || []).includes(t))) &&
+      (!filter.search || `${s.site_name} ${s.url}`.toLowerCase().includes(filter.search.toLowerCase())));
+  }
   function compare(before, after, mapping = {}, filter = {}) {
     const accepts = s => visible(s) &&
       (!filter.platform || platform(s) === filter.platform) &&
@@ -94,10 +102,46 @@
     }
     return result;
   }
+  function datedPair(before, after, value) {
+    const oldKeys = new Set(before.map(s => s.key));
+    const matched = after.filter(s => oldKeys.has(s.key)).length;
+    return {
+      ...pair(before.length ? value(before) : null, after.length ? value(after) : null, matched),
+      before_count: before.length, after_count: after.length,
+      same_sites: before.length > 0 && matched === before.length && matched === after.length,
+    };
+  }
+  function compareDates(before, after, mapping = {}, filter = {}) {
+    const old = selectedSites(before, mapping, filter), current = selectedSites(after, mapping, filter);
+    const result = compare({ sites: old }, { sites: current }, mapping);
+    const oldKeys = new Set(before.sites.map(s => s.key)), currentKeys = new Set(after.sites.map(s => s.key));
+    for (const row of result.rows) {
+      if (!row.before && oldKeys.has(row.key)) row.reason = "Outside the start-date filters";
+      if (!row.after && currentKeys.has(row.key)) row.reason = "Outside the end-date filters";
+    }
+    const oldEligible = old.filter(s => s.eligible), currentEligible = current.filter(s => s.eligible);
+    const mean = sites => sites.reduce((n, s) => n + s.target_percentage, 0) / sites.length;
+    result.target = datedPair(oldEligible, currentEligible, mean);
+    result.ready = datedPair(oldEligible, currentEligible, sites => sites.filter(s => s.target_percentage >= readyThreshold(s)).length);
+    const oldIssues = oldEligible.filter(s => s.issues_reliable), currentIssues = currentEligible.filter(s => s.issues_reliable);
+    for (const [name, levels] of [["headline", ["A", "AA", "ARIA"]], ["aaa", ["AAA"]], ["bp", ["BP"]]]) {
+      for (const metric of ["issues", "occurrences"]) {
+        result[`${name}_${metric}`] = datedPair(oldIssues, currentIssues, sites => sum(sites, levels, metric));
+      }
+    }
+    for (const metric of ["pdf_count", "pdfs_with_issues", "pdf_total_issues"]) {
+      result[metric] = datedPair(
+        oldEligible.filter(s => s.pdfs_reliable && numeric(s[metric])),
+        currentEligible.filter(s => s.pdfs_reliable && numeric(s[metric])),
+        sites => sites.reduce((n, s) => n + s[metric], 0)
+      );
+    }
+    return result;
+  }
   // Each date keeps its own verified totals and filters, independent of the other date.
   function issueChanges(before, after, mapping = {}, filter = {}) {
     const available = snapshot => {
-      const sites = compare(snapshot, snapshot, mapping, filter).rows.map(r => r.site);
+      const sites = selectedSites(snapshot, mapping, filter);
       return { total: sites.length, sites: sites.filter(s => s.eligible && s.issues_reliable && s.rule_occurrences) };
     };
     const old = available(before), current = available(after);
@@ -151,7 +195,7 @@
     if (typeof value === "string" && /^[\s]*[=+\-@]/.test(text)) text = "'" + text;
     return `"${text.replace(/"/g, '""')}"`;
   }
-  const api = { numeric, labels, wordpress, visible, reliable, platform, readyThreshold, ready, READY_THRESHOLDS, department, compare, issueChanges, daily, since, TRACKING_START, baseline, csvCell, pair };
+  const api = { numeric, labels, wordpress, visible, reliable, platform, readyThreshold, ready, READY_THRESHOLDS, department, compare, compareDates, issueChanges, daily, since, TRACKING_START, baseline, csvCell, pair };
   root.ProgressCore = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(globalThis);

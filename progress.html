@@ -87,6 +87,7 @@
         <span class="filter-label" id="platform-label">Platform</span>
         <div class="filter-row" id="filter-platform"></div>
       </div>
+      <p class="muted" style="margin:0;font-size:14px">Platform counts show the start → end date inventory.</p>
       <div class="filter-row no-print">
         <label class="filter-label" for="search">Find a site</label>
         <input id="search" class="text-input" type="search" placeholder="Name or web address" autocomplete="off">
@@ -102,6 +103,20 @@
     <section id="not-comparable" class="notice notice-block" aria-labelledby="not-comparable-title" hidden></section>
 
     <div id="report" tabindex="-1" hidden>
+      <section id="inventory-summary" class="card stack" aria-labelledby="inventory-heading">
+        <h2 id="inventory-heading">Site count across these dates</h2>
+        <dl class="inventory-counts">
+          <div><dt>Start: <span data-comparison-date="before">start date</span></dt><dd class="tnum" id="inventory-before"></dd></div>
+          <div><dt>End: <span data-comparison-date="after">end date</span></dt><dd class="tnum" id="inventory-after"></dd></div>
+          <div><dt>Net change</dt><dd id="inventory-change"></dd></div>
+        </dl>
+        <div class="pill-row no-print">
+          <button type="button" class="btn" id="inventory-only-end" data-site-filter="new" aria-controls="panel-sites"></button>
+          <button type="button" class="btn" id="inventory-only-start" data-site-filter="gone" aria-controls="panel-sites"></button>
+        </div>
+        <p id="inventory-note" class="muted" style="margin:0;font-size:14px"></p>
+      </section>
+      <p id="comparison-coverage" class="notice"></p>
       <!-- OVERVIEW -->
       <div id="panel-overview" class="tab-panel" tabindex="-1" aria-label="Overview">
         <section class="card summary-card" aria-labelledby="summary-heading">
@@ -121,7 +136,7 @@
         <section class="card stack" aria-labelledby="trend-heading">
           <div>
             <h2 id="trend-heading">Trend: average score</h2>
-            <p class="card-sub">Average score for each snapshot between the start and end dates. Use Earlier start or the table to widen the range.</p>
+            <p class="card-sub">Average score for the active filters on each date, using that date’s reliable scores. Use Earlier start or the table to widen the range.</p>
           </div>
           <p id="trend-summary" class="trend-summary"></p>
           <div class="trend">
@@ -144,7 +159,7 @@
           <div id="trend-table-wrap" class="table-scroll trend-table" tabindex="0" role="region" aria-label="Trend data as a table" hidden>
             <table class="data-table">
               <caption class="sr-only">Average score for each comparable snapshot, newest first</caption>
-              <thead><tr><th scope="col">Date</th><th scope="col" class="num">Average score</th><th scope="col">Source</th><th scope="col"><span class="sr-only">Action</span></th></tr></thead>
+              <thead><tr><th scope="col">Date</th><th scope="col" class="num">Average score</th><th scope="col" class="num">Reliable scores / sites in view</th><th scope="col">Source</th><th scope="col"><span class="sr-only">Action</span></th></tr></thead>
               <tbody id="trend-body"></tbody>
             </table>
           </div>
@@ -165,7 +180,7 @@
           <section class="card stack" aria-labelledby="coverage-heading">
             <div>
               <h2 id="coverage-heading">What’s counted</h2>
-              <p class="card-sub">Only matched sites count toward the numbers above.</p>
+              <p class="card-sub">Each date uses its own reliable data. Matched sites are used only to identify individual changes and ready-line crossings.</p>
             </div>
             <div class="coverage-bar" id="coverage-bar" aria-hidden="true"></div>
             <ul class="plain-list" id="coverage"></ul>
@@ -176,7 +191,7 @@
           <summary class="details-summary">Other measures: Level AAA, best practices and PDFs</summary>
           <div class="table-scroll">
             <table class="data-table">
-              <thead><tr><th scope="col">Measure</th><th scope="col" class="num">Before</th><th scope="col" class="num">Now</th><th scope="col" class="num">Change</th><th scope="col" class="num">Sites compared</th></tr></thead>
+              <thead><tr><th scope="col">Measure</th><th scope="col" class="num" data-comparison-date="before">Start date</th><th scope="col" class="num" data-comparison-date="after">End date</th><th scope="col" class="num">Change</th><th scope="col">Reliable sites (start → end)</th></tr></thead>
               <tbody id="supplementary-metrics"></tbody>
             </table>
           </div>
@@ -191,10 +206,11 @@
             <h2 id="departments-heading">By department</h2>
             <p class="card-sub">Today’s department list applies to both dates. Select a department to see its sites.</p>
           </div>
+          <p id="departments-note" class="muted"></p>
           <div class="table-scroll" tabindex="0" role="region" aria-label="Department comparison, scrolls sideways">
             <table class="data-table">
               <caption class="sr-only">Department comparison for the selected dates and filters</caption>
-              <thead><tr><th scope="col">Department</th><th scope="col" class="num">Matched sites</th><th scope="col">Ready for manual testing (before → now)</th><th scope="col">Average score</th><th scope="col">Issues (occurrences)</th><th scope="col" class="num">Needs reliable data</th></tr></thead>
+              <thead><tr><th scope="col">Department</th><th scope="col" class="num">Sites (start → end)</th><th scope="col">Ready for manual testing (start → end)</th><th scope="col">Average score (start → end)</th><th scope="col">Issues (start → end)</th><th scope="col" class="num">Needs reliable scores (start → end)</th></tr></thead>
               <tbody id="departments-body"></tbody>
             </table>
           </div>
@@ -208,6 +224,7 @@
             <h2 id="sites-heading" tabindex="-1">Sites <span class="muted tnum" id="sites-count"></span></h2>
             <button type="button" class="btn no-print" id="export-csv">Export comparison CSV</button>
           </div>
+          <p id="sites-note" class="muted"></p>
           <div class="filter-row no-print" id="site-filters" role="group" aria-label="Show sites"></div>
           <div class="table-scroll" tabindex="0" role="region" aria-label="Site comparison, scrolls sideways">
             <table class="data-table" id="sites-table">
@@ -215,12 +232,13 @@
               <thead><tr>
                 <th scope="col" data-sort="site" aria-sort="ascending"><button type="button" class="sort-btn">Site</button></th>
                 <th scope="col">Department</th>
-                <th scope="col" class="num">Score before</th>
-                <th scope="col" class="num">Score now</th>
+                <th scope="col" class="num">Score on <span data-comparison-date="before">start date</span></th>
+                <th scope="col" class="num">Score on <span data-comparison-date="after">end date</span></th>
                 <th scope="col" data-sort="target"><button type="button" class="sort-btn">Score change</button></th>
-                <th scope="col" class="num">Issues now</th>
+                <th scope="col" class="num">Issues on <span data-comparison-date="before">start date</span></th>
+                <th scope="col" class="num">Issues on <span data-comparison-date="after">end date</span></th>
                 <th scope="col" data-sort="occurrences"><button type="button" class="sort-btn">Occurrence change</button></th>
-                <th scope="col" class="num">Pages (before → now)</th>
+                <th scope="col" class="num">Pages (start → end)</th>
                 <th scope="col">Status</th>
               </tr></thead>
               <tbody id="sites-body"></tbody>
@@ -266,7 +284,8 @@
     <details class="card glossary">
       <summary>How these numbers work, and terms used</summary>
       <ul id="definitions">
-        <li><strong>Matched sites:</strong> a confirmed score on both dates. Overview, Departments and Sites changes use only these; Issues counts each date independently.</li>
+        <li><strong>Selected-day totals:</strong> all tabs count each date’s reliable data independently, with filters applied to that date’s site metadata. A date’s totals do not change when the other date changes. Different site coverage can change totals without fixes or regressions. Today’s department mapping applies to both dates.</li>
+        <li><strong>Matched sites:</strong> a confirmed score on both dates. Used for individual site changes and ready-line crossings, not to restrict each date’s totals.</li>
         <li><strong>Score:</strong> Siteimprove’s Title II target (Level A, AA and ARIA). Ready for manual testing at 93%+ (LSA AEM) or 98%+ (others). Not proof of compliance.</li>
         <li><strong>Issues (occurrences):</strong> each time a required check fails on a page. A drop is a net change, not verified fixes.</li>
         <li><strong>Changes by issue:</strong> occurrences of each Siteimprove check, named as on the Common problems tab. Counts sites with reliable saved per-issue data on each date independently (November 5, 2026 onward). Changing the end date does not change the start date's total for the same filters. Different site coverage can change totals without fixes or regressions.</li>

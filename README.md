@@ -156,17 +156,34 @@ Both pages share one header (search, Live snapshot | Progress over time) with th
 
 The dashboard links to `progress.html` for leadership and department reporting, not editor task management. Choose any two saved dates with the calendar (only comparable snapshots can be picked; older imports are shown struck through) or use the last week/month/3 months/since-tracking-began shortcuts. The default compares the latest saved date with one month earlier, using the nearest available observation **on or before** that baseline. Missing dates are not interpolated. Multiple observations on one day are retained; the date selector uses the latest valid observation on that date.
 
-The summary widget follows platform, label, and search filters; the live dashboard's status/scan filters do not redefine historical cohorts. The separate portfolio-history trend is explicitly unfiltered and shows changing coverage.
-Platform/label filters use the later observation's labels for the matched cohort;
-no-longer-observed sites use their earlier labels.
+All Progress over time tabs use each selected date's own reliable metrics and
+site metadata for platform, label, and search filters (`ProgressCore.compareDates`).
+Changing the other date does not change a date's totals. Overview, Departments,
+Sites, supplementary measures, and exports show date-specific coverage; unavailable
+metrics remain unknown, not zero. Aggregate deltas are neutral when the contributing
+site sets differ. Today's department mapping applies to both dates.
+
+A shared site-inventory summary is visible in every Progress tab: start/end
+counts, net increase or decrease, and links to sites only in either date's selection.
+Inventory counts include sites with running scans or missing metrics; reliable-score
+coverage is shown separately. Filter/tag changes can move sites into or out of a
+selection without a site being created or retired. Both CSV exports carry this context.
+
+The Progress average-score trend also follows these filters, loading the archived
+snapshots rather than using the unfiltered index averages. Its table reports
+reliable-score coverage on each day, and missing values leave gaps in the line.
+The live snapshot's separate portfolio-history trend remains explicitly unfiltered.
+Its summary widget retains matched-cohort comparisons (`ProgressCore.compare`):
+platform/label filters use later labels, or earlier labels for missing sites.
+The live dashboard's status/scan filters do not redefine historical cohorts.
 
 ### Definitions and data quality
 
 - **Headline measures:** WCAG A + AA + ARIA, with AAA, best practices, and PDF measures separate.
 - **Occurrences:** detected instances. **Issue types:** failing rule/site pairs; summing them does not produce a portfolio-distinct rule count.
-- **Changes by issue (Issues tab):** occurrences of each Siteimprove rule on the two dates, shown under the plain-language title from `rule-guidance.js` (rule 53, Siteimprove's "Headings are not structured", reads "Heading levels are skipped") with Siteimprove's own title beneath. Each date independently counts its sites with reliable archived per-rule data (`ProgressCore.issueChanges`), with filters applied to that date's site metadata. Unavailable data is never zero. Coverage counts and warnings accompany the table and CSV; when the site sets differ, deltas are neutral recorded-total differences, not improvements or regressions. These totals can differ from Overview's matched-site headline. Level AAA is a separate filter, as on the Common problems tab. Per-rule counts exist from the November 5, 2026 observation on.
+- **Changes by issue (Issues tab):** occurrences of each Siteimprove rule on the two dates, shown under the plain-language title from `rule-guidance.js` (rule 53, Siteimprove's "Headings are not structured", reads "Heading levels are skipped") with Siteimprove's own title beneath. Each date independently counts its sites with reliable archived per-rule data (`ProgressCore.issueChanges`), with filters applied to that date's site metadata. Unavailable data is never zero. Coverage counts and warnings accompany the table and CSV; when the site sets differ, deltas are neutral recorded-total differences, not improvements or regressions. Totals can differ from Overview if some sites lack verified per-rule counts. Level AAA is a separate filter, as on the Common problems tab. Per-rule counts exist from the November 5, 2026 observation on.
 - **Net change:** later minus earlier, with before/after counts displayed. A reduction is not proof of fixes: pages, scan scope, and newly discovered issues can change.
-- **Matched cohorts:** compare only sites with reliable metrics on both dates. Target and issue/PDF cohorts may differ; each reports its denominator. Added/first-observed and no-longer-observed sites are separate inventory changes, not remediation.
+- **Matched cohorts:** used for individual site changes, ready-line crossings, and the live snapshot's comparison widget, not to restrict Progress daily totals. Target and issue/PDF coverage may differ; each reports its denominator. Only-in-start/end filter selections include inventory and tagging changes, not remediation.
 - **Reliable targets:** numeric, not estimated, no recorded data errors, and a usable scan (`ok` or the existing `stale` status). Failed/running/unknown scans and missing scores stay in the data-gap group with reasons. The existing 14-day scan-staleness classification remains visible through scan metadata; collection time is never presented as scan time.
 - **Ready-line crossings:** each site is measured against its own manual-testing line: **93% for LSA AEM sites, 98% for every other platform** (`ProgressCore.readyThreshold`). Confirmed targets on both dates must cross that line; a newly observed site above 98% is not counted as a crossing. No comparable cohort means unknown, not zero.
 - **Ready for manual testing:** a confirmed Title II target of at least 93% for LSA AEM sites or 98% for every other platform (`ProgressCore.ready`); it excludes estimates and unusable scans, and does not assert compliance.
