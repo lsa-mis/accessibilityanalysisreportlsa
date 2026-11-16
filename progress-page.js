@@ -490,8 +490,8 @@
     });
   }
   function renderIssues() {
-    issues = core.issueChanges(comparison, before, after);
-    const ok = issues.count > 0;
+    issues = core.issueChanges(before, after, mapping, filters());
+    const ok = issues.before_count > 0 || issues.after_count > 0;
     el("issues-unavailable").hidden = ok;
     el("issues-content").hidden = el("export-issues-csv").hidden = !ok;
     if (!ok) {
@@ -502,7 +502,7 @@
       el("issues-count").textContent = "";
       el("issues-unavailable").innerHTML = `<p style="margin:0">${escape(
         missing.length ? `Counts for each issue were not saved on ${missing.join(" or ")}. ${first ? `They are saved with every snapshot from ${longDate(first.date)} on.` : "They start with the next nightly snapshot."}`
-          : comparison.matched ? "No matched site has counts for each issue on both dates." : "No sites have reliable data on both dates.")}</p>
+          : "No sites have reliable counts for each issue on either selected date.")}</p>
         ${canSwitch ? `<div class="pill-row no-print"><button type="button" class="btn btn-primary" id="issues-use-first">Compare from ${escape(longDate(first.date))} instead</button></div>` : ""}`;
       return;
     }
@@ -511,11 +511,10 @@
     el("issue-filters").innerHTML = ISSUE_FILTERS.map(([key, label, accepts]) =>
       `<button type="button" class="chip" data-issue-filter="${key}" aria-pressed="${key === current[0]}">${escape(label)} <span class="tnum">(${issues.rules.filter(r => accepts(r.level)).length})</span></button>`).join("");
     const rows = sortedIssues(issues.rules.filter(r => current[2](r.level)));
-    const down = rows.filter(r => r.change < 0).length, up = rows.filter(r => r.change > 0).length;
     el("issues-count").textContent = `(${fmt(rows.length)})`;
     el("issues-before-date").textContent = longDate(fromE.date);
     el("issues-after-date").textContent = longDate(toE.date);
-    el("issues-note").textContent = `Counted on ${fmt(issues.count)} matched sites with counts for each issue on both dates. ${fmt(down)} went down, ${fmt(up)} went up, ${fmt(rows.length - down - up)} did not change. A drop is a net change, not verified fixes.`;
+    el("issues-note").textContent = issueCoverageNote();
     el("issues-caption").textContent = `Issue comparison, ${current[1]}, ${longDate(fromE.date)} to ${longDate(toE.date)}, ${filterText()}`;
     for (const header of document.querySelectorAll("th[data-issue-sort]")) {
       const active = header.dataset.issueSort === issueSort;
@@ -533,9 +532,13 @@
         <th scope="row">${escape(name)}${name !== r.title ? `<span class="site-url">Siteimprove: ${escape(r.title)}</span>` : ""}</th>
         <td>${escape(LEVEL_NAMES[r.level] || "—")}</td>
         <td class="num tnum">${fmt(r.before)}</td><td class="num tnum">${fmt(r.after)}</td>
-        <td>${pill(r.change, false, signed(r.change))}${share === null || !r.change ? "" : ` <span class="muted tnum" style="font-size:13px;white-space:nowrap">${signed(share, 1)}%</span>`}</td>
+        <td>${issues.same_sites ? pill(r.change, false, signed(r.change)) : `<span class="pill pill-flat">${r.change === null ? "Not comparable" : escape(signed(r.change))}</span>`}${share === null || !r.change ? "" : ` <span class="muted tnum" style="font-size:13px;white-space:nowrap">${signed(share, 1)}%</span>`}</td>
         <td class="num tnum">${fmt(r.sites_before)} → ${fmt(r.sites_after)}</td></tr>`;
     }).join("") : `<tr><td colspan="6" class="empty">No issues at this level on these sites.</td></tr>`;
+  }
+
+  function issueCoverageNote() {
+    return `Reliable per-issue counts: ${fmt(issues.before_count)} of ${fmt(issues.before_total)} sites on ${longDate(fromE.date)}; ${fmt(issues.after_count)} of ${fmt(issues.after_total)} on ${longDate(toE.date)}. Each date is counted independently; unavailable counts are not zero. ${issues.same_sites ? "The same sites are counted on both dates. A drop is a net change, not verified fixes." : "Site coverage differs: changes in recorded totals are not a measure of fixes or regressions."}`;
   }
 
   // ------------------------------------------------------------ loading
@@ -640,7 +643,7 @@
     const rows = [
       ["Report context", `LSA accessibility progress by issue: ${longDate(fromE.date)} to ${longDate(toE.date)}`],
       ["Report context", `Showing ${filterText()}. Snapshots pulled ${before.generated_at} and ${after.generated_at}.`],
-      ["Report context", `Counted on ${issues.count} matched sites with counts for each issue on both dates. Net detected change, not verified fixes.`],
+      ["Report context", issueCoverageNote()],
       [],
       ["Issue", "Siteimprove check", "Siteimprove rule ID", "Level", `Occurrences on ${longDate(fromE.date)}`, `Occurrences on ${longDate(toE.date)}`, "Change", `Sites with it on ${longDate(fromE.date)}`, `Sites with it on ${longDate(toE.date)}`],
     ];
@@ -657,7 +660,7 @@
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   function exportCSV() { if (comparison) download(csvLines(), ""); }
-  function exportIssuesCSV() { if (issues?.count) download(issueCsvLines(), "issues-"); }
+  function exportIssuesCSV() { if (issues && (issues.before_count || issues.after_count)) download(issueCsvLines(), "issues-"); }
   function openExport() {
     if (!comparison) return;
     SitePanel.open({

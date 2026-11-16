@@ -94,15 +94,18 @@
     }
     return result;
   }
-  // Occurrences of each Siteimprove rule (issue title) on the two dates. Counted only on
-  // matched sites with verified issue counts whose per-rule counts were archived on both
-  // dates (rule_occurrences), so a rule's change is never a change in which sites are counted.
-  function issueChanges(comparison, before, after) {
-    const rows = comparison.rows.filter(r => r.matched && r.before.issues_reliable && r.after.issues_reliable &&
-      r.before.rule_occurrences && r.after.rule_occurrences);
+  // Each date keeps its own verified totals and filters, independent of the other date.
+  function issueChanges(before, after, mapping = {}, filter = {}) {
+    const available = snapshot => {
+      const sites = compare(snapshot, snapshot, mapping, filter).rows.map(r => r.site);
+      return { total: sites.length, sites: sites.filter(s => s.eligible && s.issues_reliable && s.rule_occurrences) };
+    };
+    const old = available(before), current = available(after);
+    const oldKeys = new Set(old.sites.map(s => s.key));
+    const matched = current.sites.filter(s => oldKeys.has(s.key)).length;
     const totals = new Map();
-    for (const row of rows) for (const side of ["before", "after"]) {
-      for (const [id, n] of Object.entries(row[side].rule_occurrences)) {
+    for (const [side, data] of [["before", old], ["after", current]]) for (const site of data.sites) {
+      for (const [id, n] of Object.entries(site.rule_occurrences)) {
         if (!totals.has(id)) totals.set(id, { before: 0, after: 0, sites_before: 0, sites_after: 0 });
         totals.get(id)[side] += n;
         if (n > 0) totals.get(id)[`sites_${side}`] += 1;
@@ -110,8 +113,15 @@
     }
     const info = id => (after.rules || {})[id] || (before.rules || {})[id] || {};
     return {
-      count: rows.length,
-      rules: [...totals].map(([id, t]) => ({ id, title: info(id).title || `Rule ${id}`, level: info(id).level || "", ...t, change: t.after - t.before })),
+      before_count: old.sites.length, after_count: current.sites.length,
+      before_total: old.total, after_total: current.total,
+      matched, same_sites: old.sites.length > 0 && matched === old.sites.length && matched === current.sites.length,
+      rules: [...totals].map(([id, t]) => ({
+        id, title: info(id).title || `Rule ${id}`, level: info(id).level || "", ...t,
+        before: old.sites.length ? t.before : null, after: current.sites.length ? t.after : null,
+        sites_before: old.sites.length ? t.sites_before : null, sites_after: current.sites.length ? t.sites_after : null,
+        change: old.sites.length && current.sites.length ? t.after - t.before : null,
+      })),
     };
   }
   function daily(entries) {

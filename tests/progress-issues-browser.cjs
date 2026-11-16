@@ -25,10 +25,17 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8765";
       }],
     });
     const snapshots = [snapshot("2026-11-05", 10), snapshot("2026-11-06", 7), snapshot("2026-11-16", 4)];
+    for (const [i, s] of snapshots.entries()) {
+      s.sites.push({
+        ...s.sites[0], key: "id:2", id: 2, site_name: "Second",
+        rule_occurrences: { 11: 100 },
+        eligible: i !== 2, issues_reliable: i !== 2, scan_status: i === 2 ? "running" : "ok",
+      });
+    }
     await page.route("**/data/history/index.json", route => route.fulfill({ json: {
       schema_version: 1, entries: snapshots.map((s, i) => ({
         path: `history/test${i}.json.gz`, date: s.reporting_date, generated_at: s.generated_at,
-        mean_target: 95, site_count: 1, eligible_count: 1, rule_counts: true,
+        mean_target: 95, site_count: 2, eligible_count: s.sites.filter(site => site.eligible).length, rule_counts: true,
       })),
     } }));
     await page.route("**/data/history/test*.json.gz", route => {
@@ -51,24 +58,47 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8765";
       assert.match(await page.locator("#issues-caption").textContent(), new RegExp(`${beforeDate} to ${afterDate}`));
     }
 
-    await check("November 5, 2026", "November 16, 2026", 10, 4);
+    await check("November 5, 2026", "November 16, 2026", 110, 4);
+    assert.match(await page.locator("#issues-note").innerText(), /2 of 2 sites on November 5, 2026; 1 of 2 on November 16, 2026/);
+    assert.match(await page.locator("#issues-note").innerText(), /Site coverage differs/);
+    assert.doesNotMatch(await page.locator("#issues-body").innerText(), /better|worse/);
+    const partialDownloadPromise = page.waitForEvent("download");
+    await page.locator("#export-issues-csv").click();
+    const partialCsv = await readFile(await (await partialDownloadPromise).path(), "utf8");
+    assert.match(partialCsv, /Site coverage differs/);
+    assert.match(partialCsv, /"110","4","-106"/);
     await page.locator("#from-btn").click();
     await page.locator('#date-picker button[data-date="2026-11-06"]').click();
     await page.locator("#report").waitFor({ state: "visible" });
-    await check("November 6, 2026", "November 16, 2026", 7, 4);
+    await check("November 6, 2026", "November 16, 2026", 107, 4);
     await page.locator("#from-btn").click();
     await page.locator('#date-picker button[data-date="2026-11-05"]').click();
     await page.locator("#report").waitFor({ state: "visible" });
     await page.locator("#to-btn").click();
     await page.locator('#date-picker button[data-date="2026-11-06"]').click();
     await page.locator("#report").waitFor({ state: "visible" });
-    await check("November 5, 2026", "November 6, 2026", 10, 7);
+    await check("November 5, 2026", "November 6, 2026", 110, 107);
+    assert.match(await page.locator("#issues-note").innerText(), /The same sites are counted/);
     const downloadPromise = page.waitForEvent("download");
     await page.locator("#export-issues-csv").click();
     const csv = await readFile(await (await downloadPromise).path(), "utf8");
     assert.match(csv, /Occurrences on November 5, 2026/);
     assert.match(csv, /Occurrences on November 6, 2026/);
-    assert.match(csv, /"10","7","-3"/);
+    assert.match(csv, /"110","107","-3"/);
+    await page.route("**/data/history/test2.json.gz", route => route.fulfill({
+      body: gzipSync(JSON.stringify({
+        ...snapshots[2], sites: snapshots[2].sites.map(site => ({ ...site, issues_reliable: false })),
+      })),
+      contentType: "application/gzip",
+    }));
+    await page.reload();
+    await page.locator("#report").waitFor({ state: "visible" });
+    await page.locator('button[data-platform="AEM"]').click();
+    const unavailableCells = page.locator("#issues-body tr").first().locator("td");
+    assert.equal(await unavailableCells.nth(1).innerText(), "110");
+    assert.equal(await unavailableCells.nth(2).innerText(), "—");
+    assert.equal(await unavailableCells.nth(3).innerText(), "Not comparable");
+    assert.match(await page.locator("#issues-note").innerText(), /0 of 2 on November 16, 2026/);
     assert.deepEqual(errors, []);
     console.log("Issue comparison date selection passed.");
   } finally { await browser.close(); }
