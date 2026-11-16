@@ -45,6 +45,10 @@ source-data/          Original analysis spreadsheets (manual exports)
   pages.yml              Deploys the site on every push to main
 ```
 
+The Issues comparison uses the selected start and end snapshots, not necessarily
+the latest snapshot. Its occurrence columns and CSV identify both dates; changes
+include only matched sites with reliable per-issue counts on both dates.
+
 ## Automation flow
 
 ```
@@ -227,6 +231,7 @@ and encryption steps with the non-production password
 
 ```bash
 NODE_PATH=/absolute/path/to/tooling/node_modules node tests/progress-browser.cjs
+NODE_PATH=/absolute/path/to/tooling/node_modules node tests/progress-issues-browser.cjs
 ```
 
 `PREVIEW_URL` and `PREVIEW_PASSWORD` override the local URL and test password.

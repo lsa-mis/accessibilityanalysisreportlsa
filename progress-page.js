@@ -513,6 +513,8 @@
     const rows = sortedIssues(issues.rules.filter(r => current[2](r.level)));
     const down = rows.filter(r => r.change < 0).length, up = rows.filter(r => r.change > 0).length;
     el("issues-count").textContent = `(${fmt(rows.length)})`;
+    el("issues-before-date").textContent = longDate(fromE.date);
+    el("issues-after-date").textContent = longDate(toE.date);
     el("issues-note").textContent = `Counted on ${fmt(issues.count)} matched sites with counts for each issue on both dates. ${fmt(down)} went down, ${fmt(up)} went up, ${fmt(rows.length - down - up)} did not change. A drop is a net change, not verified fixes.`;
     el("issues-caption").textContent = `Issue comparison, ${current[1]}, ${longDate(fromE.date)} to ${longDate(toE.date)}, ${filterText()}`;
     for (const header of document.querySelectorAll("th[data-issue-sort]")) {
@@ -640,7 +642,7 @@
       ["Report context", `Showing ${filterText()}. Snapshots pulled ${before.generated_at} and ${after.generated_at}.`],
       ["Report context", `Counted on ${issues.count} matched sites with counts for each issue on both dates. Net detected change, not verified fixes.`],
       [],
-      ["Issue", "Siteimprove check", "Siteimprove rule ID", "Level", "Occurrences before", "Occurrences now", "Change", "Sites with it before", "Sites with it now"],
+      ["Issue", "Siteimprove check", "Siteimprove rule ID", "Level", `Occurrences on ${longDate(fromE.date)}`, `Occurrences on ${longDate(toE.date)}`, "Change", `Sites with it on ${longDate(fromE.date)}`, `Sites with it on ${longDate(toE.date)}`],
     ];
     for (const r of sortedIssues(issues.rules)) {
       rows.push([issueName(r), r.title, r.id, LEVEL_NAMES[r.level] || "", r.before, r.after, r.change, r.sites_before, r.sites_after]);
