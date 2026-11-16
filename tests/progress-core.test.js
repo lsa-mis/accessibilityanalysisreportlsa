@@ -85,7 +85,7 @@ test("platform/tag filters preserve OR semantics and exclusions", () => {
   assert.equal(compare(sites, sites, {}, { tags: ["tag:AEM"] }).matched, 1);
   assert.equal(compare(sites, sites, {}, { search: "/1" }).matched, 1);
 });
-test("issue changes count each rule on matched sites with rule counts on both dates", () => {
+test("issue changes use each date's reliable per-rule counts independently", () => {
   const withRules = (key, rules, changes = {}) => ({ ...site(key), rule_occurrences: rules, ...changes });
   const before = {
     rules: { 53: { title: "Old title", level: "BP" }, 64: { title: "Empty headings", level: "A" } },
@@ -96,16 +96,35 @@ test("issue changes count each rule on matched sites with rule counts on both da
     sites: [withRules(1, { 53: 6, 2: 3 }), withRules(2, {}), site(3), withRules(4, { 53: 50 }),
       withRules(5, { 53: 1 }, { issues_reliable: false }), withRules(7, { 53: 20 })],
   };
-  const changes = core.issueChanges(core.compare(before, after), before, after);
-  assert.equal(changes.count, 2, "sites 3 and 4 lack rule counts on one date, 5 is unverified, 6 and 7 are unmatched");
+  const changes = core.issueChanges(before, after);
+  assert.deepEqual([changes.before_count, changes.after_count, changes.matched, changes.same_sites], [5, 4, 2, false]);
   const rule = id => changes.rules.find(r => r.id === id);
-  assert.deepEqual(rule("53"), { id: "53", title: "Headings are not structured", level: "BP", before: 15, after: 6, sites_before: 2, sites_after: 1, change: -9 });
+  assert.deepEqual(rule("53"), { id: "53", title: "Headings are not structured", level: "BP", before: 131, after: 76, sites_before: 5, sites_after: 3, change: -55 });
   assert.deepEqual(rule("64"), { id: "64", title: "Empty headings", level: "A", before: 4, after: 0, sites_before: 1, sites_after: 0, change: -4 });
   assert.equal(rule("2").change, 3);
-  const filtered = core.issueChanges(core.compare(before, after, {}, { search: "/2" }), before, after);
-  assert.deepEqual([filtered.count, filtered.rules.length, filtered.rules[0].change], [1, 1, -5]);
-  const none = core.issueChanges(core.compare({ sites: [site(1)] }, { sites: [site(1)] }), { sites: [site(1)] }, { sites: [site(1)] });
-  assert.deepEqual(none, { count: 0, rules: [] });
+  const filtered = core.issueChanges(before, after, {}, { search: "/2" });
+  assert.deepEqual([filtered.before_count, filtered.after_count, filtered.same_sites, filtered.rules.length, filtered.rules[0].change], [1, 1, true, 1, -5]);
+  const none = core.issueChanges({ sites: [site(1)] }, { sites: [site(1)] });
+  assert.deepEqual(none, { before_count: 0, after_count: 0, before_total: 1, after_total: 1, matched: 0, same_sites: false, rules: [] });
+});
+test("changing the end date cannot change start-day issue totals, even with running scans or retagged sites", () => {
+  const counted = (key, n) => ({ ...site(key), tags: ["tag:AEM"], rule_occurrences: { 11: n } });
+  const before = { sites: [counted(1, 10), counted(2, 100)] };
+  const firstEnd = { sites: [counted(1, 8), counted(2, 90)] };
+  const laterEnd = { sites: [counted(1, 7), { ...counted(2, 90), eligible: false, issues_reliable: false, scan_status: "running" }] };
+  const retaggedEnd = { sites: [counted(1, 7), { ...counted(2, 90), tags: ["tag:WP"] }] };
+  for (const end of [firstEnd, laterEnd, retaggedEnd]) {
+    const changes = core.issueChanges(before, end, {}, { platforms: ["AEM"] });
+    assert.equal(changes.rules[0].before, 110);
+    assert.equal(changes.before_count, 2);
+  }
+  const changes = core.issueChanges(before, laterEnd);
+  assert.deepEqual([changes.after_count, changes.after_total, changes.rules[0].after, changes.same_sites], [1, 2, 7, false]);
+  const unavailable = core.issueChanges(before, { sites: [site(1)] });
+  assert.equal(unavailable.rules[0].after, null);
+  assert.equal(unavailable.rules[0].change, null);
+  const replaced = core.issueChanges({ sites: [counted(1, 10)] }, { sites: [counted(2, 8)] });
+  assert.equal(replaced.same_sites, false, "equal site counts do not guarantee the same sites");
 });
 test("month shortcuts clamp month-end and leap dates, never go forward", () => {
   const e = date => ({ date, generated_at: date + "T07:00:00Z", path: date });

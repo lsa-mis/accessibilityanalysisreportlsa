@@ -236,7 +236,7 @@
           <div class="space-between">
             <div>
               <h2 id="issues-heading" tabindex="-1">Changes by issue <span class="muted tnum" id="issues-count"></span></h2>
-              <p class="card-sub">How many times each issue was found on the two dates, counted on the same sites both times.</p>
+              <p class="card-sub">How many times each issue was found on each selected date. Each date keeps its own recorded totals.</p>
             </div>
             <button type="button" class="btn no-print" id="export-issues-csv">Export issues CSV</button>
           </div>
@@ -266,10 +266,10 @@
     <details class="card glossary">
       <summary>How these numbers work, and terms used</summary>
       <ul id="definitions">
-        <li><strong>Matched sites:</strong> a confirmed score on both dates. All changes use only these.</li>
+        <li><strong>Matched sites:</strong> a confirmed score on both dates. Overview, Departments and Sites changes use only these; Issues counts each date independently.</li>
         <li><strong>Score:</strong> Siteimprove’s Title II target (Level A, AA and ARIA). Ready for manual testing at 93%+ (LSA AEM) or 98%+ (others). Not proof of compliance.</li>
         <li><strong>Issues (occurrences):</strong> each time a required check fails on a page. A drop is a net change, not verified fixes.</li>
-        <li><strong>Changes by issue:</strong> occurrences of each Siteimprove check, named as on the Common problems tab. Uses matched sites whose per-issue counts were saved on both dates (November 5, 2026 onward).</li>
+        <li><strong>Changes by issue:</strong> occurrences of each Siteimprove check, named as on the Common problems tab. Counts sites with reliable saved per-issue data on each date independently (November 5, 2026 onward). Changing the end date does not change the start date's total for the same filters. Different site coverage can change totals without fixes or regressions.</li>
         <li><strong>Points:</strong> percentage points (96.2% to 96.5% is +0.3).</li>
         <li><strong>Needs reliable data:</strong> estimated scores, failed checks or older imports. Never counted as zero.</li>
         <li><strong>Reliable data</strong> starts with snapshots from November 5, 2026, the first with scan quality details and per-issue counts. Earlier snapshots stay in the archive.</li>

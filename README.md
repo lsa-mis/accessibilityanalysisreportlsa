@@ -47,7 +47,8 @@ source-data/          Original analysis spreadsheets (manual exports)
 
 The Issues comparison uses the selected start and end snapshots, not necessarily
 the latest snapshot. Its occurrence columns and CSV identify both dates; changes
-include only matched sites with reliable per-issue counts on both dates.
+use each date's own sites with reliable per-issue counts. The start total stays
+fixed when the end date changes; differing site coverage is explicitly flagged.
 
 ## Automation flow
 
@@ -163,7 +164,7 @@ no-longer-observed sites use their earlier labels.
 
 - **Headline measures:** WCAG A + AA + ARIA, with AAA, best practices, and PDF measures separate.
 - **Occurrences:** detected instances. **Issue types:** failing rule/site pairs; summing them does not produce a portfolio-distinct rule count.
-- **Changes by issue (Issues tab):** occurrences of each Siteimprove rule on the two dates, shown under the plain-language title from `rule-guidance.js` (rule 53, Siteimprove's "Headings are not structured", reads "Heading levels are skipped") with Siteimprove's own title beneath. Only matched sites whose per-rule counts were archived on both dates are counted (`ProgressCore.issueChanges`), so the Level A + AA + ARIA rows add up to the headline occurrences. Level AAA is a separate filter, as on the Common problems tab. Per-rule counts exist from the November 5, 2026 observation on.
+- **Changes by issue (Issues tab):** occurrences of each Siteimprove rule on the two dates, shown under the plain-language title from `rule-guidance.js` (rule 53, Siteimprove's "Headings are not structured", reads "Heading levels are skipped") with Siteimprove's own title beneath. Each date independently counts its sites with reliable archived per-rule data (`ProgressCore.issueChanges`), with filters applied to that date's site metadata. Unavailable data is never zero. Coverage counts and warnings accompany the table and CSV; when the site sets differ, deltas are neutral recorded-total differences, not improvements or regressions. These totals can differ from Overview's matched-site headline. Level AAA is a separate filter, as on the Common problems tab. Per-rule counts exist from the November 5, 2026 observation on.
 - **Net change:** later minus earlier, with before/after counts displayed. A reduction is not proof of fixes: pages, scan scope, and newly discovered issues can change.
 - **Matched cohorts:** compare only sites with reliable metrics on both dates. Target and issue/PDF cohorts may differ; each reports its denominator. Added/first-observed and no-longer-observed sites are separate inventory changes, not remediation.
 - **Reliable targets:** numeric, not estimated, no recorded data errors, and a usable scan (`ok` or the existing `stale` status). Failed/running/unknown scans and missing scores stay in the data-gap group with reasons. The existing 14-day scan-staleness classification remains visible through scan metadata; collection time is never presented as scan time.
