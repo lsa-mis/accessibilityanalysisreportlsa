@@ -3,6 +3,9 @@
 .summary-card { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
 .summary-text { flex: 1 1 520px; max-width: 75ch; display: flex; flex-direction: column; gap: 8px; }
 #headline { margin: 0; font-size: 19px; line-height: 1.55; font-weight: 500; }
+.inventory-counts { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin: 0; }
+.inventory-counts dt { font-size: 14px; color: var(--muted); }
+.inventory-counts dd { margin: 4px 0 0; font-size: 24px; font-weight: 700; color: var(--navy); }
 
 .date-btn {
   display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 8px; font-weight: 700;

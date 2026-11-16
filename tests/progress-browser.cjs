@@ -96,8 +96,8 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8765";
       pdf_count: 1, pdfs_with_issues: 1, pdf_total_issues: 2,
       by_level: Object.fromEntries(["A", "AA", "ARIA", "AAA", "BP"].map(l => [l, { issues: 1, occurrences: n }])),
     });
-    const first = { schema_version: 1, generated_at: "2026-10-01T07:00:00Z", reporting_date: "2026-10-01", sites: [site(1, 97, 10), site(2, 95, 10)] };
-    const last = { schema_version: 1, generated_at: "2026-11-01T07:00:00Z", reporting_date: "2026-11-01", sites: [site(1, 98, 5), site(3, 99, 5)] };
+    const first = { schema_version: 1, generated_at: "2026-11-05T07:00:00Z", reporting_date: "2026-11-05", sites: [site(1, 97, 10), site(2, 95, 10)] };
+    const last = { schema_version: 1, generated_at: "2026-11-16T07:00:00Z", reporting_date: "2026-11-16", sites: [site(1, 98, 5), site(3, 99, 5)] };
     await fixture.route("**/data/history/index.json", route => route.fulfill({ json: {
       schema_version: 1, entries: [first, last].map((s, i) => ({
         path: `history/test${i}.json.gz`, date: s.reporting_date, generated_at: s.generated_at,
@@ -113,7 +113,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8765";
     await fixture.goto(`${base}/progress.html`);
     await fixture.locator("#report").waitFor({ state: "visible" });
     assert.match(await fixture.locator("#coverage").innerText(), /Matched[\s\S]*1/);
-    assert.match(await fixture.locator("#metrics").innerText(), /15\s*from 30/);
+    assert.match(await fixture.locator("#metrics").innerText(), /30\s*from 60/);
     assert.equal(await fixture.locator("#wp-up").innerText(), "1");
     assert.match(await fixture.locator("#refresh-warning").innerText(), /latest refresh failed/);
     await fixture.getByRole("button", { name: "Test department", exact: true }).click();
@@ -125,7 +125,7 @@ const base = process.env.PREVIEW_URL || "http://127.0.0.1:8765";
     const download = await downloadPromise;
     const csv = await readFile(await download.path(), "utf8");
     assert.match(csv, /"30","15","-15"/);
-    assert.match(csv, /2026-10-01T07:00:00Z/);
+    assert.match(csv, /2026-11-05T07:00:00Z/);
     assert.match(csv, /department list/);
     await fixture.context().grantPermissions(["clipboard-read", "clipboard-write"]);
     await fixture.getByRole("button", { name: "Overview", exact: true }).click();

@@ -23,7 +23,7 @@
   let sort = "site", direction = 1, generation = 0, period = "month", tab = "overview", siteFilter = "all", showAllSites = false;
   let focusSummary = false, focusIssues = false;
   let issues = null, issueSort = "change", issueDirection = 1, issueFilter = "common";
-  let picker = null, viewMonth = null, pickerOpener = null, exportTab = "summary";
+  let picker = null, viewMonth = null, pickerOpener = null, exportTab = "summary", trendGeneration = 0;
   const platforms = new Set(), tags = new Set();
   let department = "", search = "";
   const cache = new Map();
@@ -72,8 +72,8 @@
     ["up", "Became ready", r => crossing(r) === "up"],
     ["down", "No longer ready", r => crossing(r) === "down"],
     ["needs", "Needs reliable data", r => classify(r) === "needs"],
-    ["new", "New", r => classify(r) === "new"],
-    ["gone", "Not seen", r => classify(r) === "gone"],
+    ["new", "Only at end", r => classify(r) === "new"],
+    ["gone", "Only at start", r => classify(r) === "gone"],
     ["matched", "Matched", r => r.matched],
   ];
 
@@ -94,6 +94,42 @@
     if (v === 0) return `<span class="pill pill-flat">${escape(text)} (no change)</span>`;
     const better = (v > 0) === goodWhenUp;
     return `<span class="pill ${better ? "pill-good" : "pill-bad"}">${v > 0 ? "↑" : "↓"} ${escape(text)} (${better ? "better" : "worse"})</span>`;
+  }
+
+  function metricPill(metric, goodWhenUp, text) {
+    return metric.same_sites ? pill(metric.change, goodWhenUp, text)
+      : `<span class="pill pill-flat">${metric.change === null ? "Not comparable" : escape(text)}</span>`;
+  }
+  function metricCoverage(metric) {
+    return `${fmt(metric.before_count)} → ${fmt(metric.after_count)} sites with reliable data.${metric.same_sites ? " Same sites on both dates." : " Site coverage differs; changes are not a measure of fixes or regressions."}`;
+  }
+  function comparisonNote(c) {
+    return `Each date is counted independently. Reliable scores: ${fmt(c.target.before_count)} of ${fmt(c.total_before)} sites on ${longDate(fromE.date)}; ${fmt(c.target.after_count)} of ${fmt(c.total_after)} on ${longDate(toE.date)}. Unavailable data is not zero.${c.target.same_sites ? " The same sites have reliable scores on both dates." : " Score coverage differs; changes are not a measure of improvement or regression."}`;
+  }
+  function inventoryChange(c) {
+    const change = c.total_after - c.total_before;
+    return change === 0 ? "No net change" : `${fmt(Math.abs(change))} ${change > 0 ? "more" : "fewer"} ${Math.abs(change) === 1 ? "site" : "sites"}`;
+  }
+  function inventoryNote(c) {
+    return `Site inventory: ${fmt(c.total_before)} on ${longDate(fromE.date)} → ${fmt(c.total_after)} on ${longDate(toE.date)} (${signed(c.total_after - c.total_before)}). ${fmt(c.added)} only in the end-date selection; ${fmt(c.removed)} only in the start-date selection. Counts follow the active filters and include sites with running scans or unavailable scores. Only-in-start/end sites may reflect filter or label changes, not necessarily newly created or retired sites.`;
+  }
+  function renderInventory(c) {
+    el("inventory-before").textContent = fmt(c.total_before);
+    el("inventory-after").textContent = fmt(c.total_after);
+    el("inventory-change").textContent = inventoryChange(c);
+    for (const [id, label, count] of [
+      ["inventory-only-end", "View sites only at end", c.added],
+      ["inventory-only-start", "View sites only at start", c.removed],
+    ]) {
+      el(id).textContent = `${label} (${fmt(count)})`;
+      el(id).disabled = !count;
+    }
+    el("inventory-note").textContent = inventoryNote(c);
+  }
+  function renderDateLabels() {
+    document.querySelectorAll("[data-comparison-date]").forEach(node => {
+      node.textContent = longDate(node.dataset.comparisonDate === "before" ? fromE.date : toE.date);
+    });
   }
 
   // ------------------------------------------------------------ tabs
@@ -128,15 +164,19 @@
     el("shortcut-note").hidden = !missing.length;
     el("shortcut-note").textContent = missing.length ? `${missing.join(", ").replace(/, ([^,]*)$/, " and $1")} ${missing.length === 1 ? "turns" : "turn"} on once there is a snapshot that far back. Tracking starts ${longDate(entries[0].date)}.` : "";
 
-    // Platform counts: sites in this comparison that match every other filter
-    // (labels, department, search), so each number is what choosing it shows.
+    // Platform inventory for each selected date, respecting every other filter.
     const counts = new Map();
-    const rows = before && after ? core.compare(before, after, mapping, { ...filters(), platforms: [] }).rows : [];
-    for (const row of rows) counts.set(row.platform, (counts.get(row.platform) || 0) + 1);
-    for (const p of platforms) if (!counts.has(p)) counts.set(p, 0);
-    const order = [...counts.keys()].filter(p => counts.get(p) > 0 || platforms.has(p)).sort((a, b) => counts.get(b) - counts.get(a) || a.localeCompare(b));
-    const n = v => `<span class="tnum">(${v.toLocaleString("en-US")})</span>`;
-    el("filter-platform").innerHTML = `<button type="button" class="chip" data-platform="" aria-pressed="${!platforms.size}">All ${n(rows.length)}</button>` +
+    const inventory = before && after ? core.compareDates(before, after, mapping, { ...filters(), platforms: [] }) : null;
+    for (const row of inventory?.rows || []) for (const side of ["before", "after"]) {
+      if (!row[side]) continue;
+      const p = core.platform(row[side]);
+      if (!counts.has(p)) counts.set(p, { before: 0, after: 0 });
+      counts.get(p)[side]++;
+    }
+    for (const p of platforms) if (!counts.has(p)) counts.set(p, { before: 0, after: 0 });
+    const order = [...counts.keys()].sort((a, b) => counts.get(b).after - counts.get(a).after || a.localeCompare(b));
+    const n = v => `<span class="tnum">(${fmt(v.before)} → ${fmt(v.after)})</span>`;
+    el("filter-platform").innerHTML = `<button type="button" class="chip" data-platform="" aria-pressed="${!platforms.size}">All ${n({ before: inventory?.total_before || 0, after: inventory?.total_after || 0 })}</button>` +
       order.map(p => `<button type="button" class="chip" data-platform="${escape(p)}" aria-pressed="${platforms.has(p)}">${escape(p)} ${n(counts.get(p))}</button>`).join("");
     if (el("search").value !== search) el("search").value = search;
 
@@ -251,12 +291,33 @@
   }
 
   // ------------------------------------------------------------ trend
-  function renderTrend() {
+  async function renderTrend() {
+    const token = ++trendGeneration;
     // Only snapshots that can be compared are used. The chart draws the ones between
     // the selected start and end dates; the table lists all of them so any can be the start.
     const all = entries.filter(comparable);
     const pts = fromE && toE ? all.filter(e => e.date >= fromE.date && e.date <= toE.date) : all;
-    const value = e => e.mean_target;
+    const filter = filters();
+    el("trend-plot").setAttribute("aria-busy", "true");
+    el("trend-plot").innerHTML = "<p>Loading filtered trend…</p>";
+    el("trend-body").innerHTML = "";
+    el("trend-summary").textContent = "";
+    el("trend-max").textContent = el("trend-min").textContent = "";
+    el("trend-x").innerHTML = "";
+    let measures;
+    try {
+      const loaded = await Promise.all(all.map(e => snapshot(e)));
+      if (token !== trendGeneration) return;
+      measures = new Map(all.map((e, i) => [e, core.compareDates(loaded[i], loaded[i], mapping, filter)]));
+    } catch (failure) {
+      if (token !== trendGeneration) return;
+      el("trend-plot").removeAttribute("aria-busy");
+      el("trend-plot").textContent = `Filtered trend is unavailable: ${failure.message}`;
+      el("trend-plot").setAttribute("aria-label", "Filtered trend unavailable");
+      return;
+    }
+    el("trend-plot").removeAttribute("aria-busy");
+    const value = e => measures.get(e).target.after;
     el("step-earlier").disabled = !fromE || !all.some(e => e.date < fromE.date);
     el("step-later").disabled = !fromE || !toE || !all.some(e => e.date > fromE.date && e.date < toE.date);
     if (!pts.length) {
@@ -265,7 +326,7 @@
       el("trend-max").textContent = el("trend-min").textContent = "";
       el("trend-x").innerHTML = "";
       el("trend-summary").textContent = "";
-      el("trend-body").innerHTML = `<tr><td colspan="4" class="empty">No comparable snapshots yet.</td></tr>`;
+      el("trend-body").innerHTML = `<tr><td colspan="5" class="empty">No comparable snapshots yet.</td></tr>`;
       return;
     }
     const vals = pts.map(value).filter(v => v !== null && v !== undefined);
@@ -294,7 +355,7 @@
     });
     const bands = [];
     for (let i = 1; i < pts.length; i++) if (dayNum(pts[i].date) - dayNum(pts[i - 1].date) > 10) bands.push([x(pts[i - 1]), x(pts[i]) - x(pts[i - 1])]);
-    el("trend-plot").setAttribute("aria-label", `Average score for the ${pts.length} snapshot${pts.length === 1 ? "" : "s"} in the selected comparison, from ${longDate(pts[0].date)} to ${longDate(pts.at(-1).date)}${vals.length ? `, ranging from ${show(Math.min(...vals))} to ${show(Math.max(...vals))}` : ""}. The data table below lists every snapshot and lets you start the comparison on any of them.`);
+    el("trend-plot").setAttribute("aria-label", `Average score for the ${pts.length} snapshot${pts.length === 1 ? "" : "s"} in the selected comparison, from ${longDate(pts[0].date)} to ${longDate(pts.at(-1).date)}${vals.length ? `, ranging from ${show(Math.min(...vals))} to ${show(Math.max(...vals))}` : ", no reliable scores for these filters"}. Showing ${filterText()}. The data table below lists every snapshot, its coverage, and lets you start the comparison on any of them.`);
     el("trend-plot").innerHTML =
       bands.map(([l, w]) => `<div class="trend-band" style="left:${l.toFixed(2)}%;width:${w.toFixed(2)}%"><span>No snapshots</span></div>`).join("") +
       `<svg viewBox="0 0 1000 240" preserveAspectRatio="none" aria-hidden="true"><path d="${path}" fill="none" stroke="#00508F" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>` +
@@ -307,6 +368,7 @@
       }).join("") +
       pts.map(e => {
         const v = value(e), isFrom = e === fromE, isTo = e === toE;
+        if (v === null) return "";
         const cls = "pt" + (isFrom ? " from" : isTo ? " to" : "");
         const label = `${longDate(e.date)}, ${show(v)}${isFrom ? ", current start date" : isTo ? ", current end date" : toE && e.date < toE.date ? ", set as start date" : ""}`;
         // Dots are a mouse shortcut; the table below offers the same "start here" action with full-size buttons.
@@ -320,6 +382,7 @@
       const moved = Number(Math.abs(change).toFixed(changeDigits)) !== 0;
       el("trend-summary").textContent = `${moved ? `The average score ${change > 0 ? "rose" : "fell"} by ${fmt(Math.abs(change), changeDigits)} percentage points` : "The average score did not change"}: ${show(a)} on ${longDate(pts[0].date)}, ${show(b)} on ${longDate(pts.at(-1).date)}.${moved && range < 1 ? " The chart is zoomed in so this small change is visible." : ""}`;
     }
+    el("trend-summary").textContent += `${vals.length ? "" : "No reliable scores for the active filters in this date range."} Showing ${filterText()}. Each date uses its own sites with reliable scores; coverage can change.`;
     el("trend-max").textContent = vals.length ? show(hi) : "";
     el("trend-min").textContent = vals.length ? show(lo) : "";
     // Short ranges get date labels; longer ranges get month labels.
@@ -337,60 +400,51 @@
     el("trend-body").innerHTML = [...all].reverse().map(e => {
       const notes = [e === fromE ? "Start date" : "", e === toE ? "End date" : "", e.historical ? "Imported snapshot" : "Nightly snapshot"].filter(Boolean).join("; ");
       const canStart = toE && e.date < toE.date && e !== fromE;
-      return `<tr><td>${escape(longDate(e.date))}</td><td class="num tnum">${pct(e.mean_target, tableDigits)}</td><td>${escape(notes)}</td>
+      const measure = measures.get(e);
+      return `<tr><td>${escape(longDate(e.date))}</td><td class="num tnum">${pct(value(e), tableDigits)}</td><td class="num tnum">${fmt(measure.target.after_count)} of ${fmt(measure.total_after)}</td><td>${escape(notes)}</td>
         <td>${canStart ? `<button type="button" class="btn" data-start-index="${entries.indexOf(e)}" aria-label="Start the comparison on ${escape(longDate(e.date))}">Start here</button>` : ""}</td></tr>`;
     }).join("");
   }
 
   // ------------------------------------------------------------ report
-  function atCounts(rows) {
-    const m = rows.filter(r => r.matched);
-    return { before: m.filter(r => r.before.target_percentage >= line(r.before)).length, after: m.filter(r => r.after.target_percentage >= line(r.after)).length };
-  }
-
   function render() {
     renderControls();
     if (!before || !after) return;
-    comparison = core.compare(before, after, mapping, filters());
+    comparison = core.compareDates(before, after, mapping, filters());
     const c = comparison;
     el("report").hidden = false;
-    el("live-status").textContent = comparable(fromE)
-      ? `Comparing ${longDate(fromE.date)} to ${longDate(toE.date)}, ${filterText()}: ${c.matched} matched sites.`
-      : `${longDate(fromE.date)} can’t be compared yet. Comparable snapshots start on ${longDate(entries.find(comparable)?.date)}.`;
+    renderDateLabels();
+    renderInventory(c);
+    el("live-status").textContent = `Comparing ${longDate(fromE.date)} to ${longDate(toE.date)}, ${filterText()}. ${inventoryChange(c)}. ${comparisonNote(c)}`;
     el("comparison-context").textContent = `Snapshots pulled ${before.generated_at} and ${after.generated_at} (Detroit dates ${before.reporting_date} and ${after.reporting_date}). Showing ${filterText()}. Today’s department list is used for both dates.`;
-    const at = atCounts(c.rows), occ = c.headline_occurrences;
+    el("comparison-coverage").textContent = comparisonNote(c);
+    el("departments-note").textContent = comparisonNote(c);
+    el("sites-note").textContent = comparisonNote(c);
+    const at = c.ready, occ = c.headline_occurrences;
     const occPct = occ.change === null || !occ.before ? null : occ.change / occ.before * 100;
     const pp = c.target.change;
     const setAside = c.added + c.removed + c.gaps;
-    el("headline").textContent = c.matched
-      ? `${longDate(fromE.date)} to ${longDate(toE.date)}: ${fmt(at.before)} → ${fmt(at.after)} sites ready for manual testing (${at.after === at.before ? "no change" : signed(at.after - at.before)}). Average score ${signed(pp, 2)} points.${occPct === null ? "" : ` Issues ${occPct <= 0 ? "down" : "up"} ${fmt(Math.abs(occPct), 1)}%.`}`
-      : `No sites have reliable data on both dates. Try a later start date.`;
+    el("headline").textContent = `${longDate(fromE.date)} to ${longDate(toE.date)}: ${fmt(at.before)} → ${fmt(at.after)} sites ready for manual testing. Average score ${pct(c.target.before)} → ${pct(c.target.after)}. Issues ${fmt(occ.before)} → ${fmt(occ.after)}.`;
     const card = (title, now, from, delta, note) => `<div class="card kpi"><h3>${escape(title)}</h3>
       <div class="pill-row" style="align-items:baseline"><span class="kpi-value tnum">${escape(now)}</span><span class="muted tnum">from ${escape(from)}</span></div>${delta}<span class="muted" style="font-size:14px">${escape(note)}</span></div>`;
-    el("metrics").innerHTML = c.matched ? [
-      card("Sites ready for manual testing", fmt(at.after), fmt(at.before), pill(at.after - at.before, true, `${signed(at.after - at.before)} sites`), `93%+ for LSA AEM, 98%+ for others.`),
-      card("Average score", pct(c.target.after), pct(c.target.before), pill(pp === null ? null : Number(pp.toFixed(2)), true, `${signed(pp, 2)} points`), `Same ${fmt(c.matched)} sites on both dates.`),
-      card("Issues (occurrences)", fmt(occ.after), fmt(occ.before), pill(occPct === null ? null : Number(occPct.toFixed(1)), false, `${signed(occPct, 1)}% detected`), occ.count ? `Detected, not verified fixes.` : "Not available for these dates."),
-      card("Sites in this comparison", fmt(c.matched), `${fmt(c.matched + setAside)} total`, `<span class="pill pill-flat">${fmt(setAside)} set aside</span>`, "New, missing or unreliable sites are left out."),
-    ].join("") : [
-      card("Sites ready for manual testing", "—", "—", `<span class="pill pill-flat">Not comparable</span>`, "No reliable data on both dates."),
-      card("Average score", "—", "—", `<span class="pill pill-flat">Not comparable</span>`, "Not available."),
-      card("Issues (occurrences)", "—", "—", `<span class="pill pill-flat">Not comparable</span>`, "Not available."),
-      card("Sites in this comparison", "0", `${fmt(setAside)} total`, `<span class="pill pill-flat">All set aside</span>`, "See “What’s counted” for reasons."),
+    el("metrics").innerHTML = [
+      card("Sites ready for manual testing", fmt(at.after), fmt(at.before), metricPill(at, true, `${signed(at.change)} sites`), `93%+ for LSA AEM, 98%+ for others. ${metricCoverage(at)}`),
+      card("Average score", pct(c.target.after), pct(c.target.before), metricPill(c.target, true, `${signed(pp, 2)} points`), metricCoverage(c.target)),
+      card("Issues (occurrences)", fmt(occ.after), fmt(occ.before), metricPill({ ...occ, change: occPct }, false, `${signed(occPct, 1)}% detected`), metricCoverage(occ)),
     ].join("");
 
     el("wp-up").textContent = fmt(c.newly_ready);
     el("wp-down").textContent = fmt(c.regressed);
     el("wp-note").textContent = c.ready_matched
-      ? `Of ${fmt(c.ready_matched)} matched sites.`
+      ? `Crossings only: ${fmt(c.ready_matched)} sites with reliable scores on both dates. Daily ready totals above are counted independently.`
       : "Needs scores on both dates.";
 
     const total = c.matched + setAside || 1;
     const cov = [
       ["matched", "Matched", "Reliable data on both dates", c.matched, "#00274C"],
       ["needs", "Needs reliable data", "Estimated, failed check or older import", c.gaps, "#B05A0C"],
-      ["new", "New sites", "First seen after the start date", c.added, "#4F7FB0"],
-      ["gone", "No longer observed", "Not in the latest snapshot (not assumed retired)", c.removed, "#6B7684"],
+      ["new", "Only in end-date selection", "Newly observed or outside the start-date filters", c.added, "#4F7FB0"],
+      ["gone", "Only in start-date selection", "Not observed at the end or outside its filters", c.removed, "#6B7684"],
     ];
     el("coverage-bar").innerHTML = cov.map(([, , , n, color]) => `<span style="width:${(n / total * 100).toFixed(2)}%;background:${color}"></span>`).join("");
     el("coverage").innerHTML = cov.map(([key, label, desc, n, color]) =>
@@ -401,10 +455,10 @@
     const extra = [["Level AAA occurrences", c.aaa_occurrences], ["Level AAA kinds of issues", c.aaa_issues], ["Best-practice occurrences", c.bp_occurrences],
       ["Best-practice kinds of issues", c.bp_issues], ["PDFs", c.pdf_count], ["PDFs to fix", c.pdfs_with_issues], ["Problems reported inside PDFs", c.pdf_total_issues]];
     el("supplementary-metrics").innerHTML = extra.map(([label, p]) =>
-      `<tr><th scope="row">${escape(label)}</th><td class="num tnum">${fmt(p.before)}</td><td class="num tnum">${fmt(p.after)}</td><td class="num tnum">${signed(p.change)}</td><td class="num tnum">${fmt(p.count)}</td></tr>`).join("");
+      `<tr><th scope="row">${escape(label)}</th><td class="num tnum">${fmt(p.before)}</td><td class="num tnum">${fmt(p.after)}</td><td class="num tnum">${signed(p.change)}</td><td>${escape(metricCoverage(p))}</td></tr>`).join("");
 
     const notes = [...new Set([before.quality_note, after.quality_note].filter(Boolean))];
-    if (c.matched && !occ.count) notes.push("Issue counts weren’t verified for these snapshots, so issue changes can’t be calculated.");
+    if (!occ.before_count || !occ.after_count) notes.push("Issue counts are unavailable for one or both dates; missing counts are not zero.");
     el("quality-note").textContent = notes.join(" ");
     el("quality-note").hidden = !notes.length;
 
@@ -418,19 +472,20 @@
   }
 
   function renderDepartments() {
-    const names = [...new Set(comparison.rows.map(row => row.department))].sort((a, b) => a === "Unmapped" ? 1 : b === "Unmapped" ? -1 : a.localeCompare(b));
+    const names = [...new Set(comparison.rows.flatMap(row =>
+      [row.before, row.after].filter(Boolean).map(site => core.department(site, mapping))
+    ))].sort((a, b) => a === "Unmapped" ? 1 : b === "Unmapped" ? -1 : a.localeCompare(b));
     el("departments-body").innerHTML = names.length ? names.map(name => {
-      const d = core.compare(before, after, mapping, { ...filters(), department: name });
-      const at = atCounts(d.rows), occ = d.headline_occurrences;
+      const d = core.compareDates(before, after, mapping, { ...filters(), department: name });
+      const at = d.ready, occ = d.headline_occurrences;
       const occPct = occ.change === null || !occ.before ? null : occ.change / occ.before * 100;
-      const ok = d.matched > 0;
       return `<tr>
         <th scope="row"><button type="button" class="name-btn department-link" data-department="${escape(name)}">${escape(name)}</button>${name === "Unmapped" ? '<span class="site-url">No department assigned yet in the mapping file</span>' : ""}</th>
-        <td class="num tnum">${fmt(d.matched)}</td>
-        <td class="tnum">${ok ? `${fmt(at.before)} → <strong>${fmt(at.after)}</strong>` : "—"}</td>
-        <td><span class="tnum">${ok ? pct(d.target.after) : "—"}</span> ${ok ? pill(d.target.change === null ? null : Number(d.target.change.toFixed(2)), true, `${signed(d.target.change, 2)} points`) : ""}</td>
-        <td><span class="tnum">${fmt(occ.after)}</span> ${occPct === null ? "" : pill(Number(occPct.toFixed(1)), false, `${signed(occPct, 1)}%`)}</td>
-        <td class="num tnum">${fmt(d.gaps)}</td></tr>`;
+        <td class="num tnum">${fmt(d.total_before)} → ${fmt(d.total_after)}<span class="site-url">${escape(inventoryChange(d))}</span></td>
+        <td class="tnum">${fmt(at.before)} → <strong>${fmt(at.after)}</strong></td>
+        <td><span class="tnum">${pct(d.target.before)} → ${pct(d.target.after)}</span> ${metricPill(d.target, true, `${signed(d.target.change, 2)} points`)}<span class="site-url">${escape(metricCoverage(d.target))}</span></td>
+        <td><span class="tnum">${fmt(occ.before)} → ${fmt(occ.after)}</span> ${metricPill({ ...occ, change: occPct }, false, `${signed(occPct, 1)}%`)}<span class="site-url">${escape(metricCoverage(occ))}</span></td>
+        <td class="num tnum">${fmt(d.total_before - d.target.before_count)} → ${fmt(d.total_after - d.target.after_count)}</td></tr>`;
     }).join("") : `<tr><td colspan="6" class="empty">No departments match these filters.</td></tr>`;
   }
 
@@ -458,8 +513,8 @@
     const shown = showAllSites ? rows : rows.slice(0, 100);
     const statusText = row => {
       const k = classify(row);
-      if (k === "new") return "New since " + longDate(fromE.date);
-      if (k === "gone") return "Not seen on " + longDate(toE.date);
+      if (k === "new") return row.reason || "Not observed on " + longDate(fromE.date);
+      if (k === "gone") return row.reason || "Not observed on " + longDate(toE.date);
       if (k === "needs") return "Needs reliable data" + (row.reason ? ": " + row.reason : "");
       return row.before.issues_reliable && row.after.issues_reliable ? "Matched" : "Matched (issue counts not verified)";
     };
@@ -471,13 +526,14 @@
         <td>${escape(row.department)}<span class="site-url">${escape(row.platform)}</span></td>
         <td class="num tnum">${pct(t.before)}</td><td class="num tnum">${pct(t.after)}</td>
         <td>${t.change === null ? "—" : pill(Number(t.change.toFixed(2)), true, `${signed(t.change, 2)} points`)}</td>
+        <td class="num tnum">${fmt(o.before)}</td>
         <td class="num tnum">${fmt(o.after)}</td>
         <td>${o.change === null ? "—" : pill(o.change, false, signed(o.change))}</td>
         <td class="num tnum">${fmt(row.before?.pages)} → ${fmt(row.after?.pages)}</td>
         <td>${escape(statusText(row))}</td></tr>`;
-    }).join("") : `<tr><td colspan="9" class="empty">No sites match these filters. <button type="button" class="link-btn" id="clear-from-table">Clear filters</button></td></tr>`;
+    }).join("") : `<tr><td colspan="10" class="empty">No sites match these filters. <button type="button" class="link-btn" id="clear-from-table">Clear filters</button></td></tr>`;
     el("sites-count").textContent = `(${fmt(rows.length)})`;
-    el("sites-caption").textContent = `Site comparison, ${(SITE_FILTERS.find(f => f[0] === siteFilter) || SITE_FILTERS[0])[1]}, ${filterText()}`;
+    el("sites-caption").textContent = `Site comparison, ${longDate(fromE.date)} to ${longDate(toE.date)}, ${(SITE_FILTERS.find(f => f[0] === siteFilter) || SITE_FILTERS[0])[1]}, ${filterText()}`;
     el("sites-show-all").hidden = showAllSites || rows.length <= 100;
     el("sites-show-all").textContent = `Show all ${fmt(rows.length)} sites`;
   }
@@ -544,6 +600,7 @@
   // ------------------------------------------------------------ loading
   async function loadComparison() {
     const token = ++generation;
+    ++trendGeneration;
     before = after = comparison = issues = null;
     el("report").hidden = true;
     el("report-error").hidden = true;
@@ -608,18 +665,19 @@
 
   // ------------------------------------------------------------ share / export
   function summary() {
-    const c = comparison, at = atCounts(c.rows), occ = c.headline_occurrences;
+    const c = comparison, at = c.ready, occ = c.headline_occurrences;
     const occPct = occ.change === null || !occ.before ? null : occ.change / occ.before * 100;
     return [
       `LSA accessibility progress: ${longDate(fromE.date)} to ${longDate(toE.date)}`,
       `Showing ${filterText()}. Today’s department list is used for both dates.`,
       `Snapshots pulled ${before.generated_at} and ${after.generated_at}.`,
+      comparisonNote(c),
       "",
-      c.matched ? `- Sites ready for manual testing (93%+ LSA AEM, 98%+ others): ${at.before} to ${at.after} (${signed(at.after - at.before)}) of ${c.matched} matched sites.` : "- No sites have reliable data on both dates; changes are not available.",
-      c.matched ? `- Average score: ${pct(c.target.before)} to ${pct(c.target.after)} (${signed(c.target.change, 2)} percentage points).` : "",
-      occ.count ? `- Detected Level A, AA and ARIA issues: ${fmt(occ.before)} to ${fmt(occ.after)} (${signed(occPct, 1)}%). Net detected change, not verified fixes.` : "- Issue counts can’t be compared for these dates.",
+      `- Sites ready for manual testing (93%+ LSA AEM, 98%+ others): ${fmt(at.before)} to ${fmt(at.after)} (${signed(at.change)}). ${metricCoverage(at)}`,
+      `- Average score: ${pct(c.target.before)} to ${pct(c.target.after)} (${signed(c.target.change, 2)} percentage points). ${metricCoverage(c.target)}`,
+      `- Detected Level A, AA and ARIA issues: ${fmt(occ.before)} to ${fmt(occ.after)} (${signed(occPct, 1)}%). ${metricCoverage(occ)} Net detected change, not verified fixes.`,
       c.ready_matched ? `- Sites that became ready: ${fmt(c.newly_ready)}; no longer ready: ${fmt(c.regressed)}.` : "",
-      `- Set aside: ${c.added} new, ${c.removed} no longer observed, ${c.gaps} needing reliable data.`,
+      inventoryNote(c),
       "",
       el("quality-note").hidden ? "" : el("quality-note").textContent,
       el("refresh-warning").hidden ? "" : el("refresh-warning").textContent,
@@ -628,9 +686,10 @@
   }
   function csvLines() {
     const rows = summary().split("\n").filter(Boolean).map(line => ["Report context", line]);
-    rows.push([], ["Site", "URL", "Platform", "Department", "Score before", "Score now", "Score change (points)",
-      "Issues before (A+AA+ARIA)", "Issues now", "Issue change", "Kinds of issues before", "Kinds of issues now", "Kinds of issues change",
-      "Pages before", "Pages now", "Status", "Ready for manual testing", "Earlier last check", "Later last check"]);
+    const start = longDate(fromE.date), end = longDate(toE.date);
+    rows.push([], ["Site", "URL", "Platform", "Department", `Score on ${start}`, `Score on ${end}`, "Score change (points)",
+      `Issues on ${start} (A+AA+ARIA)`, `Issues on ${end}`, "Issue change", `Kinds of issues on ${start}`, `Kinds of issues on ${end}`, "Kinds of issues change",
+      `Pages on ${start}`, `Pages on ${end}`, "Status", `Ready for manual testing on ${end}`, "Earlier last check", "Later last check"]);
     for (const row of comparison.rows) {
       const t = metricRow(row, "target"), o = metricRow(row, "occurrences"), i = metricRow(row, "issues");
       rows.push([row.site.site_name, row.site.url, row.platform, row.department, t.before, t.after, t.change, o.before, o.after, o.change,
@@ -643,6 +702,7 @@
     const rows = [
       ["Report context", `LSA accessibility progress by issue: ${longDate(fromE.date)} to ${longDate(toE.date)}`],
       ["Report context", `Showing ${filterText()}. Snapshots pulled ${before.generated_at} and ${after.generated_at}.`],
+      ["Report context", inventoryNote(comparison)],
       ["Report context", issueCoverageNote()],
       [],
       ["Issue", "Siteimprove check", "Siteimprove rule ID", "Level", `Occurrences on ${longDate(fromE.date)}`, `Occurrences on ${longDate(toE.date)}`, "Change", `Sites with it on ${longDate(fromE.date)}`, `Sites with it on ${longDate(toE.date)}`],
@@ -670,7 +730,7 @@
         const draw = () => {
           const text = exportTab === "csv" ? csvLines().join("\n") : summary();
           body.innerHTML = `
-            <p class="muted" style="margin:0">Everything you share carries the dates, filters, matched-site count and caveats, so numbers can’t travel without context.</p>
+            <p class="muted" style="margin:0">Everything you share carries the dates, filters, each date’s coverage and caveats, so numbers can’t travel without context.</p>
             <div class="seg" role="group" aria-label="Format">
               <button type="button" data-export-tab="summary" aria-pressed="${exportTab === "summary"}">Summary</button>
               <button type="button" data-export-tab="csv" aria-pressed="${exportTab === "csv"}">CSV of sites</button>

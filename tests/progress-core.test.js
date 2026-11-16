@@ -126,6 +126,71 @@ test("changing the end date cannot change start-day issue totals, even with runn
   const replaced = core.issueChanges({ sites: [counted(1, 10)] }, { sites: [counted(2, 8)] });
   assert.equal(replaced.same_sites, false, "equal site counts do not guarantee the same sites");
 });
+test("daily metrics keep baseline scores, readiness, issues and PDFs independent of the end date", () => {
+  const before = { sites: [site(1, 97, 10), site(2, 99, 20)] };
+  const ends = [
+    { sites: [site(1, 98, 5), site(2, 99, 10)] },
+    { sites: [site(1, 98, 5), { ...site(2), eligible: false, issues_reliable: false, scan_status: "running" }] },
+    { sites: [site(3, 99, 5)] },
+  ];
+  for (const end of ends) {
+    const c = core.compareDates(before, end);
+    assert.equal(c.target.before, 98);
+    assert.equal(c.ready.before, 1);
+    assert.equal(c.headline_occurrences.before, 90);
+    assert.equal(c.aaa_occurrences.before, 30);
+    assert.equal(c.bp_occurrences.before, 30);
+    assert.equal(c.pdf_count.before, 4);
+    assert.equal(c.pdf_total_issues.before, 6);
+    assert.equal(c.target.before_count, 2);
+  }
+  const c = core.compareDates(before, ends[1]);
+  assert.equal(c.target.after, 98);
+  assert.equal(c.target.same_sites, false);
+  assert.equal(c.headline_occurrences.after, 15);
+  assert.equal(c.pdf_count.after, 2);
+  assert.equal(c.newly_ready, 1, "crossings still require confirmed scores on both dates");
+  assert.equal(core.compareDates(before, ends[2]).newly_ready, null);
+});
+test("daily filters use each date's metadata, including retagged, renamed, and excluded sites", () => {
+  const b = { ...site(1), tags: ["tag:AEM"], site_name: "Earlier name" };
+  const a = { ...site(1, 99), tags: ["tag:WP"], site_name: "Later name" };
+  const before = { sites: [b, { ...site(2), tags: ["tag:Development"] }] };
+  const after = { sites: [a, site(3)] };
+  for (const filter of [{ platforms: ["AEM"] }, { tags: ["tag:AEM"] }, { search: "Earlier name" }]) {
+    const c = core.compareDates(before, after, {}, filter);
+    assert.equal(c.total_before, 1);
+    assert.equal(c.target.before, 97);
+    assert.equal(c.target.after, null);
+    assert.equal(c.rows[0].reason, "Outside the end-date filters");
+    assert.equal(c.newly_ready, null);
+  }
+  const c = core.compareDates(before, after, { by_id: { 1: "History" } }, { department: "History" });
+  assert.equal(c.total_before, 1);
+  assert.equal(c.total_after, 1);
+  assert.equal(c.target.same_sites, true);
+  assert.equal(c.target.change, 2);
+  const replaced = core.compareDates({ sites: [site(1)] }, { sites: [site(2)] });
+  assert.equal(replaced.target.same_sites, false, "equal counts with different identities need a coverage warning");
+});
+test("daily metrics preserve unavailable and zero data with metric-specific coverage", () => {
+  const before = { sites: [site(1, 0, 0)] };
+  const after = { sites: [{ ...site(1, 0, 0), issues_reliable: false, pdf_count: null }] };
+  const c = core.compareDates(before, after);
+  assert.equal(c.target.after, 0);
+  assert.equal(c.ready.after, 0);
+  assert.equal(c.target.same_sites, true);
+  assert.equal(c.headline_occurrences.before, 0);
+  assert.equal(c.headline_occurrences.after, null);
+  assert.equal(c.headline_occurrences.change, null);
+  assert.equal(c.headline_occurrences.same_sites, false);
+  assert.equal(c.pdf_count.after, null);
+  assert.equal(c.pdf_total_issues.after, 3);
+  const noScores = core.compareDates(before, { sites: [{ ...site(1), eligible: false }] });
+  assert.equal(noScores.target.after, null);
+  assert.equal(noScores.ready.after, null);
+  assert.equal(noScores.ready.change, null);
+});
 test("month shortcuts clamp month-end and leap dates, never go forward", () => {
   const e = date => ({ date, generated_at: date + "T07:00:00Z", path: date });
   assert.equal(core.baseline([e("2026-02-28"), e("2026-03-01")], e("2026-03-31"), "month").date, "2026-02-28");
